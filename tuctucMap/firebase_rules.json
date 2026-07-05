@@ -1,0 +1,20 @@
+{
+  "rules": {
+    "drivers": {
+      // Cualquier persona puede leer los perfiles de los conductores (para verificar estado de aprobación)
+      ".read": "true",
+      "$uid": {
+        // Solo el conductor autenticado puede escribir/modificar su propio perfil al registrarse
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    "active_locations": {
+      // Cualquier persona (usuarios/pasajeros) puede leer las ubicaciones activas en tiempo real
+      ".read": "true",
+      "$uid": {
+        // Solo el conductor autenticado puede actualizar su propia ubicación
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    }
+  }
+}

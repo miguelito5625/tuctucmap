@@ -1,0 +1,29 @@
+// Angular Material M3 theme — TucTucMap Admin Dashboard
+// Deep dark palette with blue/cyan accents
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$cyan-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+body {
+  // Force dark color scheme for all Material components
+  color-scheme: dark;
+
+  background-color: #0a0f1e;
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+}

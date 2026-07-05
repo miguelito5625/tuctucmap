@@ -1,0 +1,392 @@
+<div class="drivers-page">
+
+  <!-- ══ Page Header ═══════════════════════════════════════════ -->
+  <header class="page-header">
+    <div class="page-title-group">
+      <div class="page-title-icon">
+        <mat-icon>directions_car</mat-icon>
+      </div>
+      <div>
+        <h1 class="page-title">Gestión de Conductores</h1>
+        <p class="page-subtitle">Monitorea y aprueba los conductores de TucTucMap en tiempo real</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ Stats Cards ═══════════════════════════════════════════ -->
+  <section class="stats-grid" aria-label="Estadísticas de conductores">
+
+    <mat-card class="stat-card stat-total" tabindex="0">
+      <mat-card-content>
+        <div class="stat-icon-wrap">
+          <mat-icon>group</mat-icon>
+        </div>
+        <div class="stat-body">
+          <span class="stat-value">{{ totalCount() }}</span>
+          <span class="stat-label">Total Registrados</span>
+        </div>
+        <mat-icon class="stat-trend-icon">trending_up</mat-icon>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card stat-pending" tabindex="0">
+      <mat-card-content>
+        <div class="stat-icon-wrap">
+          <mat-icon>pending_actions</mat-icon>
+        </div>
+        <div class="stat-body">
+          <span class="stat-value">{{ pendingCount() }}</span>
+          <span class="stat-label">Pendientes</span>
+        </div>
+        @if (pendingCount() > 0) {
+          <span class="stat-alert-badge">Acción requerida</span>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card stat-approved" tabindex="0">
+      <mat-card-content>
+        <div class="stat-icon-wrap">
+          <mat-icon>verified</mat-icon>
+        </div>
+        <div class="stat-body">
+          <span class="stat-value">{{ approvedCount() }}</span>
+          <span class="stat-label">Aprobados</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card stat-rejected" tabindex="0">
+      <mat-card-content>
+        <div class="stat-icon-wrap">
+          <mat-icon>block</mat-icon>
+        </div>
+        <div class="stat-body">
+          <span class="stat-value">{{ rejectedCount() }}</span>
+          <span class="stat-label">Rechazados</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- 5th stat card: Expired subscriptions -->
+    <mat-card class="stat-card stat-expired" tabindex="0">
+      <mat-card-content>
+        <div class="stat-icon-wrap">
+          <mat-icon>card_membership</mat-icon>
+        </div>
+        <div class="stat-body">
+          <span class="stat-value">{{ expiredCount() }}</span>
+          <span class="stat-label">Vencidas</span>
+        </div>
+        @if (expiredCount() > 0) {
+          <span class="stat-alert-badge stat-alert-badge--orange">Requiere renovación</span>
+        }
+      </mat-card-content>
+    </mat-card>
+
+  </section>
+
+  <!-- ══ Table Card ════════════════════════════════════════════ -->
+  <mat-card class="table-card">
+
+    <!-- Loading state -->
+    @if (isLoading()) {
+      <div class="loading-container">
+        <mat-spinner diameter="52" />
+        <p>Conectando con Firebase...</p>
+      </div>
+    } @else {
+
+      <!-- Tab Filters -->
+      <mat-tab-group
+        id="driver-filter-tabs"
+        [selectedIndex]="selectedTabIndex()"
+        (selectedIndexChange)="onTabChange($event)"
+        animationDuration="200ms"
+        class="filter-tabs"
+      >
+        <!-- Todos -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">group</mat-icon>
+            Todos
+            <span class="tab-count">{{ totalCount() }}</span>
+          </ng-template>
+        </mat-tab>
+
+        <!-- Pendientes -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">pending_actions</mat-icon>
+            Pendientes
+            <span class="tab-count tab-count--pending">{{ pendingCount() }}</span>
+          </ng-template>
+        </mat-tab>
+
+        <!-- Aprobados -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">verified</mat-icon>
+            Aprobados
+            <span class="tab-count tab-count--approved">{{ approvedCount() }}</span>
+          </ng-template>
+        </mat-tab>
+
+        <!-- Rechazados -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">block</mat-icon>
+            Rechazados
+            <span class="tab-count tab-count--rejected">{{ rejectedCount() }}</span>
+          </ng-template>
+        </mat-tab>
+
+        <!-- Vencidas -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">card_membership</mat-icon>
+            Vencidas
+            <span class="tab-count tab-count--expired">{{ expiredCount() }}</span>
+          </ng-template>
+        </mat-tab>
+      </mat-tab-group>
+
+      <!-- Empty state -->
+      @if (filteredDrivers().length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon-wrap">
+            <mat-icon>person_search</mat-icon>
+          </div>
+          <h3>Sin conductores aquí</h3>
+          <p>No hay conductores en esta categoría por el momento.</p>
+        </div>
+      } @else {
+
+        <!-- Data Table -->
+        <div class="table-wrapper">
+          <table
+            mat-table
+            id="drivers-table"
+            [dataSource]="filteredDrivers()"
+            aria-label="Tabla de conductores"
+          >
+
+            <!-- ─ Nombre ─────────────────────────────────────── -->
+            <ng-container matColumnDef="nombre">
+              <th mat-header-cell *matHeaderCellDef>Conductor</th>
+              <td mat-cell *matCellDef="let driver">
+                <div class="cell-driver">
+                  <div class="avatar" [attr.aria-label]="driver.nombre">
+                    {{ getInitials(driver.nombre) }}
+                  </div>
+                  <div class="driver-info">
+                    <span class="driver-fullname">{{ driver.nombre }}</span>
+                    <span class="driver-uid">{{ driver.uid | slice: 0 : 8 }}…</span>
+                  </div>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- ─ Email ─────────────────────────────────────── -->
+            <ng-container matColumnDef="email">
+              <th mat-header-cell *matHeaderCellDef>Correo</th>
+              <td mat-cell *matCellDef="let driver">
+                <div class="cell-phone">
+                  <mat-icon class="cell-meta-icon">mail</mat-icon>
+                  <span>{{ driver.email || 'Sin correo' }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- ─ Teléfono ──────────────────────────────────── -->
+            <ng-container matColumnDef="telefono">
+              <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+              <td mat-cell *matCellDef="let driver">
+                <div class="cell-phone">
+                  <mat-icon class="cell-meta-icon">phone</mat-icon>
+                  <span>{{ driver.telefono }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- ─ Placas ───────────────────────────────────── -->
+            <ng-container matColumnDef="placas">
+              <th mat-header-cell *matHeaderCellDef>Placas</th>
+              <td mat-cell *matCellDef="let driver">
+                <span class="plate-badge">{{ driver.placas }}</span>
+              </td>
+            </ng-container>
+
+            <!-- ─ Estado ───────────────────────────────────── -->
+            <ng-container matColumnDef="estadoAprobacion">
+              <th mat-header-cell *matHeaderCellDef>Estado</th>
+              <td mat-cell *matCellDef="let driver">
+                <mat-chip-set>
+                  <mat-chip
+                    [class]="'status-chip status-chip--' + driver.estadoAprobacion"
+                    [disableRipple]="true"
+                    [attr.aria-label]="'Estado: ' + getStatusLabel(driver.estadoAprobacion)"
+                  >
+                    <mat-icon matChipAvatar>
+                      {{ getStatusIcon(driver.estadoAprobacion) }}
+                    </mat-icon>
+                    {{ getStatusLabel(driver.estadoAprobacion) }}
+                  </mat-chip>
+                </mat-chip-set>
+              </td>
+            </ng-container>
+
+            <!-- ─ Fecha Vencimiento ────────────────────────── -->
+            <ng-container matColumnDef="fechaVencimiento">
+              <th mat-header-cell *matHeaderCellDef>Vencimiento</th>
+              <td mat-cell *matCellDef="let driver">
+                @if (!driver.fechaVencimientoSuscripcion || driver.fechaVencimientoSuscripcion === 0) {
+                  <span class="date-cell date-cell--none">Sin fecha</span>
+                } @else {
+                  <div class="date-cell" [class]="'date-cell date-cell--' + getExpiryStatus(driver)">
+                    <mat-icon class="date-icon">{{ getExpiryIcon(driver) }}</mat-icon>
+                    <span>{{ formatExpiryDate(driver.fechaVencimientoSuscripcion) }}</span>
+                  </div>
+                }
+              </td>
+            </ng-container>
+
+            <!-- ─ Acciones ─────────────────────────────────── -->
+            <ng-container matColumnDef="acciones">
+              <th mat-header-cell *matHeaderCellDef>Acciones</th>
+              <td mat-cell *matCellDef="let driver">
+                <div class="actions-cell">
+
+                  <!-- Approve — only if pending -->
+                  @if (driver.estadoAprobacion === 'pendiente') {
+                    <button
+                      mat-icon-button
+                      id="approve-btn-{{ driver.uid }}"
+                      class="action-btn action-btn--approve"
+                      matTooltip="Aprobar conductor"
+                      matTooltipPosition="above"
+                      [disabled]="isProcessing(driver.uid)"
+                      (click)="approveDriver(driver)"
+                      aria-label="Aprobar conductor"
+                    >
+                      <mat-icon>check_circle</mat-icon>
+                    </button>
+                  }
+
+                  <!-- Revoke — only if approved -->
+                  @if (driver.estadoAprobacion === 'aprobado') {
+                    <button
+                      mat-icon-button
+                      id="revoke-btn-{{ driver.uid }}"
+                      class="action-btn action-btn--revoke"
+                      matTooltip="Revocar aprobación"
+                      matTooltipPosition="above"
+                      [disabled]="isProcessing(driver.uid)"
+                      (click)="rejectDriver(driver)"
+                      aria-label="Revocar aprobación"
+                    >
+                      <mat-icon>remove_circle</mat-icon>
+                    </button>
+                  }
+
+                  <!-- Reject — only if pending -->
+                  @if (driver.estadoAprobacion === 'pendiente') {
+                    <button
+                      mat-icon-button
+                      id="reject-btn-{{ driver.uid }}"
+                      class="action-btn action-btn--reject"
+                      matTooltip="Rechazar conductor"
+                      matTooltipPosition="above"
+                      [disabled]="isProcessing(driver.uid)"
+                      (click)="rejectDriver(driver)"
+                      aria-label="Rechazar conductor"
+                    >
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                  }
+
+                  <!-- Re-approve — only if rejected -->
+                  @if (driver.estadoAprobacion === 'rechazado') {
+                    <button
+                      mat-icon-button
+                      id="reapprove-btn-{{ driver.uid }}"
+                      class="action-btn action-btn--approve"
+                      matTooltip="Volver a aprobar"
+                      matTooltipPosition="above"
+                      [disabled]="isProcessing(driver.uid)"
+                      (click)="approveDriver(driver)"
+                      aria-label="Volver a aprobar conductor"
+                    >
+                      <mat-icon>check_circle</mat-icon>
+                    </button>
+                  }
+
+                  <!-- Calendar — manage subscription (aprobado or suscripcion_vencida) -->
+                  @if (driver.estadoAprobacion === 'aprobado' || driver.estadoAprobacion === 'suscripcion_vencida') {
+                    <button
+                      mat-icon-button
+                      id="set-expiry-btn-{{ driver.uid }}"
+                      class="action-btn action-btn--calendar"
+                      matTooltip="Gestionar suscripción"
+                      matTooltipPosition="above"
+                      [disabled]="isProcessing(driver.uid)"
+                      (click)="openSubscriptionDialog(driver)"
+                      aria-label="Gestionar suscripción"
+                    >
+                      <mat-icon>event</mat-icon>
+                    </button>
+                  }
+
+                  <!-- History (always visible) -->
+                  <button
+                    mat-icon-button
+                    id="history-btn-{{ driver.uid }}"
+                    class="action-btn action-btn--history"
+                    matTooltip="Ver historial de suscripciones"
+                    matTooltipPosition="above"
+                    (click)="viewHistory(driver)"
+                    aria-label="Ver historial"
+                  >
+                    <mat-icon style="color: #60a5fa;">history</mat-icon>
+                  </button>
+
+                  <!-- Delete (always visible) -->
+                  <button
+                    mat-icon-button
+                    id="delete-btn-{{ driver.uid }}"
+                    class="action-btn action-btn--delete"
+                    matTooltip="Eliminar conductor"
+                    matTooltipPosition="above"
+                    [disabled]="isProcessing(driver.uid)"
+                    (click)="deleteDriver(driver)"
+                    aria-label="Eliminar conductor"
+                  >
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+
+                  <!-- Spinner while processing -->
+                  @if (isProcessing(driver.uid)) {
+                    <mat-spinner diameter="20" class="row-spinner" />
+                  }
+
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: displayedColumns;"
+              class="driver-row"
+              [class.row--pending]="row.estadoAprobacion === 'pendiente'"
+              [class.row--expired]="row.estadoAprobacion === 'suscripcion_vencida'"
+            ></tr>
+          </table>
+        </div>
+
+      }
+    }
+
+  </mat-card>
+
+</div>

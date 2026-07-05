@@ -1,0 +1,118 @@
+<mat-sidenav-container class="shell-container">
+
+  <!-- ─── Sidenav ─────────────────────────────────────── -->
+  <mat-sidenav class="sidenav" mode="side" [opened]="sidenavOpened()">
+
+    <!-- Brand -->
+    <div class="brand">
+      <div class="brand-logo">
+        <mat-icon class="brand-icon">electric_rickshaw</mat-icon>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">TucTucMap</span>
+        <span class="brand-sub">Panel Administrativo</span>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <mat-nav-list class="nav-list">
+      <div class="nav-section-label">Gestión</div>
+
+      <a
+        mat-list-item
+        routerLink="/drivers"
+        routerLinkActive="active-nav-item"
+        matTooltip="Gestión de conductores"
+        matTooltipPosition="right"
+      >
+        <mat-icon matListItemIcon>directions_car</mat-icon>
+        <span matListItemTitle>Conductores</span>
+      </a>
+
+      <a
+        mat-list-item
+        routerLink="/subscriptions"
+        routerLinkActive="active-nav-item"
+        matTooltip="Historial de suscripciones"
+        matTooltipPosition="right"
+      >
+        <mat-icon matListItemIcon>history</mat-icon>
+        <span matListItemTitle>Suscripciones</span>
+      </a>
+
+      <a
+        mat-list-item
+        routerLink="/trips"
+        routerLinkActive="active-nav-item"
+        matTooltip="Historial de Viajes"
+        matTooltipPosition="right"
+      >
+        <mat-icon matListItemIcon>map</mat-icon>
+        <span matListItemTitle>Viajes Completados</span>
+      </a>
+    </mat-nav-list>
+
+    <!-- Footer -->
+    <div class="sidenav-footer">
+      <mat-icon class="footer-icon">info_outline</mat-icon>
+      <span>tuctucMapDashboard v1.0</span>
+    </div>
+  </mat-sidenav>
+
+  <!-- ─── Main Content ─────────────────────────────────── -->
+  <mat-sidenav-content class="main-content">
+
+    <!-- Toolbar -->
+    <mat-toolbar class="main-toolbar">
+      <button
+        mat-icon-button
+        (click)="toggleSidenav()"
+        aria-label="Alternar menú lateral"
+        matTooltip="Alternar menú"
+      >
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <div class="toolbar-breadcrumb">
+        <mat-icon class="breadcrumb-icon">dashboard</mat-icon>
+        <span>Dashboard</span>
+      </div>
+
+      <span class="toolbar-spacer"></span>
+      
+      <!-- User Menu Trigger -->
+      <div class="toolbar-user" [matMenuTriggerFor]="userMenu" tabindex="0" role="button" aria-haspopup="true">
+        <div class="user-avatar">{{ adminName().charAt(0).toUpperCase() }}</div>
+        <div style="display: flex; flex-direction: column; line-height: 1.2;">
+          <span class="user-name">{{ adminName() }}</span>
+          <span style="font-size: 0.65rem; color: #94a3b8; font-weight: 500;">Super Admin</span>
+        </div>
+        <mat-icon class="user-chevron">arrow_drop_down</mat-icon>
+      </div>
+
+      <!-- User Menu Definition -->
+      <mat-menu #userMenu="matMenu" xPosition="before" class="dark-menu">
+        <button mat-menu-item (click)="openChangeNameDialog()">
+          <mat-icon>badge</mat-icon>
+          <span>Cambiar nombre</span>
+        </button>
+        <button mat-menu-item (click)="openChangePasswordDialog()">
+          <mat-icon>password</mat-icon>
+          <span>Cambiar contraseña</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="logout()" style="color: #f87171;">
+          <mat-icon style="color: #f87171;">logout</mat-icon>
+          <span>Cerrar sesión</span>
+        </button>
+      </mat-menu>
+
+    </mat-toolbar>
+
+    <!-- Page content via router -->
+    <div class="page-content">
+      <router-outlet />
+    </div>
+  </mat-sidenav-content>
+
+</mat-sidenav-container>

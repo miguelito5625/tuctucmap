@@ -1,0 +1,58 @@
+/* TucTucMap Admin — Global Styles */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar (WebKit) ─────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Snackbar Variants ──────────────────────────────────── */
+.snack-success {
+  --mdc-snackbar-container-color: #052e16;
+  --mdc-snackbar-supporting-text-color: #4ade80;
+}
+
+.snack-warn {
+  --mdc-snackbar-container-color: #422006;
+  --mdc-snackbar-supporting-text-color: #fbbf24;
+}
+
+.snack-error {
+  --mdc-snackbar-container-color: #450a0a;
+  --mdc-snackbar-supporting-text-color: #f87171;
+}
+
+/* ── Selection ──────────────────────────────────────────── */
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: #e2e8f0;
+}

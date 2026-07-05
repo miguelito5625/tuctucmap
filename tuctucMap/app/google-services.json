@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "852556047656",
+    "firebase_url": "https://tuctucmap-default-rtdb.firebaseio.com",
+    "project_id": "tuctucmap",
+    "storage_bucket": "tuctucmap.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:852556047656:android:20d1f5d9da8fd1619c9c1d",
+        "android_client_info": {
+          "package_name": "com.example.tuctucmap"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVHOo-6aQ9kaHzhMz-nGVu_OAca_pzglY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
