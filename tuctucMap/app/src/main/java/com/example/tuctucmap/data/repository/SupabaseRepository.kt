@@ -206,7 +206,9 @@ class SupabaseRepository {
                 "active" to true,
                 "updated_at" to System.currentTimeMillis().toString()
             )
-            Firebase.database.getReference("driver_locations").child(uid).setValue(location)
+            val locationRef = Firebase.database.getReference("driver_locations").child(uid)
+            locationRef.setValue(location)
+            locationRef.onDisconnect().removeValue()
         } catch (e: Exception) {
             e.printStackTrace()
         }

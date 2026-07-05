@@ -36,6 +36,8 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import kotlinx.coroutines.launch
+import android.animation.ValueAnimator
+import android.view.animation.LinearInterpolator
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,6 +124,7 @@ fun PassengerMapScreen(
 
     var mapViewInstance by remember { mutableStateOf<MapView?>(null) }
     var myLocationOverlayInstance by remember { mutableStateOf<MyLocationNewOverlay?>(null) }
+    val driverMarkers = remember { mutableMapOf<String, Marker>() }
     val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
@@ -199,25 +202,53 @@ fun PassengerMapScreen(
                         }
                     },
                     update = { mapView ->
-                        // Limpiar marcadores de conductores anteriores
-                        mapView.overlays.removeAll { it is Marker }
+                        val currentUids = driverLocations.map { it.uid }.toSet()
+                        
+                        // Remover marcadores de conductores desconectados
+                        val removedUids = driverMarkers.keys.filter { it !in currentUids }
+                        for (uid in removedUids) {
+                            val marker = driverMarkers.remove(uid)
+                            mapView.overlays.remove(marker)
+                        }
 
-                        // Agregar marcadores actualizados para conductores en línea
+                        // Actualizar o crear marcadores para conductores en línea
                         driverLocations.forEach { driverLoc ->
-                            val marker = Marker(mapView).apply {
-                                position = GeoPoint(driverLoc.latitud, driverLoc.longitud)
-                                title = driverLoc.nombre
-                                snippet = "Placas: ${driverLoc.placas}"
-                                
-                                icon = tucTucIcon
+                            val newGeoPoint = GeoPoint(driverLoc.latitud, driverLoc.longitud)
+                            var marker = driverMarkers[driverLoc.uid]
 
-                                setOnMarkerClickListener { _, _ ->
-                                    selectedDriver = driverLoc
-                                    showBottomSheet = true
-                                    true
+                            if (marker == null) {
+                                marker = Marker(mapView).apply {
+                                    position = newGeoPoint
+                                    title = driverLoc.nombre
+                                    snippet = "Placas: ${driverLoc.placas}"
+                                    icon = tucTucIcon
+                                    setOnMarkerClickListener { _, _ ->
+                                        selectedDriver = driverLoc
+                                        showBottomSheet = true
+                                        true
+                                    }
                                 }
+                                driverMarkers[driverLoc.uid] = marker
+                                mapView.overlays.add(marker)
+                            } else {
+                                val oldGeoPoint = marker.position
+                                if (oldGeoPoint.latitude != newGeoPoint.latitude || oldGeoPoint.longitude != newGeoPoint.longitude) {
+                                    val animator = ValueAnimator.ofFloat(0f, 1f)
+                                    animator.duration = 4000L // Interpolar durante 4s
+                                    animator.interpolator = LinearInterpolator()
+                                    animator.addUpdateListener { animation ->
+                                        val fraction = animation.animatedFraction
+                                        val lat = oldGeoPoint.latitude + (newGeoPoint.latitude - oldGeoPoint.latitude) * fraction
+                                        val lon = oldGeoPoint.longitude + (newGeoPoint.longitude - oldGeoPoint.longitude) * fraction
+                                        marker?.position = GeoPoint(lat, lon)
+                                        mapView.invalidate()
+                                    }
+                                    animator.start()
+                                }
+                                // Actualizar info si cambió
+                                marker.title = driverLoc.nombre
+                                marker.snippet = "Placas: ${driverLoc.placas}"
                             }
-                            mapView.overlays.add(marker)
                         }
                         mapView.invalidate()
                     },
