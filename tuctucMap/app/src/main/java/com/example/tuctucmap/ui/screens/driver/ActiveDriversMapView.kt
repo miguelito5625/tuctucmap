@@ -34,7 +34,8 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-
+import android.animation.ValueAnimator
+import android.view.animation.LinearInterpolator
 /**
  * Pantalla de mapa en pantalla completa.
  * Muestra todos los conductores activos en tiempo real.
@@ -110,6 +111,7 @@ fun DriverMapFullscreenScreen(
     var showBottomSheet by remember { mutableStateOf(false) }
     var mapViewInstance by remember { mutableStateOf<MapView?>(null) }
     var myLocationOverlayInstance by remember { mutableStateOf<MyLocationNewOverlay?>(null) }
+    val driverMarkers = remember { mutableMapOf<String, Marker>() }
 
     Scaffold(
         topBar = {
@@ -188,19 +190,48 @@ fun DriverMapFullscreenScreen(
                     }
                 },
                 update = { mapView ->
-                    mapView.overlays.removeAll { it is Marker }
+                    val currentUids = driverLocations.map { it.uid }.toSet()
+                    val removedUids = driverMarkers.keys.filter { it !in currentUids }
+                    for (uid in removedUids) {
+                        val marker = driverMarkers.remove(uid)
+                        mapView.overlays.remove(marker)
+                    }
+
                     driverLocations.forEach { driverLoc ->
-                        Marker(mapView).apply {
-                            position = GeoPoint(driverLoc.latitud, driverLoc.longitud)
-                            title = driverLoc.nombre
-                            snippet = "Placas: ${driverLoc.placas}"
-                            icon = tucTucIcon
-                            setOnMarkerClickListener { _, _ ->
-                                selectedDriver = driverLoc
-                                showBottomSheet = true
-                                true
+                        val newGeoPoint = GeoPoint(driverLoc.latitud, driverLoc.longitud)
+                        var marker = driverMarkers[driverLoc.uid]
+
+                        if (marker == null) {
+                            marker = Marker(mapView).apply {
+                                position = newGeoPoint
+                                title = driverLoc.nombre
+                                snippet = "Placas: ${driverLoc.placas}"
+                                icon = tucTucIcon
+                                setOnMarkerClickListener { _, _ ->
+                                    selectedDriver = driverLoc
+                                    showBottomSheet = true
+                                    true
+                                }
                             }
-                            mapView.overlays.add(this)
+                            driverMarkers[driverLoc.uid] = marker
+                            mapView.overlays.add(marker)
+                        } else {
+                            val oldGeoPoint = marker.position
+                            if (oldGeoPoint.latitude != newGeoPoint.latitude || oldGeoPoint.longitude != newGeoPoint.longitude) {
+                                val animator = ValueAnimator.ofFloat(0f, 1f)
+                                animator.duration = 4000L
+                                animator.interpolator = LinearInterpolator()
+                                animator.addUpdateListener { animation ->
+                                    val fraction = animation.animatedFraction
+                                    val lat = oldGeoPoint.latitude + (newGeoPoint.latitude - oldGeoPoint.latitude) * fraction
+                                    val lon = oldGeoPoint.longitude + (newGeoPoint.longitude - oldGeoPoint.longitude) * fraction
+                                    marker?.position = GeoPoint(lat, lon)
+                                    mapView.invalidate()
+                                }
+                                animator.start()
+                            }
+                            marker.title = driverLoc.nombre
+                            marker.snippet = "Placas: ${driverLoc.placas}"
                         }
                     }
                     mapView.invalidate()
