@@ -43,3 +43,4 @@ Este proyecto es un monorepo que contiene tres sistemas principales. Nunca modif
 2. **Convenciones UI Móvil:** Siempre asume diseño responsive y protección contra el teclado (IME Padding) en pantallas Compose.
 3. **Manejo de Librerías:** No sugieras librerías nuevas (como Retrofit o Mapbox) si el stack actual (Supabase SDK, OSMDroid, Firebase) ya resuelve el problema.
 4. **Respetar RLS:** Cualquier nueva tabla en Supabase debe ir acompañada de su correspondiente política de Row Level Security (RLS) en `db.sql`.
+5. **Documentación Continua:** Cualquier funcionalidad importante que sea modificada o agregada al proyecto, debe ser documentada inmediatamente en este archivo (`AGENTS.md`) para mantener el contexto general de la plataforma siempre actualizado.

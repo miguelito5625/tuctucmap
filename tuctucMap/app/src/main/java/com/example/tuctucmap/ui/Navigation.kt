@@ -11,6 +11,8 @@ import com.example.tuctucmap.ui.screens.driver.*
 import com.example.tuctucmap.ui.screens.passenger.PassengerMapScreen
 import kotlinx.coroutines.launch
 
+import androidx.activity.compose.BackHandler
+
 sealed class Screen {
     object PassengerLogin : Screen()
     object PassengerRegister : Screen()
@@ -39,7 +41,24 @@ fun AppNavigation(
     repository: SupabaseRepository,
     initialScreen: Screen = Screen.PassengerLogin
 ) {
-    var currentScreen by remember { mutableStateOf(initialScreen) }
+    val backStack = remember { mutableStateListOf(initialScreen) }
+    val currentScreen = backStack.last()
+
+    BackHandler(enabled = backStack.size > 1) {
+        backStack.removeLast()
+    }
+
+    fun navigate(screen: Screen, clearStack: Boolean = false) {
+        if (clearStack) {
+            backStack.clear()
+            backStack.add(screen)
+        } else {
+            if (backStack.lastOrNull() != screen) {
+                backStack.add(screen)
+            }
+        }
+    }
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -64,24 +83,24 @@ fun AppNavigation(
                 repository = repository,
                 onLoginSuccess = {
                     saveRole("passenger")
-                    currentScreen = Screen.PassengerHome
+                    navigate(Screen.PassengerHome, clearStack = true)
                 },
                 onSelectDriver = {
                     if (repository.isUserLoggedIn) {
                         val uid = repository.currentUserUid ?: ""
                         repository.getDriverProfileOnce(uid) { driver ->
-                            currentScreen = if (driver != null) {
-                                resolveDriverScreen(driver.estadoAprobacion)
+                            if (driver != null) {
+                                navigate(resolveDriverScreen(driver.estadoAprobacion), clearStack = true)
                             } else {
-                                Screen.DriverLogin
+                                navigate(Screen.DriverLogin, clearStack = true)
                             }
                         }
                     } else {
-                        currentScreen = Screen.DriverLogin
+                        navigate(Screen.DriverLogin, clearStack = true)
                     }
                 },
                 onNavigateToRegister = {
-                    currentScreen = Screen.PassengerRegister
+                    navigate(Screen.PassengerRegister)
                 }
             )
         }
@@ -90,10 +109,10 @@ fun AppNavigation(
                 repository = repository,
                 onRegisterSuccess = {
                     saveRole("passenger")
-                    currentScreen = Screen.PassengerHome
+                    navigate(Screen.PassengerHome, clearStack = true)
                 },
                 onNavigateToLogin = {
-                    currentScreen = Screen.PassengerLogin
+                    navigate(Screen.PassengerLogin, clearStack = true)
                 }
             )
         }
@@ -101,15 +120,15 @@ fun AppNavigation(
             PassengerHomeScreen(
                 repository = repository,
                 onSearchTucTuc = {
-                    currentScreen = Screen.PassengerMap
+                    navigate(Screen.PassengerMap)
                 },
                 onViewHistory = {
-                    currentScreen = Screen.PassengerTripHistory
+                    navigate(Screen.PassengerTripHistory)
                 },
                 onLogout = {
                     clearRole()
                     scope.launch { repository.logout() }
-                    currentScreen = Screen.PassengerLogin
+                    navigate(Screen.PassengerLogin, clearStack = true)
                 }
             )
         }
@@ -117,7 +136,7 @@ fun AppNavigation(
             com.example.tuctucmap.ui.screens.passenger.PassengerTripHistoryScreen(
                 repository = repository,
                 onBack = {
-                    currentScreen = Screen.PassengerHome
+                    backStack.removeLast()
                 }
             )
         }
@@ -125,7 +144,7 @@ fun AppNavigation(
             PassengerMapScreen(
                 repository = repository,
                 onBackToOnboarding = {
-                    currentScreen = Screen.PassengerHome
+                    backStack.removeLast()
                 }
             )
         }
@@ -133,21 +152,21 @@ fun AppNavigation(
             DriverLoginScreen(
                 repository = repository,
                 onNavigateToRegister = {
-                    currentScreen = Screen.DriverRegister
+                    navigate(Screen.DriverRegister)
                 },
                 onLoginSuccess = {
                     saveRole("driver")
                     val uid = repository.currentUserUid ?: ""
                     repository.getDriverProfileOnce(uid) { driver ->
-                        currentScreen = if (driver != null) {
-                            resolveDriverScreen(driver.estadoAprobacion)
+                        if (driver != null) {
+                            navigate(resolveDriverScreen(driver.estadoAprobacion), clearStack = true)
                         } else {
-                            Screen.DriverPending
+                            navigate(Screen.DriverPending, clearStack = true)
                         }
                     }
                 },
                 onBackToOnboarding = {
-                    currentScreen = Screen.PassengerLogin
+                    navigate(Screen.PassengerLogin, clearStack = true)
                 }
             )
         }
@@ -155,14 +174,14 @@ fun AppNavigation(
             DriverRegisterScreen(
                 repository = repository,
                 onNavigateToLogin = {
-                    currentScreen = Screen.DriverLogin
+                    navigate(Screen.DriverLogin, clearStack = true)
                 },
                 onRegisterSuccess = {
                     saveRole("driver")
-                    currentScreen = Screen.DriverHome  // Auto-aprobado con 7 días de prueba
+                    navigate(Screen.DriverHome, clearStack = true)  // Auto-aprobado con 7 días de prueba
                 },
                 onBackToOnboarding = {
-                    currentScreen = Screen.PassengerLogin
+                    navigate(Screen.PassengerLogin, clearStack = true)
                 }
             )
         }
@@ -170,18 +189,18 @@ fun AppNavigation(
             DriverPendingScreen(
                 repository = repository,
                 onApproved = {
-                    currentScreen = Screen.DriverHome
+                    navigate(Screen.DriverHome, clearStack = true)
                 },
                 onSubscriptionExpired = {
-                    currentScreen = Screen.DriverSubscriptionExpired
+                    navigate(Screen.DriverSubscriptionExpired, clearStack = true)
                 },
                 onLogout = {
                     clearRole()
                     scope.launch { repository.logout() }
-                    currentScreen = Screen.PassengerLogin
+                    navigate(Screen.PassengerLogin, clearStack = true)
                 },
                 onViewMap = {
-                    currentScreen = Screen.DriverMapFullscreen(returnTo = Screen.DriverPending)
+                    navigate(Screen.DriverMapFullscreen(returnTo = Screen.DriverPending))
                 }
             )
         }
@@ -191,19 +210,19 @@ fun AppNavigation(
                 onLogout = {
                     clearRole()
                     scope.launch { repository.logout() }
-                    currentScreen = Screen.PassengerLogin
+                    navigate(Screen.PassengerLogin, clearStack = true)
                 },
                 onSubscriptionExpired = {
-                    currentScreen = Screen.DriverSubscriptionExpired
+                    navigate(Screen.DriverSubscriptionExpired, clearStack = true)
                 },
                 onApprovalRevoked = {
-                    currentScreen = Screen.DriverPending
+                    navigate(Screen.DriverPending, clearStack = true)
                 },
                 onViewMap = {
-                    currentScreen = Screen.DriverMapFullscreen(returnTo = Screen.DriverHome)
+                    navigate(Screen.DriverMapFullscreen(returnTo = Screen.DriverHome))
                 },
                 onViewHistory = {
-                    currentScreen = Screen.DriverTripHistory
+                    navigate(Screen.DriverTripHistory)
                 }
             )
         }
@@ -211,7 +230,7 @@ fun AppNavigation(
             com.example.tuctucmap.ui.screens.driver.DriverTripHistoryScreen(
                 repository = repository,
                 onBack = {
-                    currentScreen = Screen.DriverHome
+                    backStack.removeLast()
                 }
             )
         }
@@ -219,15 +238,15 @@ fun AppNavigation(
             DriverSubscriptionExpiredScreen(
                 repository = repository,
                 onRenewed = {
-                    currentScreen = Screen.DriverHome
+                    navigate(Screen.DriverHome, clearStack = true)
                 },
                 onLogout = {
                     clearRole()
                     scope.launch { repository.logout() }
-                    currentScreen = Screen.PassengerLogin
+                    navigate(Screen.PassengerLogin, clearStack = true)
                 },
                 onViewMap = {
-                    currentScreen = Screen.DriverMapFullscreen(returnTo = Screen.DriverSubscriptionExpired)
+                    navigate(Screen.DriverMapFullscreen(returnTo = Screen.DriverSubscriptionExpired))
                 }
             )
         }
@@ -235,7 +254,7 @@ fun AppNavigation(
             DriverMapFullscreenScreen(
                 repository = repository,
                 onBack = {
-                    currentScreen = screen.returnTo
+                    backStack.removeLast()
                 }
             )
         }
