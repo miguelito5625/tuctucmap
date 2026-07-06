@@ -35,7 +35,11 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import android.animation.ValueAnimator
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.view.animation.LinearInterpolator
+import android.view.animation.OvershootInterpolator
+import android.view.animation.AccelerateInterpolator
 /**
  * Pantalla de mapa en pantalla completa.
  * Muestra todos los conductores activos en tiempo real.
@@ -194,7 +198,27 @@ fun DriverMapFullscreenScreen(
                     val removedUids = driverMarkers.keys.filter { it !in currentUids }
                     for (uid in removedUids) {
                         val marker = driverMarkers.remove(uid)
-                        mapView.overlays.remove(marker)
+                        if (marker != null) {
+                            val startLat = marker.position.latitude
+                            val exitAnimator = ValueAnimator.ofFloat(1f, 0f).apply {
+                                duration = 500L
+                                interpolator = AccelerateInterpolator()
+                                addUpdateListener { animation ->
+                                    val fraction = animation.animatedValue as Float
+                                    marker.setAlpha(fraction)
+                                    val currentLat = startLat + 0.002 * (1f - fraction)
+                                    marker.position = GeoPoint(currentLat, marker.position.longitude)
+                                    mapView.invalidate()
+                                }
+                                addListener(object : AnimatorListenerAdapter() {
+                                    override fun onAnimationEnd(animation: Animator) {
+                                        mapView.overlays.remove(marker)
+                                        mapView.invalidate()
+                                    }
+                                })
+                            }
+                            exitAnimator.start()
+                        }
                     }
 
                     driverLocations.forEach { driverLoc ->
@@ -202,8 +226,10 @@ fun DriverMapFullscreenScreen(
                         var marker = driverMarkers[driverLoc.uid]
 
                         if (marker == null) {
+                            val startLat = newGeoPoint.latitude + 0.002
                             marker = Marker(mapView).apply {
-                                position = newGeoPoint
+                                position = GeoPoint(startLat, newGeoPoint.longitude)
+                                setAlpha(0f)
                                 title = driverLoc.nombre
                                 snippet = "Placas: ${driverLoc.placas}"
                                 icon = tucTucIcon
@@ -215,6 +241,19 @@ fun DriverMapFullscreenScreen(
                             }
                             driverMarkers[driverLoc.uid] = marker
                             mapView.overlays.add(marker)
+
+                            val entranceAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+                                duration = 1000L
+                                interpolator = OvershootInterpolator()
+                                addUpdateListener { animation ->
+                                    val fraction = animation.animatedValue as Float
+                                    val currentLat = startLat + (newGeoPoint.latitude - startLat) * fraction
+                                    marker.position = GeoPoint(currentLat, newGeoPoint.longitude)
+                                    marker.setAlpha(fraction.coerceIn(0f, 1f))
+                                    mapView.invalidate()
+                                }
+                            }
+                            entranceAnimator.start()
                         } else {
                             val oldGeoPoint = marker.position
                             if (oldGeoPoint.latitude != newGeoPoint.latitude || oldGeoPoint.longitude != newGeoPoint.longitude) {
