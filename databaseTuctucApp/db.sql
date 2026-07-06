@@ -22,14 +22,6 @@ CREATE TABLE IF NOT EXISTS public.driver_subscriptions (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Crear tabla de ubicaciones en tiempo real para conductores activos
-CREATE TABLE IF NOT EXISTS public.driver_locations (
-    driver_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE PRIMARY KEY,
-    lat DOUBLE PRECISION,
-    lon DOUBLE PRECISION,
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    active BOOLEAN DEFAULT TRUE
-);
 
 -- 3. Crear tabla de viajes
 CREATE TABLE IF NOT EXISTS public.trips (
@@ -46,7 +38,7 @@ CREATE TABLE IF NOT EXISTS public.trips (
 
 -- Habilitar Row Level Security (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.driver_locations ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE public.trips ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.driver_subscriptions ENABLE ROW LEVEL SECURITY;
 
@@ -65,9 +57,6 @@ CREATE POLICY "Admins can insert subscriptions" ON public.driver_subscriptions F
   (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin'
 );
 
--- Reglas para Driver Locations
-CREATE POLICY "Locations viewable by everyone" ON public.driver_locations FOR SELECT USING (true);
-CREATE POLICY "Drivers can insert/update their location" ON public.driver_locations FOR ALL USING (auth.uid() = driver_id);
 
 -- Reglas para Trips
 CREATE POLICY "Trips viewable by participants" ON public.trips FOR SELECT USING (auth.uid() = passenger_id OR auth.uid() = driver_id);

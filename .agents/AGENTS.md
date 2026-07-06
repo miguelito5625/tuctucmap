@@ -10,7 +10,7 @@ Este proyecto es un monorepo que contiene tres sistemas principales. Nunca modif
 - **Base de Datos:** PostgreSQL en Supabase.
 - **Archivos Clave:**
   - `db.sql`: Define las tablas principales (`profiles`, `driver_subscriptions`, `driver_locations`, `trips`) y las reglas de seguridad (RLS - Row Level Security).
-  - Scripts en Node.js (`migrate.js`, `setup_admin.js`, `policy.js`): Sirven para realizar migraciones y testing directamente a Supabase utilizando `pg` y `@supabase/supabase-js`.
+  - Script en Node.js (`run_sql.js`): Sirve para ejecutar sentencias SQL directamente en Supabase desde la terminal. Uso: `node run_sql.js "TU_SENTENCIA_SQL"` (ej. `node run_sql.js "SELECT * FROM public.profiles;"`).
 - **Estructura de Datos Importante:**
   - `profiles`: Contiene la columna `role` (passenger, driver, admin) y estado de aprobación para conductores.
   - `trips`: Estados del viaje (`requested`, `accepted`, `completed`, `cancelled`).

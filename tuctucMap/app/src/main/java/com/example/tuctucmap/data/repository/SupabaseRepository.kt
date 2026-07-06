@@ -471,7 +471,9 @@ class SupabaseRepository {
     }
 
     fun observeDriverProfile(uid: String): Flow<Driver?> = callbackFlow {
-        val channel = supabase.channel("public:profiles:driver_$uid")
+        // Usar un nombre de canal único para evitar que devuelva un canal cerrado/desuscrito al cambiar de pantalla
+        val uniqueChannelId = "profile_${uid}_${java.util.UUID.randomUUID()}"
+        val channel = supabase.channel(uniqueChannelId)
         val flow = channel.postgresChangeFlow<PostgresAction>("public") { 
             table = "profiles"
         }
