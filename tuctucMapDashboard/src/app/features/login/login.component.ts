@@ -270,6 +270,12 @@ export class LoginComponent {
       if (error) {
         this.errorMessage.set('Credenciales incorrectas. Inténtalo de nuevo.');
       } else {
+        const profile = await this.supabaseService.getCurrentUserProfile();
+        if (!profile || profile.role !== 'admin') {
+          await this.supabaseService.signOut();
+          this.errorMessage.set('Acceso denegado: Esta cuenta no tiene permisos de administrador.');
+          return;
+        }
         await this.router.navigate(['/drivers']);
       }
     } catch (err) {

@@ -4,6 +4,9 @@
  */
 export type DriverStatus = 'pendiente' | 'aprobado' | 'rechazado' | 'suscripcion_vencida';
 
+export type SubscriptionPlan = 'trial' | 'semanal' | 'quincenal' | 'mensual' | 'personalizado';
+export type PaymentMethod = 'efectivo' | 'transferencia' | 'deposito_bancario' | 'gratis_prueba';
+
 export interface SubscriptionHistory {
   id: string;
   driver_id: string;
@@ -13,31 +16,48 @@ export interface SubscriptionHistory {
   end_date: number;
   created_at: number;
   status: 'Activo' | 'Expirado';
+  plan_type?: SubscriptionPlan;
+  amount_paid?: number;
+  payment_method?: PaymentMethod;
+  reference_number?: string;
 }
 
-/**
- * TypeScript interface that mirrors the Kotlin data class
- * stored under the `drivers/{uid}` node in Firebase Realtime Database.
- */
 export interface Driver {
-  /** Firebase Auth UID — also used as the node key in the database. */
   uid: string;
-  /** Full name of the driver. */
   nombre: string;
-  /** Email address. */
   email: string;
-  /** Phone number. */
   telefono: string;
-  /** Vehicle license plate (Tuc Tuc). */
   placas: string;
-  /** Current approval status. Defaults to 'pendiente' on registration. */
   estadoAprobacion: DriverStatus;
-  /**
-   * Subscription expiry date as a Unix timestamp in milliseconds.
-   * A value of 0 or undefined means no expiry date is set.
-   * Compatible with Kotlin Long field in the Android app.
-   */
   fechaVencimientoSuscripcion?: number;
-  /** Number of subscriptions the driver has had. */
   suscripcionesCount?: number;
+}
+
+export interface PassengerProfile {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  created_at: string;
+  tripsCount?: number;
+}
+
+export interface LiveDriverLocation {
+  driver_id: string;
+  nombre: string;
+  telefono: string;
+  placas: string;
+  lat: number;
+  lon: number;
+  active: boolean;
+  status?: string; // "disponible", "ocupado", "en_pausa"
+  updated_at?: string;
+}
+
+export interface FinancialKPIs {
+  totalRevenue: number;
+  monthRevenue: number;
+  expiringIn7Days: number;
+  expiringAmountExpected: number;
+  activeFleetCount: number;
 }

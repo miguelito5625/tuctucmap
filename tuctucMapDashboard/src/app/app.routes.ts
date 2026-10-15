@@ -31,9 +31,21 @@ export const routes: Routes = [
         title: 'Suscripciones — TucTucMap Admin',
       },
       {
+        path: 'fleet-map',
+        loadComponent: () =>
+          import('./features/fleet-map/fleet-map.component').then((m) => m.FleetMapComponent),
+        title: 'Mapa en Vivo — TucTucMap Admin',
+      },
+      {
+        path: 'passengers',
+        loadComponent: () =>
+          import('./features/passengers/passengers.component').then((m) => m.PassengersComponent),
+        title: 'Pasajeros — TucTucMap Admin',
+      },
+      {
         path: 'trips',
         loadComponent: () =>
-          import('./features/trips/trips').then((m) => m.Trips),
+          import('./features/trips/trips.component').then((m) => m.TripsComponent),
         title: 'Viajes — TucTucMap Admin',
       },
     ]

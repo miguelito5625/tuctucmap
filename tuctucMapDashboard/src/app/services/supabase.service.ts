@@ -2,7 +2,16 @@ import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { Driver, DriverStatus, SubscriptionHistory } from '../core/models/driver.model';
+import {
+  Driver,
+  DriverStatus,
+  SubscriptionHistory,
+  SubscriptionPlan,
+  PaymentMethod,
+  FinancialKPIs,
+  PassengerProfile,
+  LiveDriverLocation
+} from '../core/models/driver.model';
 
 @Injectable({
   providedIn: 'root'
@@ -69,7 +78,7 @@ export class SupabaseService {
     if (!this.channel) {
       this.channel = this.supabase
         .channel('public:profiles')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, payload => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
           this.fetchDrivers();
         })
         .subscribe();
@@ -135,9 +144,107 @@ export class SupabaseService {
         start_date: new Date(item.start_date).getTime(),
         end_date: end,
         created_at: new Date(item.created_at).getTime(),
-        status: end >= now ? 'Activo' : 'Expirado'
+        status: end >= now ? 'Activo' : 'Expirado',
+        plan_type: item.plan_type || 'semanal',
+        amount_paid: Number(item.amount_paid) || 0,
+        payment_method: item.payment_method || 'deposito_bancario',
+        reference_number: item.reference_number || ''
       };
     });
+  }
+
+  async getFinancialStats(): Promise<FinancialKPIs> {
+    const { data: subs } = await this.supabase
+      .from('driver_subscriptions')
+      .select('amount_paid, created_at, end_date');
+
+    const { data: approvedDrivers } = await this.supabase
+      .from('profiles')
+      .select('id, subscription_end_date')
+      .eq('role', 'driver')
+      .eq('approval_status', 'aprobado');
+
+    const now = Date.now();
+    const sevenDaysLater = now + (7 * 24 * 60 * 60 * 1000);
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    let totalRevenue = 0;
+    let monthRevenue = 0;
+
+    (subs || []).forEach(s => {
+      const amt = Number(s.amount_paid) || 0;
+      totalRevenue += amt;
+      const d = new Date(s.created_at);
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+        monthRevenue += amt;
+      }
+    });
+
+    let expiringIn7Days = 0;
+    let activeFleetCount = 0;
+
+    (approvedDrivers || []).forEach(d => {
+      if (d.subscription_end_date) {
+        const exp = new Date(d.subscription_end_date).getTime();
+        if (exp >= now) {
+          activeFleetCount++;
+          if (exp <= sevenDaysLater) {
+            expiringIn7Days++;
+          }
+        }
+      }
+    });
+
+    return {
+      totalRevenue,
+      monthRevenue,
+      expiringIn7Days,
+      expiringAmountExpected: expiringIn7Days * 25.00,
+      activeFleetCount
+    };
+  }
+
+  async getPassengers(): Promise<PassengerProfile[]> {
+    const { data: profiles, error } = await this.supabase
+      .from('profiles')
+      .select('*')
+      .eq('role', 'passenger')
+      .order('created_at', { ascending: false });
+
+    if (error || !profiles) return [];
+
+    const { data: trips } = await this.supabase
+      .from('trips')
+      .select('passenger_id');
+
+    const tripCounts: Record<string, number> = {};
+    (trips || []).forEach(t => {
+      if (t.passenger_id) {
+        tripCounts[t.passenger_id] = (tripCounts[t.passenger_id] || 0) + 1;
+      }
+    });
+
+    return profiles.map(p => ({
+      id: p.id,
+      name: p.name || 'Sin nombre',
+      email: p.email || 'Sin correo',
+      phone: p.phone || 'Sin teléfono',
+      created_at: p.created_at,
+      tripsCount: tripCounts[p.id] || 0
+    }));
+  }
+
+  async getLiveDrivers(): Promise<LiveDriverLocation[]> {
+    try {
+      const res = await fetch('https://tuctucmap-default-rtdb.firebaseio.com/driver_locations.json');
+      const data = await res.json();
+      if (!data) return [];
+      return Object.values(data).filter((d: any) => d && d.active) as LiveDriverLocation[];
+    } catch (e) {
+      console.error('Error fetching live drivers from Firebase:', e);
+      return [];
+    }
   }
 
   async getCompletedTrips(): Promise<any[]> {
@@ -175,14 +282,30 @@ export class SupabaseService {
   }
 
   async deleteDriver(uid: string): Promise<void> {
-    const { error } = await this.supabase.from('profiles').delete().eq('id', uid);
-    if (error) throw error;
+    try {
+      const { error: rpcError } = await this.supabase.rpc('delete_user_by_admin', { target_user_id: uid });
+      if (rpcError) {
+        console.warn('RPC delete_user_by_admin fallo, aplicando fallback en profiles:', rpcError);
+        const { error } = await this.supabase.from('profiles').delete().eq('id', uid);
+        if (error) throw error;
+      }
+    } catch {
+      const { error } = await this.supabase.from('profiles').delete().eq('id', uid);
+      if (error) throw error;
+    }
     await this.fetchDrivers();
   }
 
-  async renewSubscription(uid: string): Promise<void> {
+  async renewSubscription(
+    uid: string,
+    planType: SubscriptionPlan = 'semanal',
+    amountPaid: number = 25.00,
+    paymentMethod: PaymentMethod = 'deposito_bancario',
+    referenceNumber: string = ''
+  ): Promise<void> {
     const start = new Date();
-    const end = new Date(start.getTime() + (7 * 24 * 60 * 60 * 1000));
+    const days = planType === 'mensual' ? 30 : (planType === 'quincenal' ? 15 : 7);
+    const end = new Date(start.getTime() + (days * 24 * 60 * 60 * 1000));
     
     const { error: profileError } = await this.supabase.from('profiles').update({ 
       approval_status: 'aprobado',
@@ -193,16 +316,28 @@ export class SupabaseService {
     const { error: subError } = await this.supabase.from('driver_subscriptions').insert({
       driver_id: uid,
       start_date: start.toISOString(),
-      end_date: end.toISOString()
+      end_date: end.toISOString(),
+      plan_type: planType,
+      amount_paid: amountPaid,
+      payment_method: paymentMethod,
+      reference_number: referenceNumber
     });
     if (subError) throw subError;
     await this.fetchDrivers();
   }
 
-  async setSubscriptionExpiry(uid: string, timestamp: number): Promise<void> {
+  async setSubscriptionExpiry(
+    uid: string,
+    timestamp: number,
+    planType: SubscriptionPlan = 'semanal',
+    amountPaid: number = 25.00,
+    paymentMethod: PaymentMethod = 'deposito_bancario',
+    referenceNumber: string = ''
+  ): Promise<void> {
     const end = new Date(timestamp);
     const start = new Date();
     const { error: profileError } = await this.supabase.from('profiles').update({ 
+      approval_status: 'aprobado',
       subscription_end_date: end.toISOString() 
     }).eq('id', uid);
     if (profileError) throw profileError;
@@ -210,7 +345,11 @@ export class SupabaseService {
     const { error: subError } = await this.supabase.from('driver_subscriptions').insert({
       driver_id: uid,
       start_date: start.toISOString(),
-      end_date: end.toISOString()
+      end_date: end.toISOString(),
+      plan_type: planType,
+      amount_paid: amountPaid,
+      payment_method: paymentMethod,
+      reference_number: referenceNumber
     });
     if (subError) throw subError;
     await this.fetchDrivers();

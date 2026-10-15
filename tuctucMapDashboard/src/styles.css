@@ -1,4 +1,5 @@
 /* TucTucMap Admin — Global Styles */
+@import 'leaflet/dist/leaflet.css';
 
 *,
 *::before,

@@ -6,18 +6,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import com.example.tuctucmap.data.model.Driver
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.data.supabase
 import com.example.tuctucmap.ui.AppNavigation
 import com.example.tuctucmap.ui.Screen
+import com.example.tuctucmap.ui.screens.AnimatedSplashScreen
 import com.example.tuctucmap.ui.theme.TuctucMapTheme
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.status.SessionStatus
@@ -28,6 +25,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
+
 class MainActivity : ComponentActivity() {
 
     private val repository = SupabaseRepository()
@@ -36,108 +36,139 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        Configuration.getInstance().load(
-            applicationContext,
-            getSharedPreferences("osmdroid_prefs", Context.MODE_PRIVATE)
-        )
-        Configuration.getInstance().userAgentValue = packageName
+        val osmConfig = Configuration.getInstance()
+        val osmdroidPrefs = getSharedPreferences("osmdroid_prefs", Context.MODE_PRIVATE)
+        val defaultPrefs = getSharedPreferences("${packageName}_preferences", Context.MODE_PRIVATE)
+        val currentUserAgent = "TucTucMap/1.0 (Android; app.tuctucmap.gt)"
+
+        osmdroidPrefs.edit().putString("osmdroid.userAgentValue", currentUserAgent).apply()
+        defaultPrefs.edit().putString("osmdroid.userAgentValue", currentUserAgent).apply()
+
+        osmConfig.load(applicationContext, osmdroidPrefs)
+        osmConfig.userAgentValue = currentUserAgent
+        osmConfig.save(applicationContext, osmdroidPrefs)
+
+        // Limpiar caché de tiles si venía con versión anterior o bloqueada
+        val lastUserAgent = osmdroidPrefs.getString("applied_user_agent_v2", null)
+        if (lastUserAgent != currentUserAgent) {
+            try {
+                osmConfig.osmdroidTileCache?.deleteRecursively()
+                val osmdroidDir = java.io.File(filesDir, "osmdroid")
+                if (osmdroidDir.exists()) {
+                    osmdroidDir.deleteRecursively()
+                }
+            } catch (_: Exception) {}
+            osmdroidPrefs.edit().putString("applied_user_agent_v2", currentUserAgent).apply()
+        }
 
         enableEdgeToEdge()
 
         setContent {
             TuctucMapTheme {
                 var initialScreen by remember { mutableStateOf<Screen?>(null) }
+                var isSplashFinished by remember { mutableStateOf(false) }
 
                 LaunchedEffect(Unit) {
                     val sharedPrefs = getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
                     val savedRole = sharedPrefs.getString("user_role", null)
 
-                    // Restaurar tokens si existen
-                    val accessToken  = sharedPrefs.getString("supabase_access", null)
-                    val refreshToken = sharedPrefs.getString("supabase_refresh", null)
-
-                    if (savedRole != null && accessToken != null && refreshToken != null) {
-                        // Intentar restaurar la sesión
-                        try {
-                            supabase.auth.importAuthToken(accessToken, refreshToken)
-
-                            // Esperar a que Supabase resuelva (Authenticated o NotAuthenticated)
-                            val status = supabase.auth.sessionStatus
-                                .filter {
-                                    it is SessionStatus.Authenticated ||
-                                    it is SessionStatus.NotAuthenticated
-                                }
-                                .first()
-
-                            if (status is SessionStatus.Authenticated) {
-                                // Guardar tokens renovados
-                                sharedPrefs.edit()
-                                    .putString("supabase_access", status.session.accessToken)
-                                    .putString("supabase_refresh", status.session.refreshToken)
-                                    .apply()
-
-                                // Navegar según rol
-                                when (savedRole) {
-                                    "passenger" -> initialScreen = Screen.PassengerHome
-                                    "driver" -> {
-                                        val uid = repository.currentUserUid ?: ""
-                                        repository.getDriverProfileOnce(uid) { driver ->
-                                            initialScreen = when (driver?.estadoAprobacion) {
-                                                "aprobado" -> Screen.DriverHome
-                                                "suscripcion_vencida" -> Screen.DriverSubscriptionExpired
-                                                else -> if (driver != null) Screen.DriverPending else Screen.DriverLogin
-                                            }
-                                        }
-                                    }
-                                    else -> initialScreen = Screen.PassengerLogin
-                                }
-                            } else {
-                                // Sesión inválida/expirada
-                                sharedPrefs.edit()
-                                    .remove("supabase_access")
-                                    .remove("supabase_refresh")
-                                    .remove("user_role")
-                                    .apply()
-                                initialScreen = Screen.PassengerLogin
-                            }
-                        } catch (e: Exception) {
-                            initialScreen = Screen.PassengerLogin
-                        }
-                    } else {
-                        // Sin sesión guardada
-                        initialScreen = Screen.PassengerLogin
+                    if (savedRole.isNullOrBlank()) {
+                        // Usuario sin sesión previa iniciada: acceso público directo al mapa como invitado
+                        initialScreen = Screen.PassengerMap
+                        return@LaunchedEffect
                     }
 
-                    // Guardar tokens de forma reactiva cuando la sesión cambie
-                    CoroutineScope(Dispatchers.IO).launch {
-                        supabase.auth.sessionStatus.collect { status ->
-                            when (status) {
-                                is SessionStatus.Authenticated -> {
-                                    sharedPrefs.edit()
-                                        .putString("supabase_access", status.session.accessToken)
-                                        .putString("supabase_refresh", status.session.refreshToken)
-                                        .apply()
-                                }
-                                else -> {}
+                    // Esperar a que Supabase resuelva la sesión persistida desde almacenamiento seguro
+                    val status = try {
+                        withTimeoutOrNull(3000L) {
+                            supabase.auth.sessionStatus
+                                .filter { it !is SessionStatus.Initializing }
+                                .first()
+                        }
+                    } catch (_: Exception) { null }
+
+                    val isAuthed = status is SessionStatus.Authenticated ||
+                            status is SessionStatus.RefreshFailure ||
+                            repository.isUserLoggedIn
+
+                    if (isAuthed) {
+                        when (savedRole) {
+                            "passenger" -> {
+                                initialScreen = Screen.PassengerMap
                             }
+                            "driver" -> {
+                                val uid = repository.currentUserUid
+                                    ?: (status as? SessionStatus.Authenticated)?.session?.user?.id
+                                    ?: ""
+
+                                val cachedApproval = sharedPrefs.getString("driver_last_approval_status", null)
+                                val cachedSubEnd = sharedPrefs.getString("driver_last_sub_end", null)
+
+                                val isSubExpiredCached = cachedSubEnd?.let {
+                                    try {
+                                        val expiryInstant = java.time.Instant.parse(it)
+                                        java.time.Instant.now().isAfter(expiryInstant)
+                                    } catch (_: Exception) { false }
+                                } ?: false
+
+                                // Intentar refrescar perfil del conductor en tiempo real (timeout rápido)
+                                val driver = if (uid.isNotBlank()) {
+                                    try {
+                                        withTimeoutOrNull(2000L) {
+                                            kotlinx.coroutines.suspendCancellableCoroutine<Driver?> { continuation ->
+                                                repository.getDriverProfileOnce(uid) { d ->
+                                                    if (continuation.isActive) continuation.resumeWith(Result.success(d))
+                                                }
+                                            }
+                                        }
+                                    } catch (_: Exception) { null }
+                                } else null
+
+                                if (driver != null) {
+                                    sharedPrefs.edit()
+                                        .putString("driver_last_approval_status", driver.estadoAprobacion)
+                                        .putString("driver_last_sub_end", driver.subscriptionEndDate)
+                                        .apply()
+                                    initialScreen = com.example.tuctucmap.ui.resolveDriverScreen(driver)
+                                } else {
+                                    // Si no hubo respuesta inmediata de red pero el conductor está autenticado:
+                                    // Entrar según caché o DriverHome (DriverHomeScreen vigila el estado en tiempo real)
+                                    initialScreen = when {
+                                        isSubExpiredCached -> Screen.DriverSubscriptionExpired
+                                        cachedApproval == "pendiente" || cachedApproval == "rechazado" -> Screen.DriverPending
+                                        else -> Screen.DriverHome
+                                    }
+                                }
+                            }
+                            else -> {
+                                initialScreen = Screen.PassengerMap
+                            }
+                        }
+                    } else {
+                        // Sesión explícitamente no autenticada en Supabase (expirada definitivamente o revocada)
+                        when (savedRole) {
+                            "driver" -> initialScreen = Screen.DriverLogin
+                            else -> initialScreen = Screen.PassengerMap
                         }
                     }
                 }
 
-                if (initialScreen != null) {
-                    AppNavigation(
-                        repository = repository,
-                        initialScreen = initialScreen!!
-                    )
-                } else {
-                    // Pantalla de carga mientras se restaura la sesión
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFF0F2027)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = Color(0xFFF9D423))
+                Crossfade(
+                    targetState = isSplashFinished && initialScreen != null,
+                    animationSpec = tween(durationMillis = 350),
+                    label = "SplashCrossfade"
+                ) { isReady ->
+                    if (isReady && initialScreen != null) {
+                        AppNavigation(
+                            repository = repository,
+                            initialScreen = initialScreen!!
+                        )
+                    } else {
+                        AnimatedSplashScreen(
+                            onAnimationFinished = {
+                                isSplashFinished = true
+                            }
+                        )
                     }
                 }
             }

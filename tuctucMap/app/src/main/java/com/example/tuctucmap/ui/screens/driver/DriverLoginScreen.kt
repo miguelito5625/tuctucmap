@@ -31,7 +31,8 @@ fun DriverLoginScreen(
     repository: SupabaseRepository,
     onNavigateToRegister: () -> Unit,
     onLoginSuccess: () -> Unit,
-    onBackToOnboarding: () -> Unit
+    onBackToOnboarding: () -> Unit,
+    onExploreMapAsGuest: () -> Unit = onBackToOnboarding
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -222,22 +223,32 @@ fun DriverLoginScreen(
 
         // Enlace para crear cuenta
         Row(
-            modifier = Modifier.padding(top = 16.dp, bottom = 24.dp),
+            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-                Text(
-                    text = "¿No tienes una cuenta? ",
-                    color = Color.LightGray,
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = "Regístrate aquí",
-                    color = Color(0xFFF9D423),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    modifier = Modifier.clickable { onNavigateToRegister() }
-                )
-            }
+            Text(
+                text = "¿No tienes una cuenta? ",
+                color = Color.LightGray,
+                fontSize = 14.sp
+            )
+            Text(
+                text = "Regístrate aquí",
+                color = Color(0xFFF9D423),
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                modifier = Modifier.clickable { onNavigateToRegister() }
+            )
         }
+
+        Text(
+            text = "🗺️ Explorar Mapa como Pasajero",
+            color = Color(0xFF38BDF8),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier
+                .clickable { onExploreMapAsGuest() }
+                .padding(bottom = 20.dp)
+        )
     }
+}
 }

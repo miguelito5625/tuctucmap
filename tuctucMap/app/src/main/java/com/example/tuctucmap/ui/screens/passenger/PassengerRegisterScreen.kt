@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
@@ -32,7 +33,9 @@ import kotlinx.coroutines.launch
 fun PassengerRegisterScreen(
     repository: SupabaseRepository,
     onRegisterSuccess: () -> Unit,
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    onExploreMapAsGuest: () -> Unit = {},
+    onBack: (() -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
 
@@ -53,6 +56,13 @@ fun PassengerRegisterScreen(
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
+                },
+                navigationIcon = {
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                        }
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF0F2027)
@@ -259,6 +269,20 @@ fun PassengerRegisterScreen(
                         color = Color(0xFF78909C),
                         fontSize = 14.sp
                     )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = onExploreMapAsGuest,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFF9D423)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF9D423)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("🗺️ Explorar Mapa sin Registrarse", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
             }
         }

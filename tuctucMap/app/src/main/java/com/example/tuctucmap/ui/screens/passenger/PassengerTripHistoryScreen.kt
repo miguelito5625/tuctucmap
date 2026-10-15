@@ -128,9 +128,16 @@ fun PassengerTripHistoryScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text("Estado: ", color = Color.LightGray, fontSize = 14.sp)
+                                    val (statusLabel, statusColor) = when (trip.status) {
+                                        "completed" -> Pair("Completado", Color(0xFF4CAF50))
+                                        "accepted" -> Pair("Aceptado", Color(0xFF4CAF50))
+                                        "rejected" -> Pair("Rechazado", Color(0xFFFF5252))
+                                        "cancelled" -> Pair("Cancelado", Color(0xFFFF5252))
+                                        else -> Pair(trip.status, Color(0xFFF9D423))
+                                    }
                                     Text(
-                                        text = if (trip.status == "completed") "Completado" else trip.status,
-                                        color = if (trip.status == "completed") Color(0xFF4CAF50) else Color(0xFFF9D423),
+                                        text = statusLabel,
+                                        color = statusColor,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp
                                     )

@@ -9,7 +9,10 @@ export const authGuard: CanActivateFn = async () => {
   const { data: { session } } = await supabaseService.session;
 
   if (session) {
-    return true;
+    const profile = await supabaseService.getCurrentUserProfile();
+    if (profile && profile.role === 'admin') {
+      return true;
+    }
   }
 
   return router.parseUrl('/login');

@@ -36,12 +36,17 @@ class LocationTrackingService : Service() {
     private var driverTelefono: String = ""
     private var driverPlacas: String = ""
 
+    // Control adaptativo de batería y datos móviles
+    private var lastSentLocation: Location? = null
+    private var lastSentTimestamp: Long = 0L
+
     companion object {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "tuctuc_tracking_channel"
         var isRunning = false
             private set
         val currentLocation = MutableStateFlow<Location?>(null)
+        val driverStatus = MutableStateFlow("disponible") // "disponible", "ocupado", "en_pausa"
     }
 
     override fun onCreate() {
@@ -86,8 +91,9 @@ class LocationTrackingService : Service() {
     }
 
     private fun startLocationUpdates() {
+        // Intervalo de 5 segundos con precisión alta
         val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
-            .setMinUpdateIntervalMillis(5000L)
+            .setMinUpdateIntervalMillis(4000L)
             .build()
 
         try {
@@ -103,7 +109,24 @@ class LocationTrackingService : Service() {
     }
 
     private fun updateSupabaseLocation(location: Location) {
-        if (driverUid.isNotBlank()) {
+        if (driverUid.isBlank()) return
+
+        val now = System.currentTimeMillis()
+        val lastLoc = lastSentLocation
+        val distanceMoved = if (lastLoc != null) location.distanceTo(lastLoc) else Float.MAX_VALUE
+
+        // MUESTREO ADAPTATIVO:
+        // Solo enviar a Firebase si:
+        // 1. Es la primera lectura, o
+        // 2. Se desplazó al menos 8 metros, o
+        // 3. Pasaron 45 segundos (heartbeat para mantener presencia en línea en paradas).
+        val shouldSend = (lastLoc == null) || (distanceMoved >= 8.0f) || ((now - lastSentTimestamp) >= 45_000L)
+
+        if (shouldSend) {
+            lastSentLocation = location
+            lastSentTimestamp = now
+            val currentStatus = driverStatus.value
+
             serviceScope.launch {
                 repository.updateLocation(
                     uid = driverUid,
@@ -111,7 +134,8 @@ class LocationTrackingService : Service() {
                     telefono = driverTelefono,
                     placas = driverPlacas,
                     latitud = location.latitude,
-                    longitud = location.longitude
+                    longitud = location.longitude,
+                    status = currentStatus
                 )
             }
         }
@@ -122,7 +146,7 @@ class LocationTrackingService : Service() {
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
                 "Tuc Tuc Tracking Channel",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_LOW
             )
             val manager = getSystemService(NotificationManager::class.java)
             manager?.createNotificationChannel(serviceChannel)

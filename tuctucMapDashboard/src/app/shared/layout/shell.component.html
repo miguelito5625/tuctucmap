@@ -20,6 +20,17 @@
 
       <a
         mat-list-item
+        routerLink="/fleet-map"
+        routerLinkActive="active-nav-item"
+        matTooltip="Mapa de flota en tiempo real"
+        matTooltipPosition="right"
+      >
+        <mat-icon matListItemIcon>radar</mat-icon>
+        <span matListItemTitle>Mapa en Vivo</span>
+      </a>
+
+      <a
+        mat-list-item
         routerLink="/drivers"
         routerLinkActive="active-nav-item"
         matTooltip="Gestión de conductores"
@@ -33,11 +44,22 @@
         mat-list-item
         routerLink="/subscriptions"
         routerLinkActive="active-nav-item"
-        matTooltip="Historial de suscripciones"
+        matTooltip="Historial y cobros de suscripciones"
         matTooltipPosition="right"
       >
-        <mat-icon matListItemIcon>history</mat-icon>
+        <mat-icon matListItemIcon>monetization_on</mat-icon>
         <span matListItemTitle>Suscripciones</span>
+      </a>
+
+      <a
+        mat-list-item
+        routerLink="/passengers"
+        routerLinkActive="active-nav-item"
+        matTooltip="Directorio de pasajeros"
+        matTooltipPosition="right"
+      >
+        <mat-icon matListItemIcon>people</mat-icon>
+        <span matListItemTitle>Pasajeros</span>
       </a>
 
       <a
@@ -47,7 +69,7 @@
         matTooltip="Historial de Viajes"
         matTooltipPosition="right"
       >
-        <mat-icon matListItemIcon>map</mat-icon>
+        <mat-icon matListItemIcon>history</mat-icon>
         <span matListItemTitle>Viajes Completados</span>
       </a>
     </mat-nav-list>

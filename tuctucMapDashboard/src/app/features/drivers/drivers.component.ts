@@ -7,7 +7,7 @@ import {
   inject,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { SlicePipe } from '@angular/common';
+import { CommonModule, SlicePipe, DecimalPipe } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
@@ -27,11 +27,18 @@ import {
 } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 
 import { SupabaseService } from '../../services/supabase.service';
-import { Driver, DriverStatus } from '../../core/models/driver.model';
+import {
+  Driver,
+  DriverStatus,
+  SubscriptionPlan,
+  PaymentMethod,
+  FinancialKPIs
+} from '../../core/models/driver.model';
 import { DriverHistoryDialogComponent } from './driver-history-dialog.component';
 
 // ── Inline Dialog Component ────────────────────────────────────────────────
@@ -45,11 +52,13 @@ export interface SubscriptionDialogData {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
     MatDialogModule,
@@ -62,7 +71,7 @@ export interface SubscriptionDialogData {
         </div>
         <div>
           <h2 class="sub-dialog__title">Gestionar Suscripción</h2>
-          <p class="sub-dialog__subtitle">{{ data.driver.nombre }}</p>
+          <p class="sub-dialog__subtitle">{{ data.driver.nombre }} ({{ data.driver.placas }})</p>
         </div>
       </div>
 
@@ -74,11 +83,48 @@ export interface SubscriptionDialogData {
       }
 
       <div class="sub-dialog__body">
-        <p class="sub-dialog__current-label">Fecha de vencimiento actual:</p>
+        <p class="sub-dialog__current-label">Vencimiento registrado actualmente:</p>
         <p class="sub-dialog__current-value">{{ currentExpiryLabel }}</p>
 
+        <!-- Selección de Plan -->
         <mat-form-field appearance="outline" class="sub-dialog__field">
-          <mat-label>Nueva fecha de vencimiento</mat-label>
+          <mat-label>Plan de Suscripción</mat-label>
+          <mat-select [formControl]="planControl" (selectionChange)="onPlanChange($event.value)">
+            <mat-option value="semanal">Plan Semanal (7 días) — Q25.00</mat-option>
+            <mat-option value="quincenal">Plan Quincenal (15 días) — Q45.00</mat-option>
+            <mat-option value="mensual">Plan Mensual (30 días) — Q80.00</mat-option>
+            <mat-option value="personalizado">Personalizado (Fecha libre)</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="sub-dialog__row">
+          <!-- Monto Cobrado -->
+          <mat-form-field appearance="outline" class="sub-dialog__field-half">
+            <mat-label>Monto Cobrado (Q)</mat-label>
+            <input matInput type="number" [formControl]="amountControl" placeholder="25.00" />
+          </mat-form-field>
+
+          <!-- Método de Pago -->
+          <mat-form-field appearance="outline" class="sub-dialog__field-half">
+            <mat-label>Método de Pago</mat-label>
+            <mat-select [formControl]="paymentMethodControl">
+              <mat-option value="deposito_bancario">Depósito Banrural</mat-option>
+              <mat-option value="transferencia">Transferencia Bancaria</mat-option>
+              <mat-option value="efectivo">Efectivo en Mano</mat-option>
+              <mat-option value="gratis_prueba">Cortesía / Prueba</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- No. de Boleta o Comprobante -->
+        <mat-form-field appearance="outline" class="sub-dialog__field">
+          <mat-label>No. de Boleta / Referencia Bancaria</mat-label>
+          <input matInput [formControl]="referenceControl" placeholder="Ej. 98451203" />
+        </mat-form-field>
+
+        <!-- Nueva fecha de vencimiento -->
+        <mat-form-field appearance="outline" class="sub-dialog__field">
+          <mat-label>Fecha de vencimiento resultante</mat-label>
           <input
             matInput
             [matDatepicker]="picker"
@@ -89,36 +135,23 @@ export interface SubscriptionDialogData {
           <mat-datepicker-toggle matIconSuffix [for]="picker" />
           <mat-datepicker #picker />
           @if (dateControl.hasError('required')) {
-            <mat-error>Selecciona una fecha</mat-error>
+            <mat-error>Selecciona una fecha válida</mat-error>
           }
         </mat-form-field>
       </div>
 
       <div class="sub-dialog__actions">
-        @if (data.driver.estadoAprobacion === 'suscripcion_vencida') {
-          <button
-            mat-flat-button
-            id="renew-btn-{{ data.driver.uid }}"
-            class="sub-dialog__renew-btn"
-            (click)="onRenew()"
-          >
-            <mat-icon>refresh</mat-icon>
-            Renovar Suscripción
-          </button>
-        }
-        <div class="sub-dialog__actions-right">
-          <button mat-button (click)="onCancel()">Cancelar</button>
-          <button
-            mat-flat-button
-            id="set-expiry-btn-{{ data.driver.uid }}"
-            class="sub-dialog__save-btn"
-            [disabled]="dateControl.invalid"
-            (click)="onSave()"
-          >
-            <mat-icon>save</mat-icon>
-            Guardar Fecha
-          </button>
-        </div>
+        <button mat-button (click)="onCancel()">Cancelar</button>
+        <button
+          mat-flat-button
+          id="set-expiry-btn-{{ data.driver.uid }}"
+          class="sub-dialog__save-btn"
+          [disabled]="dateControl.invalid"
+          (click)="onSave()"
+        >
+          <mat-icon>check_circle</mat-icon>
+          Activar y Guardar Cuota
+        </button>
       </div>
     </div>
   `,
@@ -128,59 +161,58 @@ export interface SubscriptionDialogData {
       color: #f1f5f9;
       border-radius: 20px;
       overflow: hidden;
-      min-width: 380px;
-      max-width: 460px;
+      min-width: 420px;
+      max-width: 500px;
     }
 
     .sub-dialog__header {
       display: flex;
       align-items: center;
       gap: 16px;
-      padding: 24px 24px 20px;
+      padding: 22px 24px 18px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.07);
     }
 
     .sub-dialog__header-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
-      background: rgba(251, 146, 60, 0.15);
-      border: 1px solid rgba(251, 146, 60, 0.3);
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      color: #818cf8;
 
       mat-icon {
-        color: #fb923c;
-        font-size: 24px;
-        width: 24px;
-        height: 24px;
+        font-size: 26px;
+        width: 26px;
+        height: 26px;
       }
     }
 
     .sub-dialog__title {
       margin: 0;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       font-weight: 700;
-      color: #f1f5f9;
+      color: #f8fafc;
     }
 
     .sub-dialog__subtitle {
-      margin: 4px 0 0;
+      margin: 2px 0 0;
       font-size: 0.85rem;
-      color: #64748b;
+      color: #94a3b8;
     }
 
     .sub-dialog__expired-banner {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin: 16px 24px 0;
-      padding: 12px 16px;
-      background: rgba(251, 146, 60, 0.1);
+      margin: 14px 24px 0;
+      padding: 10px 14px;
+      background: rgba(251, 146, 60, 0.12);
       border: 1px solid rgba(251, 146, 60, 0.25);
-      border-radius: 12px;
+      border-radius: 10px;
       font-size: 0.85rem;
       color: #fb923c;
 
@@ -188,16 +220,15 @@ export interface SubscriptionDialogData {
         font-size: 20px;
         width: 20px;
         height: 20px;
-        flex-shrink: 0;
       }
     }
 
     .sub-dialog__body {
-      padding: 20px 24px 8px;
+      padding: 18px 24px 8px;
     }
 
     .sub-dialog__current-label {
-      margin: 0 0 4px;
+      margin: 0 0 2px;
       font-size: 0.72rem;
       color: #64748b;
       text-transform: uppercase;
@@ -206,16 +237,28 @@ export interface SubscriptionDialogData {
     }
 
     .sub-dialog__current-value {
-      margin: 0 0 20px;
+      margin: 0 0 16px;
       font-size: 0.95rem;
-      color: #94a3b8;
-      font-weight: 500;
+      color: #f9d423;
+      font-weight: 600;
+    }
+
+    .sub-dialog__row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .sub-dialog__field-half {
+      flex: 1;
     }
 
     .sub-dialog__field {
       width: 100%;
+      margin-bottom: 4px;
+    }
 
-      ::ng-deep {
+    ::ng-deep {
+      .sub-dialog {
         .mat-mdc-form-field-flex {
           background: rgba(255, 255, 255, 0.04);
         }
@@ -224,15 +267,11 @@ export interface SubscriptionDialogData {
         .mdc-notched-outline__trailing {
           border-color: rgba(255, 255, 255, 0.15) !important;
         }
-        .mat-mdc-form-field-focus-overlay {
-          background: transparent;
-        }
-        .mat-mdc-input-element {
+        .mat-mdc-input-element, .mat-mdc-select-value {
           color: #f1f5f9 !important;
-          caret-color: #60a5fa;
         }
         .mat-mdc-floating-label {
-          color: #64748b !important;
+          color: #94a3b8 !important;
         }
         &.mat-focused {
           .mdc-notched-outline__leading,
@@ -240,12 +279,6 @@ export interface SubscriptionDialogData {
           .mdc-notched-outline__trailing {
             border-color: #60a5fa !important;
           }
-          .mat-mdc-floating-label {
-            color: #60a5fa !important;
-          }
-        }
-        .mat-datepicker-toggle {
-          color: #64748b;
         }
       }
     }
@@ -253,42 +286,14 @@ export interface SubscriptionDialogData {
     .sub-dialog__actions {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 12px 24px 24px;
+      justify-content: flex-end;
+      padding: 12px 24px 20px;
       gap: 12px;
       border-top: 1px solid rgba(255, 255, 255, 0.06);
-      flex-wrap: wrap;
-    }
-
-    .sub-dialog__actions-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-left: auto;
-    }
-
-    .sub-dialog__renew-btn {
-      background: rgba(52, 211, 153, 0.15) !important;
-      color: #34d399 !important;
-      border: 1px solid rgba(52, 211, 153, 0.3);
-      border-radius: 10px !important;
-      font-weight: 600 !important;
-      font-size: 0.8rem !important;
-
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        margin-right: 4px;
-      }
-
-      &:hover {
-        background: rgba(52, 211, 153, 0.25) !important;
-      }
     }
 
     .sub-dialog__save-btn {
-      background: linear-gradient(135deg, #3b82f6, #6366f1) !important;
+      background: linear-gradient(135deg, #22c55e, #16a34a) !important;
       color: #fff !important;
       border-radius: 10px !important;
       font-weight: 600 !important;
@@ -300,41 +305,49 @@ export interface SubscriptionDialogData {
         height: 18px;
         margin-right: 4px;
       }
-
-      &:disabled {
-        opacity: 0.4 !important;
-      }
-
-      &:not(:disabled):hover {
-        filter: brightness(1.1);
-      }
-    }
-
-    ::ng-deep .mat-calendar {
-      background: #1e293b !important;
-      color: #f1f5f9 !important;
-    }
-
-    ::ng-deep .mat-calendar-body-cell-content {
-      color: #f1f5f9 !important;
-    }
-
-    ::ng-deep .mat-calendar-body-selected {
-      background: #3b82f6 !important;
-      color: #fff !important;
-    }
-
-    ::ng-deep .mat-calendar-body-today:not(.mat-calendar-body-selected) {
-      border-color: #60a5fa !important;
     }
   `],
 })
-export class SubscriptionDialogComponent {
+export class SubscriptionDialogComponent implements OnInit {
   readonly data: SubscriptionDialogData = inject(MAT_DIALOG_DATA);
   private readonly dialogRef = inject(MatDialogRef<SubscriptionDialogComponent>);
 
   readonly today = new Date();
+  readonly planControl = new FormControl<SubscriptionPlan>('semanal', { nonNullable: true });
+  readonly amountControl = new FormControl<number>(25.00, { nonNullable: true });
+  readonly paymentMethodControl = new FormControl<PaymentMethod>('deposito_bancario', { nonNullable: true });
+  readonly referenceControl = new FormControl<string>('', { nonNullable: true });
   readonly dateControl = new FormControl<Date | null>(null, Validators.required);
+
+  ngOnInit(): void {
+    // Inicializar con plan semanal (7 días por defecto)
+    this.calculatePlanExpiry('semanal');
+  }
+
+  onPlanChange(plan: string): void {
+    this.calculatePlanExpiry(plan as SubscriptionPlan);
+  }
+
+  private calculatePlanExpiry(plan: SubscriptionPlan): void {
+    const baseDate = new Date();
+    switch (plan) {
+      case 'semanal':
+        baseDate.setDate(baseDate.getDate() + 7);
+        this.amountControl.setValue(25.00);
+        break;
+      case 'quincenal':
+        baseDate.setDate(baseDate.getDate() + 15);
+        this.amountControl.setValue(45.00);
+        break;
+      case 'mensual':
+        baseDate.setDate(baseDate.getDate() + 30);
+        this.amountControl.setValue(80.00);
+        break;
+      case 'personalizado':
+        return; // Mantiene la fecha seleccionada
+    }
+    this.dateControl.setValue(baseDate);
+  }
 
   get currentExpiryLabel(): string {
     const ts = this.data.driver.fechaVencimientoSuscripcion;
@@ -343,6 +356,8 @@ export class SubscriptionDialogComponent {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   }
 
@@ -354,11 +369,14 @@ export class SubscriptionDialogComponent {
     if (this.dateControl.invalid || !this.dateControl.value) return;
     const date = new Date(this.dateControl.value);
     date.setHours(23, 59, 59, 999);
-    this.dialogRef.close({ action: 'save', timestamp: date.getTime() });
-  }
-
-  onRenew(): void {
-    this.dialogRef.close({ action: 'renew' });
+    this.dialogRef.close({
+      action: 'save',
+      timestamp: date.getTime(),
+      planType: this.planControl.value,
+      amountPaid: this.amountControl.value || 0,
+      paymentMethod: this.paymentMethodControl.value,
+      referenceNumber: this.referenceControl.value || ''
+    });
   }
 }
 
@@ -368,7 +386,9 @@ export class SubscriptionDialogComponent {
   selector: 'app-drivers',
   standalone: true,
   imports: [
+    CommonModule,
     SlicePipe,
+    DecimalPipe,
     ReactiveFormsModule,
     MatTableModule,
     MatTabsModule,
@@ -380,26 +400,32 @@ export class SubscriptionDialogComponent {
     MatSnackBarModule,
     MatTooltipModule,
     MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
   ],
   templateUrl: './drivers.component.html',
   styleUrl: './drivers.component.scss',
 })
 export class DriversComponent implements OnInit, OnDestroy {
-  private readonly SupabaseService = inject(SupabaseService);
+  private readonly supabaseService = inject(SupabaseService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
   private readonly destroy$ = new Subject<void>();
 
-  // ── State signals ──────────────────────────────────────────
-  readonly allDrivers = signal<Driver[]>([]);
+  // Data signals
+  readonly drivers = signal<Driver[]>([]);
   readonly isLoading = signal(true);
   readonly selectedTabIndex = signal(0);
   readonly processingUid = signal<string | null>(null);
 
+  // Financial KPIs
+  readonly financialKPIs = signal<FinancialKPIs>({
+    totalRevenue: 0,
+    monthRevenue: 0,
+    expiringIn7Days: 0,
+    expiringAmountExpected: 0,
+    activeFleetCount: 0
+  });
+
+  // Table columns
   readonly displayedColumns: string[] = [
     'nombre',
     'email',
@@ -410,52 +436,39 @@ export class DriversComponent implements OnInit, OnDestroy {
     'acciones',
   ];
 
-  // ── Derived / computed ─────────────────────────────────────
-  readonly filteredDrivers = computed<Driver[]>(() => {
-    const all = this.allDrivers();
-    switch (this.selectedTabIndex()) {
-      case 1:
-        return all.filter((d) => d.estadoAprobacion === 'pendiente');
-      case 2:
-        return all.filter((d) => d.estadoAprobacion === 'aprobado');
-      case 3:
-        return all.filter((d) => d.estadoAprobacion === 'rechazado');
-      case 4:
-        return all.filter((d) => d.estadoAprobacion === 'suscripcion_vencida');
-      default:
-        return all;
-    }
+  // Tab mapping
+  private readonly tabStatusMap: Record<number, DriverStatus | null> = {
+    0: null, // Todos
+    1: 'pendiente',
+    2: 'aprobado',
+    3: 'rechazado',
+    4: 'suscripcion_vencida',
+  };
+
+  // Filtered drivers based on selected tab
+  readonly filteredDrivers = computed(() => {
+    const tab = this.selectedTabIndex();
+    const status = this.tabStatusMap[tab];
+    const list = this.drivers();
+
+    if (!status) return list;
+    return list.filter((d) => d.estadoAprobacion === status);
   });
 
-  readonly totalCount = computed(() => this.allDrivers().length);
-  readonly pendingCount = computed(
-    () => this.allDrivers().filter((d) => d.estadoAprobacion === 'pendiente').length,
-  );
-  readonly approvedCount = computed(
-    () => this.allDrivers().filter((d) => d.estadoAprobacion === 'aprobado').length,
-  );
-  readonly rejectedCount = computed(
-    () => this.allDrivers().filter((d) => d.estadoAprobacion === 'rechazado').length,
-  );
-  readonly expiredCount = computed(
-    () => this.allDrivers().filter((d) => d.estadoAprobacion === 'suscripcion_vencida').length,
-  );
+  // Stats
+  readonly totalCount = computed(() => this.drivers().length);
+  readonly pendingCount = computed(() => this.countByStatus('pendiente'));
+  readonly approvedCount = computed(() => this.countByStatus('aprobado'));
+  readonly rejectedCount = computed(() => this.countByStatus('rechazado'));
+  readonly expiredCount = computed(() => this.countByStatus('suscripcion_vencida'));
 
-  // ── Lifecycle ──────────────────────────────────────────────
+  private countByStatus(status: DriverStatus): number {
+    return this.drivers().filter((d) => d.estadoAprobacion === status).length;
+  }
+
   ngOnInit(): void {
-    this.SupabaseService
-      .getDrivers()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (drivers) => {
-          this.allDrivers.set(drivers);
-          this.isLoading.set(false);
-        },
-        error: () => {
-          this.isLoading.set(false);
-          this.showSnack('Error al conectar con Firebase', 'snack-error');
-        },
-      });
+    this.subscribeDrivers();
+    this.loadFinancialStats();
   }
 
   ngOnDestroy(): void {
@@ -463,76 +476,73 @@ export class DriversComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ── Handlers ───────────────────────────────────────────────
+  private subscribeDrivers(): void {
+    this.supabaseService
+      .getDrivers()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (list) => {
+          this.drivers.set(list);
+          this.isLoading.set(false);
+          this.loadFinancialStats();
+        },
+        error: () => {
+          this.isLoading.set(false);
+          this.showSnack('Error al cargar la lista de conductores', 'snack-error');
+        },
+      });
+  }
+
+  async loadFinancialStats(): Promise<void> {
+    try {
+      const stats = await this.supabaseService.getFinancialStats();
+      this.financialKPIs.set(stats);
+    } catch {
+      // Ignorar fallo no crítico de estadísticas
+    }
+  }
+
   onTabChange(index: number): void {
     this.selectedTabIndex.set(index);
   }
 
-  async setSubscriptionExpiry(driver: Driver, timestamp: number): Promise<void> {
-    if (this.processingUid()) return;
-    this.processingUid.set(driver.uid);
-    try {
-      await this.SupabaseService.setSubscriptionExpiry(driver.uid, timestamp);
-      this.showSnack(`✓ Fecha personalizada para ${driver.nombre} guardada`, 'snack-success');
-    } catch {
-      this.showSnack('Error al guardar la fecha personalizada', 'snack-error');
-    } finally {
-      this.processingUid.set(null);
-    }
-  }
-
-  viewHistory(driver: Driver): void {
-    this.dialog.open(DriverHistoryDialogComponent, {
-      width: '600px',
-      data: { driverId: driver.uid, driverName: driver.nombre },
-      panelClass: 'dark-dialog'
-    });
-  }
-
+  // ── Actions ────────────────────────────────────────────────
   async approveDriver(driver: Driver): Promise<void> {
-    if (this.processingUid()) return;
     this.processingUid.set(driver.uid);
     try {
-      await this.SupabaseService.approveDriver(driver.uid);
-      this.showSnack(`✓ ${driver.nombre} ha sido aprobado`, 'snack-success');
+      await this.supabaseService.approveDriver(driver.uid);
+      this.showSnack(`✓ Conductor ${driver.nombre} aprobado`, 'snack-success');
     } catch {
-      this.showSnack('Error al aprobar el conductor', 'snack-error');
+      this.showSnack(`Error al aprobar a ${driver.nombre}`, 'snack-error');
     } finally {
       this.processingUid.set(null);
     }
   }
 
   async rejectDriver(driver: Driver): Promise<void> {
-    if (this.processingUid()) return;
     this.processingUid.set(driver.uid);
     try {
-      await this.SupabaseService.rejectDriver(driver.uid);
-      if (driver.estadoAprobacion === 'aprobado') {
-        this.showSnack(`✗ La aprobación de ${driver.nombre} ha sido revocada`, 'snack-warn');
-      } else {
-        this.showSnack(`✗ ${driver.nombre} ha sido rechazado`, 'snack-warn');
-      }
+      await this.supabaseService.rejectDriver(driver.uid);
+      this.showSnack(`Conductor ${driver.nombre} rechazado`, 'snack-warn');
     } catch {
-      this.showSnack('Error al rechazar el conductor', 'snack-error');
+      this.showSnack(`Error al rechazar a ${driver.nombre}`, 'snack-error');
     } finally {
       this.processingUid.set(null);
     }
   }
 
   async deleteDriver(driver: Driver): Promise<void> {
-    if (
-      !confirm(
-        `¿Eliminar permanentemente a ${driver.nombre}? Esta acción no se puede deshacer.`,
-      )
-    )
-      return;
-    if (this.processingUid()) return;
+    const confirm = window.confirm(
+      `¿Estás seguro de eliminar permanentemente a ${driver.nombre}? Esta acción no se puede deshacer.`
+    );
+    if (!confirm) return;
+
     this.processingUid.set(driver.uid);
     try {
-      await this.SupabaseService.deleteDriver(driver.uid);
-      this.showSnack(`${driver.nombre} ha sido eliminado`, 'snack-error');
+      await this.supabaseService.deleteDriver(driver.uid);
+      this.showSnack(`Conductor ${driver.nombre} eliminado`, 'snack-warn');
     } catch {
-      this.showSnack('Error al eliminar el conductor', 'snack-error');
+      this.showSnack(`Error al eliminar a ${driver.nombre}`, 'snack-error');
     } finally {
       this.processingUid.set(null);
     }
@@ -548,27 +558,45 @@ export class DriversComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(async (result) => {
       if (!result) return;
 
-      if (result.action === 'save') {
-        this.processingUid.set(driver.uid);
-        try {
-          await this.SupabaseService.setSubscriptionExpiry(driver.uid, result.timestamp as number);
-          this.showSnack(`📅 Fecha de vencimiento actualizada para ${driver.nombre}`, 'snack-success');
-        } catch {
-          this.showSnack('Error al actualizar la fecha de vencimiento', 'snack-error');
-        } finally {
-          this.processingUid.set(null);
-        }
-      } else if (result.action === 'renew') {
-        this.processingUid.set(driver.uid);
-        try {
-          await this.SupabaseService.renewSubscription(driver.uid);
-          this.showSnack(`✓ Suscripción de ${driver.nombre} renovada`, 'snack-success');
-        } catch {
-          this.showSnack('Error al renovar la suscripción', 'snack-error');
-        } finally {
-          this.processingUid.set(null);
-        }
+      this.processingUid.set(driver.uid);
+      try {
+        await this.supabaseService.setSubscriptionExpiry(
+          driver.uid,
+          result.timestamp as number,
+          result.planType,
+          result.amountPaid,
+          result.paymentMethod,
+          result.referenceNumber
+        );
+        this.showSnack(`📅 Cuota de ${driver.nombre} activada exitosamente (Q${result.amountPaid})`, 'snack-success');
+        this.loadFinancialStats();
+      } catch {
+        this.showSnack('Error al registrar la suscripción', 'snack-error');
+      } finally {
+        this.processingUid.set(null);
       }
+    });
+  }
+
+  /**
+   * Envía un recordatorio de cobro personalizado a través de WhatsApp Web en 1 clic.
+   */
+  sendWhatsAppPaymentReminder(driver: Driver): void {
+    let phone = driver.telefono.replace(/\s+/g, '').replace(/-/g, '');
+    if (phone.length === 8) phone = '502' + phone;
+
+    const expiryStr = this.formatExpiryDate(driver.fechaVencimientoSuscripcion);
+    const msg = `Hola ${driver.nombre}, te saludamos de TucTucMap. Te recordamos que tu cuota para el Torito placas ${driver.placas} vence el ${expiryStr}. Para mantenerte visible en el mapa y recibiendo viajes, por favor deposita tu cuota de Q25 al número de cuenta Banrural 3402-0987-65 y envíanos tu boleta. ¡Muchas gracias!`;
+
+    const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+  }
+
+  viewHistory(driver: Driver): void {
+    this.dialog.open(DriverHistoryDialogComponent, {
+      data: { driverId: driver.uid, driverName: driver.nombre },
+      width: '650px',
+      panelClass: 'dark-dialog'
     });
   }
 
@@ -599,9 +627,6 @@ export class DriversComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Returns the CSS modifier class for the expiry date cell.
-   */
   getExpiryStatus(driver: Driver): 'expired' | 'warning' | 'ok' | 'none' {
     const ts = driver.fechaVencimientoSuscripcion;
     if (!ts || ts === 0) return 'none';
@@ -612,9 +637,6 @@ export class DriversComponent implements OnInit, OnDestroy {
     return 'ok';
   }
 
-  /**
-   * Returns the Material icon name for the expiry cell.
-   */
   getExpiryIcon(driver: Driver): string {
     const status = this.getExpiryStatus(driver);
     switch (status) {
@@ -629,9 +651,6 @@ export class DriversComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Formats the expiry timestamp as a localized date string (es-GT).
-   */
   formatExpiryDate(timestamp: number | undefined): string {
     if (!timestamp || timestamp === 0) return 'Sin fecha';
     return new Date(timestamp).toLocaleDateString('es-GT', {
@@ -651,6 +670,33 @@ export class DriversComponent implements OnInit, OnDestroy {
 
   isProcessing(uid: string): boolean {
     return this.processingUid() === uid;
+  }
+
+  exportDriversCsv(): void {
+    const list = this.drivers();
+    if (!list || list.length === 0) return;
+
+    const headers = ['UID', 'Nombre', 'Correo', 'Teléfono', 'Placas', 'Estado Aprobación', 'Vencimiento Suscripción'];
+    const rows = list.map((d) => [
+      `"${d.uid || ''}"`,
+      `"${(d.nombre || '').replace(/"/g, '""')}"`,
+      `"${(d.email || '').replace(/"/g, '""')}"`,
+      `"${d.telefono || ''}"`,
+      `"${d.placas || ''}"`,
+      `"${d.estadoAprobacion || ''}"`,
+      `"${this.formatExpiryDate(d.fechaVencimientoSuscripcion)}"`,
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `conductores_flota_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   private showSnack(message: string, panelClass: string): void {

@@ -3,10 +3,11 @@ package com.example.tuctucmap.ui
 import android.content.Context
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import com.example.tuctucmap.data.model.Driver
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.ui.screens.passenger.PassengerLoginScreen
 import com.example.tuctucmap.ui.screens.passenger.PassengerRegisterScreen
-import com.example.tuctucmap.ui.screens.passenger.PassengerHomeScreen
+import com.example.tuctucmap.ui.screens.passenger.PassengerProfileScreen
 import com.example.tuctucmap.ui.screens.driver.*
 import com.example.tuctucmap.ui.screens.passenger.PassengerMapScreen
 import kotlinx.coroutines.launch
@@ -16,7 +17,6 @@ import androidx.activity.compose.BackHandler
 sealed class Screen {
     object PassengerLogin : Screen()
     object PassengerRegister : Screen()
-    object PassengerHome : Screen()
     object PassengerMap : Screen()
     object DriverLogin : Screen()
     object DriverRegister : Screen()
@@ -27,19 +27,24 @@ sealed class Screen {
     data class DriverMapFullscreen(val returnTo: Screen) : Screen()
     object PassengerTripHistory : Screen()
     object DriverTripHistory : Screen()
+    object PassengerProfile : Screen()
+    object DriverProfile : Screen()
 }
 
-// Mapea el estadoAprobacion del conductor a la pantalla correspondiente
-private fun resolveDriverScreen(estadoAprobacion: String): Screen = when (estadoAprobacion) {
-    "aprobado" -> Screen.DriverHome
-    "suscripcion_vencida" -> Screen.DriverSubscriptionExpired
-    else -> Screen.DriverPending // "pendiente" y cualquier otro estado
+// Mapea el perfil del conductor a la pantalla correspondiente
+fun resolveDriverScreen(driver: Driver?, defaultIfNull: Screen = Screen.DriverLogin): Screen {
+    if (driver == null) return defaultIfNull
+    return when {
+        driver.isSubscriptionExpired -> Screen.DriverSubscriptionExpired
+        driver.estadoAprobacion == "aprobado" -> Screen.DriverHome
+        else -> Screen.DriverPending // "pendiente", "rechazado", etc.
+    }
 }
 
 @Composable
 fun AppNavigation(
     repository: SupabaseRepository,
-    initialScreen: Screen = Screen.PassengerLogin
+    initialScreen: Screen = Screen.PassengerMap
 ) {
     val backStack = remember { mutableStateListOf(initialScreen) }
     val currentScreen = backStack.last()
@@ -83,25 +88,29 @@ fun AppNavigation(
                 repository = repository,
                 onLoginSuccess = {
                     saveRole("passenger")
-                    navigate(Screen.PassengerHome, clearStack = true)
+                    navigate(Screen.PassengerMap, clearStack = true)
                 },
                 onSelectDriver = {
                     if (repository.isUserLoggedIn) {
                         val uid = repository.currentUserUid ?: ""
                         repository.getDriverProfileOnce(uid) { driver ->
                             if (driver != null) {
-                                navigate(resolveDriverScreen(driver.estadoAprobacion), clearStack = true)
+                                navigate(resolveDriverScreen(driver), clearStack = true)
                             } else {
-                                navigate(Screen.DriverLogin, clearStack = true)
+                                navigate(Screen.DriverLogin)
                             }
                         }
                     } else {
-                        navigate(Screen.DriverLogin, clearStack = true)
+                        navigate(Screen.DriverLogin)
                     }
                 },
                 onNavigateToRegister = {
                     navigate(Screen.PassengerRegister)
-                }
+                },
+                onExploreMapAsGuest = {
+                    navigate(Screen.PassengerMap, clearStack = true)
+                },
+                onBack = if (backStack.size > 1) { { backStack.removeLast() } } else null
             )
         }
         is Screen.PassengerRegister -> {
@@ -109,27 +118,15 @@ fun AppNavigation(
                 repository = repository,
                 onRegisterSuccess = {
                     saveRole("passenger")
-                    navigate(Screen.PassengerHome, clearStack = true)
+                    navigate(Screen.PassengerMap, clearStack = true)
                 },
                 onNavigateToLogin = {
                     navigate(Screen.PassengerLogin, clearStack = true)
-                }
-            )
-        }
-        is Screen.PassengerHome -> {
-            PassengerHomeScreen(
-                repository = repository,
-                onSearchTucTuc = {
-                    navigate(Screen.PassengerMap)
                 },
-                onViewHistory = {
-                    navigate(Screen.PassengerTripHistory)
+                onExploreMapAsGuest = {
+                    navigate(Screen.PassengerMap, clearStack = true)
                 },
-                onLogout = {
-                    clearRole()
-                    scope.launch { repository.logout() }
-                    navigate(Screen.PassengerLogin, clearStack = true)
-                }
+                onBack = if (backStack.size > 1) { { backStack.removeLast() } } else null
             )
         }
         is Screen.PassengerTripHistory -> {
@@ -143,8 +140,32 @@ fun AppNavigation(
         is Screen.PassengerMap -> {
             PassengerMapScreen(
                 repository = repository,
-                onBackToOnboarding = {
-                    backStack.removeLast()
+                onBack = if (backStack.size > 1) { { backStack.removeLast() } } else null,
+                onNavigateToPassengerLogin = {
+                    navigate(Screen.PassengerLogin)
+                },
+                onNavigateToPassengerRegister = {
+                    navigate(Screen.PassengerRegister)
+                },
+                onNavigateToDriverLogin = {
+                    navigate(Screen.DriverLogin)
+                },
+                onNavigateToDriverRegister = {
+                    navigate(Screen.DriverRegister)
+                },
+                onNavigateToPassengerProfile = {
+                    navigate(Screen.PassengerProfile)
+                },
+                onNavigateToPassengerHistory = {
+                    navigate(Screen.PassengerTripHistory)
+                },
+                onLogout = {
+                    scope.launch {
+                        clearRole()
+                        com.example.tuctucmap.data.SecurePrefs.clearTokens(context)
+                        repository.logout()
+                        navigate(Screen.PassengerLogin, clearStack = true)
+                    }
                 }
             )
         }
@@ -159,14 +180,28 @@ fun AppNavigation(
                     val uid = repository.currentUserUid ?: ""
                     repository.getDriverProfileOnce(uid) { driver ->
                         if (driver != null) {
-                            navigate(resolveDriverScreen(driver.estadoAprobacion), clearStack = true)
+                            try {
+                                context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
+                                    .edit()
+                                    .putString("driver_last_approval_status", driver.estadoAprobacion)
+                                    .putString("driver_last_sub_end", driver.subscriptionEndDate)
+                                    .apply()
+                            } catch (_: Exception) {}
+                            navigate(resolveDriverScreen(driver, defaultIfNull = Screen.DriverHome), clearStack = true)
                         } else {
-                            navigate(Screen.DriverPending, clearStack = true)
+                            navigate(Screen.DriverHome, clearStack = true)
                         }
                     }
                 },
                 onBackToOnboarding = {
-                    navigate(Screen.PassengerLogin, clearStack = true)
+                    if (backStack.size > 1) {
+                        backStack.removeLast()
+                    } else {
+                        navigate(Screen.PassengerMap, clearStack = true)
+                    }
+                },
+                onExploreMapAsGuest = {
+                    navigate(Screen.PassengerMap, clearStack = true)
                 }
             )
         }
@@ -178,10 +213,20 @@ fun AppNavigation(
                 },
                 onRegisterSuccess = {
                     saveRole("driver")
+                    try {
+                        context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
+                            .edit()
+                            .putString("driver_last_approval_status", "aprobado")
+                            .apply()
+                    } catch (_: Exception) {}
                     navigate(Screen.DriverHome, clearStack = true)  // Auto-aprobado con 7 días de prueba
                 },
                 onBackToOnboarding = {
-                    navigate(Screen.PassengerLogin, clearStack = true)
+                    if (backStack.size > 1) {
+                        backStack.removeLast()
+                    } else {
+                        navigate(Screen.PassengerMap, clearStack = true)
+                    }
                 }
             )
         }
@@ -195,9 +240,12 @@ fun AppNavigation(
                     navigate(Screen.DriverSubscriptionExpired, clearStack = true)
                 },
                 onLogout = {
-                    clearRole()
-                    scope.launch { repository.logout() }
-                    navigate(Screen.PassengerLogin, clearStack = true)
+                    scope.launch {
+                        clearRole()
+                        com.example.tuctucmap.data.SecurePrefs.clearTokens(context)
+                        repository.logout()
+                        navigate(Screen.DriverLogin, clearStack = true)
+                    }
                 },
                 onViewMap = {
                     navigate(Screen.DriverMapFullscreen(returnTo = Screen.DriverPending))
@@ -208,9 +256,12 @@ fun AppNavigation(
             DriverHomeScreen(
                 repository = repository,
                 onLogout = {
-                    clearRole()
-                    scope.launch { repository.logout() }
-                    navigate(Screen.PassengerLogin, clearStack = true)
+                    scope.launch {
+                        clearRole()
+                        com.example.tuctucmap.data.SecurePrefs.clearTokens(context)
+                        repository.logout()
+                        navigate(Screen.DriverLogin, clearStack = true)
+                    }
                 },
                 onSubscriptionExpired = {
                     navigate(Screen.DriverSubscriptionExpired, clearStack = true)
@@ -223,6 +274,9 @@ fun AppNavigation(
                 },
                 onViewHistory = {
                     navigate(Screen.DriverTripHistory)
+                },
+                onViewProfile = {
+                    navigate(Screen.DriverProfile)
                 }
             )
         }
@@ -240,10 +294,16 @@ fun AppNavigation(
                 onRenewed = {
                     navigate(Screen.DriverHome, clearStack = true)
                 },
+                onApprovalRevoked = {
+                    navigate(Screen.DriverPending, clearStack = true)
+                },
                 onLogout = {
-                    clearRole()
-                    scope.launch { repository.logout() }
-                    navigate(Screen.PassengerLogin, clearStack = true)
+                    scope.launch {
+                        clearRole()
+                        com.example.tuctucmap.data.SecurePrefs.clearTokens(context)
+                        repository.logout()
+                        navigate(Screen.DriverLogin, clearStack = true)
+                    }
                 },
                 onViewMap = {
                     navigate(Screen.DriverMapFullscreen(returnTo = Screen.DriverSubscriptionExpired))
@@ -252,6 +312,22 @@ fun AppNavigation(
         }
         is Screen.DriverMapFullscreen -> {
             DriverMapFullscreenScreen(
+                repository = repository,
+                onBack = {
+                    backStack.removeLast()
+                }
+            )
+        }
+        is Screen.PassengerProfile -> {
+            PassengerProfileScreen(
+                repository = repository,
+                onBack = {
+                    backStack.removeLast()
+                }
+            )
+        }
+        is Screen.DriverProfile -> {
+            DriverProfileScreen(
                 repository = repository,
                 onBack = {
                     backStack.removeLast()

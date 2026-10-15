@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalContext
+import android.content.Context
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tuctucmap.data.repository.SupabaseRepository
@@ -31,6 +33,7 @@ fun DriverPendingScreen(
     onViewMap: () -> Unit = {},
     onSubscriptionExpired: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     val uid = repository.currentUserUid ?: ""
     var driverName by remember { mutableStateOf("") }
 
@@ -40,9 +43,16 @@ fun DriverPendingScreen(
             repository.observeDriverProfile(uid).collectLatest { driver ->
                 if (driver != null) {
                     driverName = driver.nombre
-                    when (driver.estadoAprobacion) {
-                        "aprobado" -> onApproved()
-                        "suscripcion_vencida" -> onSubscriptionExpired()
+                    try {
+                        context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
+                            .edit()
+                            .putString("driver_last_approval_status", driver.estadoAprobacion)
+                            .putString("driver_last_sub_end", driver.subscriptionEndDate)
+                            .apply()
+                    } catch (_: Exception) {}
+                    when {
+                        driver.isSubscriptionExpired -> onSubscriptionExpired()
+                        driver.estadoAprobacion == "aprobado" -> onApproved()
                     }
                 }
             }

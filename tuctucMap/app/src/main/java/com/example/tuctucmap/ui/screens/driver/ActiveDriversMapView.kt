@@ -4,10 +4,16 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -23,11 +29,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.util.Locale
+import com.example.tuctucmap.service.LocationTrackingService
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.tuctucmap.data.model.DriverLocation
 import com.example.tuctucmap.data.repository.SupabaseRepository
+import com.example.tuctucmap.ui.util.AppTileSource
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -65,27 +75,12 @@ fun DriverMapFullscreenScreen(
         }
     }
 
-    // Ícono del Tuc Tuc con fondo transparente
+    // Ícono del Tuc Tuc con fondo transparente y caché optimizada
     val tucTucIcon = remember(context) {
-        val drawable = ContextCompat.getDrawable(context, com.example.tuctucmap.R.drawable.ic_tuc_tuc)
-        if (drawable is android.graphics.drawable.BitmapDrawable) {
-            val originalBitmap = drawable.bitmap
-            val size = 144
-            val scaledBitmap = android.graphics.Bitmap.createScaledBitmap(originalBitmap, size, size, true)
-            val pixels = IntArray(scaledBitmap.width * scaledBitmap.height)
-            scaledBitmap.getPixels(pixels, 0, scaledBitmap.width, 0, 0, scaledBitmap.width, scaledBitmap.height)
-            for (i in pixels.indices) {
-                val r = (pixels[i] shr 16) and 0xff
-                val g = (pixels[i] shr 8) and 0xff
-                val b = pixels[i] and 0xff
-                if (r > 230 && g > 230 && b > 230) pixels[i] = 0x00000000
-            }
-            val bmp = android.graphics.Bitmap.createBitmap(
-                scaledBitmap.width, scaledBitmap.height, android.graphics.Bitmap.Config.ARGB_8888
-            )
-            bmp.setPixels(pixels, 0, scaledBitmap.width, 0, 0, scaledBitmap.width, scaledBitmap.height)
-            android.graphics.drawable.BitmapDrawable(context.resources, bmp)
-        } else drawable
+        com.example.tuctucmap.ui.util.MarkerIconUtils.getTucTucIcon(context)
+    }
+    val pausedTucTucIcon = remember(context) {
+        com.example.tuctucmap.ui.util.MarkerIconUtils.getPausedTucTucIcon(context)
     }
 
     // Permiso de ubicación
@@ -117,6 +112,27 @@ fun DriverMapFullscreenScreen(
     var myLocationOverlayInstance by remember { mutableStateOf<MyLocationNewOverlay?>(null) }
     val driverMarkers = remember { mutableMapOf<String, Marker>() }
 
+    val coroutineScope = rememberCoroutineScope()
+    val uid = repository.currentUserUid ?: ""
+    var driverProfile by remember { mutableStateOf<com.example.tuctucmap.data.model.Driver?>(null) }
+    LaunchedEffect(uid) {
+        if (uid.isNotBlank()) {
+            repository.observeDriverProfile(uid).collectLatest { driverProfile = it }
+        }
+    }
+
+    var pendingTrips by remember { mutableStateOf<List<SupabaseRepository.TripInfo>>(emptyList()) }
+    LaunchedEffect(uid) {
+        if (uid.isNotBlank()) {
+            repository.observePendingTripsForDriver(uid).collectLatest { trips ->
+                pendingTrips = trips
+            }
+        }
+    }
+
+    val currentLocation by LocationTrackingService.currentLocation.collectAsState()
+    val driverStatus by LocationTrackingService.driverStatus.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -128,9 +144,17 @@ fun DriverMapFullscreenScreen(
                             color = Color.White,
                             fontSize = 18.sp
                         )
+                        val availableCount = driverLocations.count { it.isAvailable }
+                        val pausedCount = driverLocations.size - availableCount
+                        val subtitleText = when {
+                            driverLocations.isEmpty() -> "Sin conductores activos"
+                            pausedCount == 0 -> "$availableCount conductor${if (availableCount != 1) "es" else ""} en línea"
+                            availableCount == 0 -> "0 disponibles ($pausedCount en pausa)"
+                            else -> "$availableCount disponible${if (availableCount != 1) "s" else ""} • $pausedCount en pausa"
+                        }
                         Text(
-                            text = "${driverLocations.size} conductor${if (driverLocations.size != 1) "es" else ""} en línea",
-                            color = Color(0xFF4CAF50),
+                            text = subtitleText,
+                            color = if (availableCount > 0) Color(0xFF4CAF50) else Color(0xFFFFB74D),
                             fontSize = 13.sp
                         )
                     }
@@ -150,7 +174,7 @@ fun DriverMapFullscreenScreen(
             )
         },
         floatingActionButton = {
-            if (hasLocationPermission) {
+            if (hasLocationPermission && pendingTrips.isEmpty()) {
                 FloatingActionButton(
                     onClick = {
                         myLocationOverlayInstance?.myLocation?.let { loc ->
@@ -175,7 +199,7 @@ fun DriverMapFullscreenScreen(
             AndroidView(
                 factory = { ctx ->
                     MapView(ctx).apply {
-                        setTileSource(TileSourceFactory.MAPNIK)
+                        setTileSource(AppTileSource)
                         setMultiTouchControls(true)
                         controller.setZoom(16.0)
                         controller.setCenter(GeoPoint(14.6349, -90.5069))
@@ -225,14 +249,19 @@ fun DriverMapFullscreenScreen(
                         val newGeoPoint = GeoPoint(driverLoc.latitud, driverLoc.longitud)
                         var marker = driverMarkers[driverLoc.uid]
 
+                        val isAvail = driverLoc.isAvailable
+                        val targetIcon = if (isAvail) tucTucIcon else pausedTucTucIcon
+                        val targetAlpha = if (isAvail) 1.0f else 0.65f
+                        val statusTag = if (isAvail) "🟢 DISPONIBLE" else "🟠 EN PAUSA"
+
                         if (marker == null) {
                             val startLat = newGeoPoint.latitude + 0.002
                             marker = Marker(mapView).apply {
                                 position = GeoPoint(startLat, newGeoPoint.longitude)
                                 setAlpha(0f)
                                 title = driverLoc.nombre
-                                snippet = "Placas: ${driverLoc.placas}"
-                                icon = tucTucIcon
+                                snippet = "Placas: ${driverLoc.placas} • $statusTag"
+                                icon = targetIcon
                                 setOnMarkerClickListener { _, _ ->
                                     selectedDriver = driverLoc
                                     showBottomSheet = true
@@ -249,7 +278,7 @@ fun DriverMapFullscreenScreen(
                                     val fraction = animation.animatedValue as Float
                                     val currentLat = startLat + (newGeoPoint.latitude - startLat) * fraction
                                     marker.position = GeoPoint(currentLat, newGeoPoint.longitude)
-                                    marker.setAlpha(fraction.coerceIn(0f, 1f))
+                                    marker.setAlpha((fraction * targetAlpha).coerceIn(0f, targetAlpha))
                                     mapView.invalidate()
                                 }
                             }
@@ -270,7 +299,9 @@ fun DriverMapFullscreenScreen(
                                 animator.start()
                             }
                             marker.title = driverLoc.nombre
-                            marker.snippet = "Placas: ${driverLoc.placas}"
+                            marker.snippet = "Placas: ${driverLoc.placas} • $statusTag"
+                            marker.icon = targetIcon
+                            marker.setAlpha(targetAlpha)
                         }
                     }
                     mapView.invalidate()
@@ -293,6 +324,192 @@ fun DriverMapFullscreenScreen(
                         color = Color.LightGray,
                         fontSize = 14.sp
                     )
+                }
+            }
+
+            // ── Solicitudes Pendientes Flotantes en Vivo sobre el Mapa (Fase 2 - Acción 2 de ANALISIS_UX_MOVIL.md) ──
+            if (pendingTrips.isNotEmpty() && driverStatus == "disponible") {
+                LazyColumn(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(bottom = 16.dp, start = 14.dp, end = 14.dp)
+                        .heightIn(max = 440.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(pendingTrips, key = { it.tripId }) { trip ->
+                        var isVisible by remember { mutableStateOf(true) }
+
+                        AnimatedVisibility(
+                            visible = isVisible,
+                            enter = fadeIn(animationSpec = tween(400)) + slideInVertically(initialOffsetY = { it }),
+                            exit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut(animationSpec = tween(400))
+                        ) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                elevation = CardDefaults.cardElevation(12.dp),
+                                shape = RoundedCornerShape(20.dp),
+                                border = BorderStroke(2.5.dp, Color(0xFFF9D423))
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    // Encabezado con Distancia y Descarte Seguro
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text(text = "🔔", fontSize = 22.sp)
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Column {
+                                                Text(
+                                                    text = "¡SOLICITUD DE VIAJE!",
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = Color.White,
+                                                    fontSize = 16.sp
+                                                )
+                                                val distanceText = if (currentLocation != null) {
+                                                    val results = FloatArray(1)
+                                                    android.location.Location.distanceBetween(
+                                                        currentLocation!!.latitude, currentLocation!!.longitude,
+                                                        trip.passengerLat, trip.passengerLon,
+                                                        results
+                                                    )
+                                                    val distMeters = results[0]
+                                                    if (distMeters > 1000) String.format(Locale.getDefault(), "A %.1f km de ti", distMeters / 1000) else "A ${distMeters.toInt()} m de ti"
+                                                } else "Pasajero esperando"
+                                                Text(
+                                                    text = distanceText,
+                                                    color = Color(0xFF4ADE80),
+                                                    fontSize = 13.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+
+                                        // Botón discreto para descartar en la esquina superior derecha
+                                        IconButton(
+                                            onClick = {
+                                                isVisible = false
+                                                coroutineScope.launch {
+                                                    kotlinx.coroutines.delay(200)
+                                                    repository.saveTripRecord(trip, "rejected")
+                                                    repository.updateTripStatus(trip.tripId, "cancelled")
+                                                    kotlinx.coroutines.delay(10000)
+                                                    repository.deleteTrip(trip.tripId)
+                                                }
+                                            },
+                                            modifier = Modifier.size(32.dp)
+                                        ) {
+                                            Text(text = "✕", color = Color(0xFF94A3B8), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // Contenedor de referencia del pasajero (Alto Contraste)
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = Color(0xFF1E293B),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(modifier = Modifier.padding(12.dp)) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text("👤", fontSize = 14.sp)
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = trip.passengerName.ifBlank { "Pasajero" },
+                                                    color = Color(0xFFF9D423),
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 15.sp
+                                                )
+                                                if (trip.passengerPhone.isNotBlank()) {
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Text(
+                                                        text = "• ${trip.passengerPhone}",
+                                                        color = Color(0xFF94A3B8),
+                                                        fontSize = 13.sp
+                                                    )
+                                                }
+                                            }
+                                            if (trip.message.isNotBlank()) {
+                                                Spacer(modifier = Modifier.height(6.dp))
+                                                Text(
+                                                    text = "\"${trip.message}\"",
+                                                    color = Color.White,
+                                                    fontSize = 16.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(14.dp))
+
+                                    // BOTÓN GIGANTE DE ACEPTACIÓN (66dp)
+                                    Button(
+                                        onClick = {
+                                            isVisible = false
+                                            coroutineScope.launch {
+                                                val acceptResult = repository.acceptTripAtomically(
+                                                    tripId = trip.tripId,
+                                                    driverId = uid,
+                                                    driverName = driverProfile?.nombre ?: "Conductor",
+                                                    driverPhone = driverProfile?.telefono ?: "",
+                                                    driverPlate = driverProfile?.placas ?: ""
+                                                )
+
+                                                when (acceptResult) {
+                                                    is SupabaseRepository.AcceptTripResult.Success -> {
+                                                        LocationTrackingService.driverStatus.value = "ocupado"
+                                                        repository.updateDriverStatus(uid, "ocupado")
+
+                                                        Toast.makeText(context, "¡Viaje aceptado! En camino a recoger al pasajero.", Toast.LENGTH_SHORT).show()
+                                                        onBack()
+                                                    }
+                                                    is SupabaseRepository.AcceptTripResult.AlreadyTaken -> {
+                                                        Toast.makeText(
+                                                            context,
+                                                            "¡Este viaje ya fue tomado por otro torito!",
+                                                            Toast.LENGTH_LONG
+                                                        ).show()
+                                                    }
+                                                    is SupabaseRepository.AcceptTripResult.Error -> {
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Error de conexión: ${acceptResult.message}",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(72.dp),
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFF2E7D32),
+                                            contentColor = Color.White
+                                        ),
+                                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+                                    ) {
+                                        Text(
+                                            text = "ACEPTAR VIAJE",
+                                            fontWeight = FontWeight.ExtraBold,
+                                            fontSize = 18.sp,
+                                            letterSpacing = 1.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
