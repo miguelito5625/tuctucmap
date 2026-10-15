@@ -26,8 +26,8 @@ android {
         applicationId = "com.tuctucmap.app"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -47,6 +47,9 @@ android {
         release {
             optimization {
                 enable = false
+            }
+            ndk {
+                debugSymbolLevel = "FULL"
             }
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")

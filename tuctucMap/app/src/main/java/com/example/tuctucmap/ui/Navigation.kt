@@ -50,7 +50,7 @@ fun AppNavigation(
     val currentScreen = backStack.last()
 
     BackHandler(enabled = backStack.size > 1) {
-        backStack.removeLast()
+        backStack.removeAt(backStack.lastIndex)
     }
 
     fun navigate(screen: Screen, clearStack: Boolean = false) {
@@ -110,7 +110,7 @@ fun AppNavigation(
                 onExploreMapAsGuest = {
                     navigate(Screen.PassengerMap, clearStack = true)
                 },
-                onBack = if (backStack.size > 1) { { backStack.removeLast() } } else null
+                onBack = if (backStack.size > 1) { { backStack.removeAt(backStack.lastIndex) } } else null
             )
         }
         is Screen.PassengerRegister -> {
@@ -126,21 +126,21 @@ fun AppNavigation(
                 onExploreMapAsGuest = {
                     navigate(Screen.PassengerMap, clearStack = true)
                 },
-                onBack = if (backStack.size > 1) { { backStack.removeLast() } } else null
+                onBack = if (backStack.size > 1) { { backStack.removeAt(backStack.lastIndex) } } else null
             )
         }
         is Screen.PassengerTripHistory -> {
             com.example.tuctucmap.ui.screens.passenger.PassengerTripHistoryScreen(
                 repository = repository,
                 onBack = {
-                    backStack.removeLast()
+                    backStack.removeAt(backStack.lastIndex)
                 }
             )
         }
         is Screen.PassengerMap -> {
             PassengerMapScreen(
                 repository = repository,
-                onBack = if (backStack.size > 1) { { backStack.removeLast() } } else null,
+                onBack = if (backStack.size > 1) { { backStack.removeAt(backStack.lastIndex) } } else null,
                 onNavigateToPassengerLogin = {
                     navigate(Screen.PassengerLogin)
                 },
@@ -195,7 +195,7 @@ fun AppNavigation(
                 },
                 onBackToOnboarding = {
                     if (backStack.size > 1) {
-                        backStack.removeLast()
+                        backStack.removeAt(backStack.lastIndex)
                     } else {
                         navigate(Screen.PassengerMap, clearStack = true)
                     }
@@ -223,7 +223,7 @@ fun AppNavigation(
                 },
                 onBackToOnboarding = {
                     if (backStack.size > 1) {
-                        backStack.removeLast()
+                        backStack.removeAt(backStack.lastIndex)
                     } else {
                         navigate(Screen.PassengerMap, clearStack = true)
                     }
@@ -284,7 +284,7 @@ fun AppNavigation(
             com.example.tuctucmap.ui.screens.driver.DriverTripHistoryScreen(
                 repository = repository,
                 onBack = {
-                    backStack.removeLast()
+                    backStack.removeAt(backStack.lastIndex)
                 }
             )
         }
@@ -314,7 +314,7 @@ fun AppNavigation(
             DriverMapFullscreenScreen(
                 repository = repository,
                 onBack = {
-                    backStack.removeLast()
+                    backStack.removeAt(backStack.lastIndex)
                 }
             )
         }
@@ -322,7 +322,7 @@ fun AppNavigation(
             PassengerProfileScreen(
                 repository = repository,
                 onBack = {
-                    backStack.removeLast()
+                    backStack.removeAt(backStack.lastIndex)
                 }
             )
         }
@@ -330,7 +330,7 @@ fun AppNavigation(
             DriverProfileScreen(
                 repository = repository,
                 onBack = {
-                    backStack.removeLast()
+                    backStack.removeAt(backStack.lastIndex)
                 }
             )
         }

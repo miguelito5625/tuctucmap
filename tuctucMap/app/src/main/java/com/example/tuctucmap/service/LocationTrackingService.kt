@@ -3,6 +3,7 @@ package com.example.tuctucmap.service
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -12,6 +13,8 @@ import android.os.Build
 import android.os.IBinder
 import android.os.Looper
 import androidx.core.app.NotificationCompat
+import com.example.tuctucmap.MainActivity
+import com.example.tuctucmap.R
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -42,7 +45,7 @@ class LocationTrackingService : Service() {
 
     companion object {
         private const val NOTIFICATION_ID = 1001
-        private const val CHANNEL_ID = "tuctuc_tracking_channel"
+        private const val CHANNEL_ID = "tuctuc_driver_tracking_channel_v3"
         var isRunning = false
             private set
         val currentLocation = MutableStateFlow<Location?>(null)
@@ -145,21 +148,38 @@ class LocationTrackingService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
-                "Tuc Tuc Tracking Channel",
-                NotificationManager.IMPORTANCE_LOW
-            )
+                "TucTuc Map - Rastreo de Conductor",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Notificación persistente de servicio de ubicación del conductor en turno"
+                setShowBadge(true)
+            }
             val manager = getSystemService(NotificationManager::class.java)
             manager?.createNotificationChannel(serviceChannel)
         }
     }
 
     private fun createNotification(): Notification {
+        val launchIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Tuc Tuc Activo")
-            .setContentText("Transmitiendo tu ubicación en tiempo real...")
-            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setContentTitle("TucTuc Map - Conductor en Turno")
+            .setContentText("Transmitiendo ubicación en vivo a pasajeros")
+            .setSmallIcon(R.drawable.ic_tuc_tuc)
+            .setContentIntent(pendingIntent)
             .setOngoing(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .build()
     }
 
