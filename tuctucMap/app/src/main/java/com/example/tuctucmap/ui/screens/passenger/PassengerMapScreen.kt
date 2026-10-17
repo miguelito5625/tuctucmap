@@ -197,7 +197,7 @@ fun PassengerMapScreen(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        gesturesEnabled = activeTrip == null,
+        gesturesEnabled = drawerState.isOpen,
         drawerContent = {
             PassengerDrawerSheet(
                 passenger = passengerProfile,

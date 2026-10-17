@@ -17,6 +17,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -372,118 +373,149 @@ fun DriverHomeScreen(
                     .statusBarsPadding()
             ) {
                 // ── Cabecera Superior Ejecutiva (HUD Header) ─────────────────────
+                val shortDriverName = remember(driverProfile?.nombre) {
+                    driverProfile?.nombre
+                        ?.substringBefore("(")
+                        ?.trim()
+                        ?.takeIf { it.isNotBlank() }
+                        ?: "Conductor"
+                }
+                val daysRemaining = if (expiryMs > now) ((expiryMs - now) / (1000L * 3600L * 24L)).toInt() else 0
+
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color(0xF2162634),
-                    border = BorderStroke(1.dp, Color(0x33FFFFFF)),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    color = Color(0xFF152534),
+                    border = BorderStroke(1.dp, Color(0x26FFFFFF)),
                     shadowElevation = 6.dp
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(horizontal = 10.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(
-                                onClick = { coroutineScope.launch { drawerState.open() } },
-                                modifier = Modifier.size(38.dp)
+                        IconButton(
+                            onClick = { coroutineScope.launch { drawerState.open() } },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0x14FFFFFF))
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "Menú",
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Hola, $shortDriverName",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "🛺 ${driverProfile?.displayIdentifier?.takeIf { it.isNotBlank() } ?: "Sin placa asignada"}",
+                                color = Color(0xFFF9D423),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Pastilla compacta de estado de suscripción (sin salto de línea)
+                        if (isExpiringSoon) {
+                            Surface(
+                                onClick = { showRenewalDialog = true },
+                                shape = RoundedCornerShape(50),
+                                color = Color(0x29FFA726),
+                                border = BorderStroke(1.dp, Color(0xFFFFA726))
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Menu,
-                                    contentDescription = "Menú",
-                                    tint = Color.White
-                                )
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFFA726),
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "${hoursRemaining}h",
+                                        color = Color(0xFFFFA726),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
                             }
-
-                            Spacer(modifier = Modifier.width(6.dp))
-
-                            Column {
-                                Text(
-                                    text = "TucTuc Conductor",
-                                    color = Color.White,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = driverProfile?.displayIdentifier?.takeIf { it.isNotBlank() }?.let { "Unidad/Placas: $it" } ?: "Torito en línea",
-                                    color = Color(0xFFF9D423),
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                        } else {
+                            Surface(
+                                onClick = { showRenewalDialog = true },
+                                shape = RoundedCornerShape(50),
+                                color = Color(0x224ADE80),
+                                border = BorderStroke(1.dp, Color(0x554ADE80))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(7.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF4ADE80))
+                                    )
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Text(
+                                        text = "Activo",
+                                        color = Color(0xFF86EFAC),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
                             }
                         }
 
-                        // Pastilla de estado de suscripción & Avatar de perfil
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (isExpiringSoon) {
-                                Surface(
-                                    onClick = { showRenewalDialog = true },
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = Color(0x33FFA726),
-                                    border = BorderStroke(1.dp, Color(0xFFFFA726))
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Warning,
-                                            contentDescription = null,
-                                            tint = Color(0xFFFFA726),
-                                            modifier = Modifier.size(13.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = "${hoursRemaining}h",
-                                            color = Color(0xFFFFA726),
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                            } else {
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = Color(0x224ADE80),
-                                    border = BorderStroke(1.dp, Color(0x444ADE80))
-                                ) {
-                                    Text(
-                                        text = "Plan Activo",
-                                        color = Color(0xFF81C784),
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                    )
-                                }
-                            }
+                        Spacer(modifier = Modifier.width(8.dp))
 
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            IconButton(
-                                onClick = onViewProfile,
-                                modifier = Modifier.size(36.dp)
+                        IconButton(
+                            onClick = onViewProfile,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            val initial = (shortDriverName.firstOrNull() ?: 'C').uppercaseChar().toString()
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(Brush.linearGradient(listOf(Color(0xFFF9D423), Color(0xFFFFB300))))
+                                    .border(1.dp, Color.White.copy(alpha = 0.5f), CircleShape),
+                                contentAlignment = Alignment.Center
                             ) {
-                                val initial = (driverProfile?.nombre?.trim()?.firstOrNull() ?: 'C').uppercaseChar().toString()
-                                Box(
-                                    modifier = Modifier
-                                        .size(34.dp)
-                                        .clip(CircleShape)
-                                        .background(Brush.linearGradient(listOf(Color(0xFFF9D423), Color(0xFFFFB300))))
-                                        .border(1.dp, Color.White.copy(alpha = 0.5f), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = initial,
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF0F2027)
-                                    )
-                                }
+                                Text(
+                                    text = initial,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF0F2027)
+                                )
                             }
                         }
                     }
@@ -494,7 +526,7 @@ fun DriverHomeScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // 1. Alerta de Suscripción Preventiva (si aplica)
@@ -505,7 +537,7 @@ fun DriverHomeScreen(
                                 .padding(bottom = 12.dp),
                             colors = CardDefaults.cardColors(containerColor = Color(0x33FF9800)),
                             shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(1.5.dp, Color(0xFFFFB74D))
+                            border = BorderStroke(1.dp, Color(0xFFFFB74D))
                         ) {
                             Row(
                                 modifier = Modifier.padding(12.dp),
@@ -515,31 +547,33 @@ fun DriverHomeScreen(
                                     Icons.Default.Warning,
                                     contentDescription = null,
                                     tint = Color(0xFFFFB74D),
-                                    modifier = Modifier.size(26.dp)
+                                    modifier = Modifier.size(22.dp)
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "Tu suscripción vence pronto",
+                                        text = "Suscripción próxima a vencer",
                                         color = Color(0xFFFFB74D),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 13.sp
                                     )
                                     Text(
-                                        text = "Vence en $hoursRemaining horas. Renueva para mantener tu cuenta activa.",
+                                        text = "Quedan $hoursRemaining horas vigentes.",
                                         color = Color.White,
                                         fontSize = 11.sp
                                     )
                                 }
-                                Spacer(modifier = Modifier.width(6.dp))
                                 Button(
                                     onClick = { showRenewalDialog = true },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB74D), contentColor = Color(0xFF0F2027)),
-                                    shape = RoundedCornerShape(8.dp),
-                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                                    modifier = Modifier.height(32.dp)
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFFFB74D),
+                                        contentColor = Color(0xFF0F2027)
+                                    ),
+                                    shape = RoundedCornerShape(10.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                    modifier = Modifier.height(34.dp)
                                 ) {
-                                    Text("Renovar", fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                    Text("Renovar", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                 }
                             }
                         }
@@ -551,78 +585,95 @@ fun DriverHomeScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(22.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF131D26)),
-                            border = BorderStroke(1.5.dp, Color(0x55EF5350)),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF152534)),
+                            border = BorderStroke(1.dp, Color(0x33FFFFFF)),
                             elevation = CardDefaults.cardElevation(8.dp)
                         ) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(20.dp),
+                                    .padding(horizontal = 18.dp, vertical = 18.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(64.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0x22EF5350))
-                                        .border(2.dp, Color(0x66EF5350), CircleShape),
-                                    contentAlignment = Alignment.Center
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.PowerSettingsNew,
-                                        contentDescription = null,
-                                        tint = Color(0xFFFF5252),
-                                        modifier = Modifier.size(34.dp)
-                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(52.dp)
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(Color(0x22EF5350))
+                                            .border(1.dp, Color(0x55EF5350), RoundedCornerShape(16.dp)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.PowerSettingsNew,
+                                            contentDescription = null,
+                                            tint = Color(0xFFFF6B6B),
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(14.dp))
+
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Surface(
+                                            shape = RoundedCornerShape(50),
+                                            color = Color(0x26EF5350)
+                                        ) {
+                                            Text(
+                                                text = "FUERA DE SERVICIO",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = Color(0xFFFF8A80),
+                                                letterSpacing = 0.6.sp,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "Turno desconectado",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = Color.White
+                                        )
+                                        Text(
+                                            text = "Activa tu turno para aparecer en el mapa y recibir carreras con aviso por voz.",
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF94A3B8),
+                                            lineHeight = 16.sp
+                                        )
+                                    }
                                 }
 
-                                Spacer(modifier = Modifier.height(14.dp))
+                                Spacer(modifier = Modifier.height(16.dp))
 
-                                Text(
-                                    text = "ESTÁS FUERA DE SERVICIO",
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White,
-                                    letterSpacing = 0.5.sp
-                                )
-
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                Text(
-                                    text = "Los pasajeros no pueden verte en el mapa ni enviarte viajes. Inicia turno para comenzar a trabajar.",
-                                    fontSize = 13.sp,
-                                    color = Color(0xFF94A3B8),
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(horizontal = 10.dp)
-                                )
-
-                                Spacer(modifier = Modifier.height(20.dp))
-
-                                // BOTÓN GIGANTE: INICIAR TURNO
                                 Button(
                                     onClick = onConnectToggle,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(64.dp),
-                                    shape = RoundedCornerShape(16.dp),
+                                        .height(54.dp),
+                                    shape = RoundedCornerShape(14.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFF2E7D32),
-                                        contentColor = Color.White
+                                        containerColor = Color(0xFF10B981),
+                                        contentColor = Color(0xFF06281E)
                                     ),
-                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.ElectricRickshaw,
                                         contentDescription = null,
-                                        modifier = Modifier.size(26.dp)
+                                        modifier = Modifier.size(22.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "⚡ INICIAR TURNO (EN LÍNEA)",
-                                        fontSize = 16.sp,
+                                        text = "INICIAR TURNO EN LÍNEA",
+                                        fontSize = 15.sp,
                                         fontWeight = FontWeight.ExtraBold,
-                                        letterSpacing = 0.5.sp
+                                        letterSpacing = 0.4.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -630,81 +681,81 @@ fun DriverHomeScreen(
                     } else {
                         // ── ESTADO: EN LÍNEA ────────────────────────────────────────
                         val isAvailable = driverAvailability == "disponible"
-                        val borderColor = if (isAvailable) Color(0xFF4ADE80) else Color(0xFFFFA726)
+                        val accentColor = if (isAvailable) Color(0xFF10B981) else Color(0xFFF59E0B)
 
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(22.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF131D26)),
-                            border = BorderStroke(2.dp, borderColor),
-                            elevation = CardDefaults.cardElevation(10.dp)
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF152534)),
+                            border = BorderStroke(1.5.dp, accentColor.copy(alpha = 0.7f)),
+                            elevation = CardDefaults.cardElevation(8.dp)
                         ) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(20.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                    .padding(horizontal = 18.dp, vertical = 18.dp)
                             ) {
-                                // Indicador de radar o transmisión
                                 Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .size(12.dp)
-                                            .clip(CircleShape)
-                                            .background(if (isAvailable) Color(0xFF4ADE80) else Color(0xFFFFA726))
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = if (isAvailable) "EN LÍNEA (DISPONIBLE)" else "EN LÍNEA (EN PAUSA)",
-                                        fontSize = 17.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = Color.White,
-                                        letterSpacing = 0.5.sp
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                Surface(
-                                    shape = RoundedCornerShape(14.dp),
-                                    color = if (isAvailable) Color(0x1A4ADE80) else Color(0x1AFFA726),
-                                    border = BorderStroke(1.dp, if (isAvailable) Color(0x334ADE80) else Color(0x33FFA726)),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(14.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
+                                            .size(52.dp)
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(accentColor.copy(alpha = 0.16f))
+                                            .border(1.dp, accentColor.copy(alpha = 0.4f), RoundedCornerShape(16.dp)),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        Text(
-                                            text = if (isAvailable) "📡 RADAR DE VIAJES ACTIVO" else "⏸️ MODO PAUSA TEMPORAL",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 13.sp,
-                                            color = if (isAvailable) Color(0xFF4ADE80) else Color(0xFFFFA726)
+                                        Icon(
+                                            imageVector = if (isAvailable) Icons.Default.ElectricRickshaw else Icons.Default.Pause,
+                                            contentDescription = null,
+                                            tint = accentColor,
+                                            modifier = Modifier.size(28.dp)
                                         )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(14.dp))
+
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Surface(
+                                            shape = RoundedCornerShape(50),
+                                            color = accentColor.copy(alpha = 0.2f)
+                                        ) {
+                                            Text(
+                                                text = if (isAvailable) "RADAR ACTIVO • DISPONIBLE" else "TURNO EN PAUSA",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = accentColor,
+                                                letterSpacing = 0.6.sp,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                            )
+                                        }
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
+                                            text = if (isAvailable) "Recibiendo solicitudes" else "Modo descanso activo",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = Color.White
+                                        )
+                                        Text(
                                             text = if (isAvailable)
-                                                "Transmitiendo coordenadas GPS. Recibirás solicitudes con alerta de voz."
+                                                "Tu torito es visible en el mapa y las alertas por voz están activas."
                                             else
-                                                "Estás descansando. No recibirás nuevos viajes hasta reactivarte.",
+                                                "No recibirás nuevos viajes hasta que reanudes tu turno.",
                                             fontSize = 12.sp,
-                                            color = Color.LightGray,
-                                            textAlign = TextAlign.Center
+                                            color = Color(0xFF94A3B8),
+                                            lineHeight = 16.sp
                                         )
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(18.dp))
+                                Spacer(modifier = Modifier.height(16.dp))
 
-                                // Botonera de control de turno en línea
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
-                                    // Botón de alternancia Pausa / Activar
                                     Button(
                                         onClick = {
                                             val newStatus = if (isAvailable) "ocupado" else "disponible"
@@ -715,36 +766,36 @@ fun DriverHomeScreen(
                                         },
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(54.dp),
+                                            .height(50.dp),
                                         shape = RoundedCornerShape(14.dp),
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (isAvailable) Color(0xFFEF6C00) else Color(0xFF2E7D32),
-                                            contentColor = Color.White
+                                            containerColor = if (isAvailable) Color(0xFFF59E0B) else Color(0xFF10B981),
+                                            contentColor = Color(0xFF0F172A)
                                         )
                                     ) {
                                         Icon(
                                             imageVector = if (isAvailable) Icons.Default.Pause else Icons.Default.PlayArrow,
                                             contentDescription = null,
-                                            modifier = Modifier.size(20.dp)
+                                            modifier = Modifier.size(19.dp)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
                                             text = if (isAvailable) "Pausar" else "Reanudar",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 14.sp
+                                            fontWeight = FontWeight.ExtraBold,
+                                            fontSize = 14.sp,
+                                            maxLines = 1
                                         )
                                     }
 
-                                    // Botón Desconectar Turno
                                     OutlinedButton(
                                         onClick = onConnectToggle,
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(54.dp),
+                                            .height(50.dp),
                                         shape = RoundedCornerShape(14.dp),
-                                        border = BorderStroke(1.5.dp, Color(0xFFFF5252)),
+                                        border = BorderStroke(1.5.dp, Color(0xFFFF6B6B)),
                                         colors = ButtonDefaults.outlinedButtonColors(
-                                            contentColor = Color(0xFFFF5252)
+                                            contentColor = Color(0xFFFF6B6B)
                                         )
                                     ) {
                                         Icon(
@@ -754,9 +805,10 @@ fun DriverHomeScreen(
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            text = "Finalizar",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 14.sp
+                                            text = "Terminar",
+                                            fontWeight = FontWeight.ExtraBold,
+                                            fontSize = 14.sp,
+                                            maxLines = 1
                                         )
                                     }
                                 }
@@ -765,212 +817,314 @@ fun DriverHomeScreen(
                     }
 
                     if (showPermissionError) {
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Se requieren permisos de ubicación para poder transmitir tu ubicación en tiempo real.",
+                            text = "Activa los permisos de ubicación para transmitir tu posición en tiempo real.",
                             color = Color(0xFFFF6B6B),
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             textAlign = TextAlign.Center
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    // 3. TARJETA DE RESUMEN DE LA JORNADA (KPIs RÁPIDOS)
-                    Card(
+                    // 3. MÉTRICAS RÁPIDAS DE LA JORNADA (3 tarjetas limpias)
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0x1AFFFFFF)),
-                        border = BorderStroke(1.dp, Color(0x22FFFFFF))
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "📊 Tu jornada de hoy",
-                                    color = Color.White,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                TextButton(
-                                    onClick = { refreshTripStats() },
-                                    contentPadding = PaddingValues(0.dp)
-                                ) {
-                                    Text("Actualizar", fontSize = 11.sp, color = Color(0xFFF9D423))
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                // Métrica 1: Viajes Hoy
-                                Surface(
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = Color(0xFF16232F)
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(10.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Text("Viajes Hoy", color = Color(0xFF94A3B8), fontSize = 11.sp)
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = "$completedTripsToday",
-                                            color = Color(0xFFF9D423),
-                                            fontSize = 20.sp,
-                                            fontWeight = FontWeight.ExtraBold
-                                        )
-                                    }
-                                }
-
-                                // Métrica 2: Estado GPS
-                                Surface(
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = Color(0xFF16232F)
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(10.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Text("Señal GPS", color = Color(0xFF94A3B8), fontSize = 11.sp)
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = if (currentLocation != null) "Óptima 🛰️" else "Buscando...",
-                                            color = if (currentLocation != null) Color(0xFF4ADE80) else Color(0xFFFFB74D),
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-
-                                // Métrica 3: Torito
-                                Surface(
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = Color(0xFF16232F)
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(10.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Text("Vehículo", color = Color(0xFF94A3B8), fontSize = 11.sp)
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = driverProfile?.placas ?: "---",
-                                            color = Color.White,
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                        Text(
+                            text = "Resumen de tu jornada",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Actualizar",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFFF9D423),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .clickable { refreshTripStats() }
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    // 4. ACCESOS RÁPIDOS (HERRAMIENTAS DE APOYO)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // Botón secundario: Ver Mapa en Vivo (opcional, no forzado)
-                        Button(
-                            onClick = onViewMap,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF1E3A5F),
-                                contentColor = Color.White
-                            )
+                        // KPI 1: Viajes Hoy
+                        Surface(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color(0xFF152534),
+                            border = BorderStroke(1.dp, Color(0x22FFFFFF))
                         ) {
-                            Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Mapa de Flota", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Column(
+                                modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "$completedTripsToday",
+                                    color = Color(0xFFF9D423),
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    maxLines = 1
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "Viajes hoy",
+                                    color = Color(0xFF94A3B8),
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
 
-                        // Botón secundario: Historial de Viajes
-                        Button(
-                            onClick = onViewHistory,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF2C5364),
-                                contentColor = Color.White
-                            )
+                        // KPI 2: Señal GPS
+                        val gpsReady = currentLocation != null
+                        Surface(
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color(0xFF152534),
+                            border = BorderStroke(1.dp, Color(0x22FFFFFF))
                         ) {
-                            Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Historial", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Column(
+                                modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = if (gpsReady) "Óptima" else "En espera",
+                                    color = if (gpsReady) Color(0xFF4ADE80) else Color(0xFFFFB74D),
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Señal GPS",
+                                    color = Color(0xFF94A3B8),
+                                    fontSize = 11.sp,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+
+                        // KPI 3: Vigencia del Plan
+                        Surface(
+                            onClick = { showRenewalDialog = true },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color(0xFF152534),
+                            border = BorderStroke(1.dp, Color(0x22FFFFFF))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = if (daysRemaining > 0) "$daysRemaining días" else "${hoursRemaining}h",
+                                    color = if (isExpiringSoon) Color(0xFFFFB74D) else Color.White,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Tu plan",
+                                    color = Color(0xFF94A3B8),
+                                    fontSize = 11.sp,
+                                    maxLines = 1
+                                )
+                            }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // 5. RESUMEN DE PERFIL Y VENCIMIENTO
-                    Card(
+                    // 4. ACCESOS RÁPIDOS (Cuadrícula 2x2 de Herramientas)
+                    Text(
+                        text = "Herramientas del conductor",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                    )
+
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0x12FFFFFF))
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
+                        // Acceso 1: Mapa en Vivo
+                        Surface(
+                            onClick = onViewMap,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color(0xFF152534),
+                            border = BorderStroke(1.dp, Color(0x2638BDF8))
+                        ) {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0x2238BDF8)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.Map,
+                                        contentDescription = null,
+                                        tint = Color(0xFF38BDF8),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
                                 Column {
                                     Text(
-                                        text = driverProfile?.nombre ?: "Conductor",
+                                        text = "Mapa en Vivo",
+                                        color = Color.White,
+                                        fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 15.sp,
-                                        color = Color.White
+                                        maxLines = 1
                                     )
                                     Text(
-                                        text = "Tel: ${driverProfile?.telefono ?: "..."}",
-                                        fontSize = 12.sp,
-                                        color = Color(0xFF94A3B8)
+                                        text = "Ver cobertura",
+                                        color = Color(0xFF94A3B8),
+                                        fontSize = 11.sp,
+                                        maxLines = 1
                                     )
                                 }
+                            }
+                        }
 
-                                TextButton(onClick = onViewProfile) {
-                                    Text("Editar", color = Color(0xFFF9D423), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        // Acceso 2: Historial de Viajes
+                        Surface(
+                            onClick = onViewHistory,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color(0xFF152534),
+                            border = BorderStroke(1.dp, Color(0x26F9D423))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0x22F9D423)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.History,
+                                        contentDescription = null,
+                                        tint = Color(0xFFF9D423),
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                 }
-                            }
-
-                            val sevenDaysMs = 7L * 24 * 60 * 60 * 1000
-                            val spanishLocale = Locale.forLanguageTag("es")
-                            val (expiryText, expiryColor) = when {
-                                expiryMs == 0L -> Pair("Sin fecha asignada", Color(0xFF64748B))
-                                now > expiryMs -> Pair("Venció: ${SimpleDateFormat("dd/MM/yyyy", spanishLocale).format(Date(expiryMs))}", Color(0xFFFF5252))
-                                (expiryMs - now) <= sevenDaysMs -> Pair("Vence: ${SimpleDateFormat("dd/MM/yyyy", spanishLocale).format(Date(expiryMs))}", Color(0xFFFFA726))
-                                else -> Pair("Vence: ${SimpleDateFormat("dd/MM/yyyy", spanishLocale).format(Date(expiryMs))}", Color(0xFF4CAF50))
-                            }
-
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = expiryColor, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = expiryText, fontSize = 12.sp, color = expiryColor, fontWeight = FontWeight.SemiBold)
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = "Mis Viajes",
+                                        color = Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        text = "Historial y cobros",
+                                        color = Color(0xFF94A3B8),
+                                        fontSize = 11.sp,
+                                        maxLines = 1
+                                    )
+                                }
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(100.dp)) // Espacio para evitar solapamiento con tarjetas flotantes
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 5. TARJETA COMPACTA DE PERFIL Y RENOVACIÓN DE SUSCRIPCIÓN
+                    val spanishLocale = Locale.forLanguageTag("es")
+                    val formattedExpiryDate = if (expiryMs > 0L) {
+                        SimpleDateFormat("dd MMM yyyy", spanishLocale).format(Date(expiryMs))
+                    } else {
+                        "Sin fecha"
+                    }
+
+                    Surface(
+                        onClick = onViewProfile,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFF152534),
+                        border = BorderStroke(1.dp, Color(0x22FFFFFF))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "${driverProfile?.nombre ?: "Conductor"} • Tel: ${driverProfile?.telefono ?: "---"}",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.CalendarMonth,
+                                        contentDescription = null,
+                                        tint = Color(0xFF4ADE80),
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Text(
+                                        text = "Suscripción vence: $formattedExpiryDate",
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF94A3B8),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            TextButton(
+                                onClick = { showRenewalDialog = true },
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "Renovar",
+                                    color = Color(0xFFF9D423),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(90.dp)) // Espacio para tarjetas flotantes inferiores
                 }
             }
 
