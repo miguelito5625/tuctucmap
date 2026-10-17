@@ -1,20 +1,21 @@
 package com.example.tuctucmap.data.repository
 
+import com.example.tuctucmap.data.model.AppConfig
 import com.example.tuctucmap.data.model.Driver
 import com.example.tuctucmap.data.model.Passenger
 import com.example.tuctucmap.data.model.DriverLocation
+import com.example.tuctucmap.data.model.ServerClock
 import com.example.tuctucmap.data.supabase
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.realtime.realtime
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.CoroutineScope
@@ -29,8 +30,52 @@ import com.google.firebase.database.MutableData
 import com.google.firebase.database.Transaction
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import kotlin.math.*
 
 class SupabaseRepository {
+
+    companion object {
+        @Volatile
+        var cachedAppConfig: AppConfig = AppConfig()
+            private set
+
+        @Volatile
+        private var firebaseClockListenerInitialized = false
+
+        fun ensureFirebaseClockSync() {
+            if (firebaseClockListenerInitialized) return
+            synchronized(this) {
+                if (firebaseClockListenerInitialized) return
+                try {
+                    val offsetRef = Firebase.database.getReference(".info/serverTimeOffset")
+                    offsetRef.addValueEventListener(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            val offset = snapshot.getValue(Long::class.java) ?: 0L
+                            ServerClock.offsetMillis = offset
+                        }
+                        override fun onCancelled(error: DatabaseError) {}
+                    })
+                    firebaseClockListenerInitialized = true
+                } catch (_: Exception) {}
+            }
+        }
+
+        fun haversineMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+            if ((lat1 == 0.0 && lon1 == 0.0) || (lat2 == 0.0 && lon2 == 0.0)) return 0.0
+            val r = 6371000.0
+            val dLat = Math.toRadians(lat2 - lat1)
+            val dLon = Math.toRadians(lon2 - lon1)
+            val a = sin(dLat / 2).pow(2.0) +
+                    cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+                    sin(dLon / 2).pow(2.0)
+            val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+            return r * c
+        }
+    }
+
+    init {
+        ensureFirebaseClockSync()
+    }
 
     val currentUserUid: String?
         get() = supabase.auth.currentUserOrNull()?.id
@@ -51,12 +96,84 @@ class SupabaseRepository {
         supabase.auth.signOut()
     }
 
+    /**
+     * Sincroniza la hora real del servidor PostgreSQL y expira suscripciones vencidas en BD.
+     */
+    suspend fun syncServerTimeAndExpire(): Long {
+        return try {
+            val serverMs = supabase.postgrest.rpc("sync_server_time_and_expire").decodeAs<Long>()
+            ServerClock.updateFromServerEpoch(serverMs)
+            serverMs
+        } catch (_: Exception) {
+            ServerClock.nowMillis()
+        }
+    }
+
+    /**
+     * Obtiene la configuración dinámica del negocio (WhatsApp admin, cuentas bancarias, tarifas, radio km).
+     */
+    suspend fun getAppConfig(): AppConfig {
+        return try {
+            val cfg = supabase.postgrest["app_config"].select {
+                filter { eq("id", "default") }
+            }.decodeSingleOrNull<AppConfig>()
+            if (cfg != null) {
+                cachedAppConfig = cfg
+                cfg
+            } else {
+                cachedAppConfig
+            }
+        } catch (_: Exception) {
+            cachedAppConfig
+        }
+    }
+
+    @kotlinx.serialization.Serializable
+    private data class PaymentRequestInsertDto(
+        val driver_id: String,
+        val plan_type: String,
+        val amount: Double,
+        val payment_method: String,
+        val reference_number: String
+    )
+
+    /**
+     * Permite al conductor registrar el número de boleta o transferencia en Supabase para agilizar su activación.
+     */
+    suspend fun submitPaymentRequest(
+        planType: String,
+        amount: Double,
+        paymentMethod: String = "deposito_bancario",
+        referenceNumber: String
+    ): Result<Unit> {
+        return try {
+            val uid = currentUserUid ?: return Result.failure(Exception("No hay sesión activa"))
+            val cleanRef = referenceNumber.trim()
+            if (cleanRef.isBlank()) {
+                return Result.failure(Exception("Ingresa el número de boleta o comprobante"))
+            }
+            supabase.postgrest["subscription_payment_requests"].insert(
+                PaymentRequestInsertDto(
+                    driver_id = uid,
+                    plan_type = planType,
+                    amount = amount,
+                    payment_method = paymentMethod,
+                    reference_number = cleanRef
+                )
+            )
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun registerDriver(
         nombre: String,
         telefono: String,
         placas: String,
         email: String,
-        contrasena: String
+        contrasena: String,
+        numeroUnidad: String = ""
     ): Result<Unit> {
         return try {
             supabase.auth.signUpWith(Email) {
@@ -77,30 +194,20 @@ class SupabaseRepository {
             
             if (uid == null) return Result.failure(Exception("Por favor desactiva 'Confirm email' en Supabase (Authentication -> Providers -> Email)"))
             
-            
-            // Insert profile con 7 días de prueba gratis y estado aprobado
-            val now = java.time.Instant.now()
-            val trialStartDate = now.toString() // ISO 8601
-            val trialEndDate = now.plusSeconds(7 * 24 * 60 * 60).toString()
-            
-            val profile = mapOf(
+            // El trigger trg_profile_insert_security asigna los 7 días de prueba con la hora real del servidor
+            // y el trigger trg_create_initial_driver_trial crea automáticamente el registro en driver_subscriptions.
+            val profile = mutableMapOf(
                 "id" to uid,
                 "email" to email,
-                "name" to nombre,
-                "phone" to telefono,
+                "name" to nombre.trim(),
+                "phone" to telefono.trim(),
                 "role" to "driver",
-                "plate_number" to placas,
-                "approval_status" to "aprobado",
-                "subscription_end_date" to trialEndDate
+                "plate_number" to placas.trim().uppercase()
             )
+            if (numeroUnidad.isNotBlank()) {
+                profile["unit_number"] = numeroUnidad.trim()
+            }
             supabase.postgrest["profiles"].insert(profile)
-            
-            val subscription = mapOf(
-                "driver_id" to uid,
-                "start_date" to trialStartDate,
-                "end_date" to trialEndDate
-            )
-            supabase.postgrest["driver_subscriptions"].insert(subscription)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -116,6 +223,7 @@ class SupabaseRepository {
                 this.email = email
                 this.password = contrasena
             }
+            syncServerTimeAndExpire()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -159,12 +267,11 @@ class SupabaseRepository {
             
             if (uid == null) return Result.failure(Exception("Por favor desactiva 'Confirm email' en Supabase (Authentication -> Providers -> Email)"))
             
-            
             val profile = mapOf(
                 "id" to uid,
                 "email" to email,
-                "name" to nombre,
-                "phone" to telefono,
+                "name" to nombre.trim(),
+                "phone" to telefono.trim(),
                 "role" to "passenger"
             )
             supabase.postgrest["profiles"].insert(profile)
@@ -177,6 +284,7 @@ class SupabaseRepository {
     fun getDriverProfileOnce(uid: String, onResult: (Driver?) -> Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                syncServerTimeAndExpire()
                 val driver = supabase.postgrest["profiles"].select {
                     filter { eq("id", uid) }
                 }.decodeSingleOrNull<Driver>()
@@ -210,7 +318,7 @@ class SupabaseRepository {
         return try {
             val uid = currentUserUid ?: return Result.failure(Exception("No hay sesión activa"))
             supabase.postgrest["profiles"].update(
-                UpdatePassengerProfileDto(name = name, phone = phone)
+                UpdatePassengerProfileDto(name = name.trim(), phone = phone.trim())
             ) {
                 filter { eq("id", uid) }
             }
@@ -225,14 +333,26 @@ class SupabaseRepository {
         val name: String,
         val phone: String,
         @kotlinx.serialization.SerialName("plate_number")
-        val plateNumber: String
+        val plateNumber: String,
+        @kotlinx.serialization.SerialName("unit_number")
+        val unitNumber: String? = null
     )
 
-    suspend fun updateDriverProfile(name: String, phone: String, plateNumber: String): Result<Unit> {
+    suspend fun updateDriverProfile(
+        name: String,
+        phone: String,
+        plateNumber: String,
+        unitNumber: String = ""
+    ): Result<Unit> {
         return try {
             val uid = currentUserUid ?: return Result.failure(Exception("No hay sesión activa"))
             supabase.postgrest["profiles"].update(
-                UpdateDriverProfileDto(name = name, phone = phone, plateNumber = plateNumber)
+                UpdateDriverProfileDto(
+                    name = name.trim(),
+                    phone = phone.trim(),
+                    plateNumber = plateNumber.trim().uppercase(),
+                    unitNumber = unitNumber.trim().ifBlank { null }
+                )
             ) {
                 filter { eq("id", uid) }
             }
@@ -241,9 +361,10 @@ class SupabaseRepository {
             try {
                 val locationRef = Firebase.database.getReference("driver_locations").child(uid)
                 val updates = mapOf<String, Any>(
-                    "nombre" to name,
-                    "telefono" to phone,
-                    "placas" to plateNumber
+                    "nombre" to name.trim(),
+                    "telefono" to phone.trim(),
+                    "placas" to plateNumber.trim().uppercase(),
+                    "numeroUnidad" to unitNumber.trim()
                 )
                 locationRef.updateChildren(updates)
             } catch (_: Exception) {}
@@ -265,14 +386,6 @@ class SupabaseRepository {
         }
     }
 
-    @kotlinx.serialization.Serializable
-    private data class LocationUpdateDto(
-        val driver_id: String,
-        val lat: Double,
-        val lon: Double,
-        val active: Boolean
-    )
-
     suspend fun updateLocation(
         uid: String,
         nombre: String,
@@ -280,7 +393,8 @@ class SupabaseRepository {
         placas: String,
         latitud: Double,
         longitud: Double,
-        status: String = "disponible"
+        status: String = "disponible",
+        numeroUnidad: String = ""
     ) {
         try {
             val location = mapOf(
@@ -290,9 +404,10 @@ class SupabaseRepository {
                 "nombre" to nombre,
                 "telefono" to telefono,
                 "placas" to placas,
+                "numeroUnidad" to numeroUnidad,
                 "active" to true,
                 "status" to status,
-                "updated_at" to System.currentTimeMillis().toString()
+                "updated_at" to ServerClock.nowMillis().toString()
             )
             val locationRef = Firebase.database.getReference("driver_locations").child(uid)
             locationRef.setValue(location)
@@ -304,7 +419,13 @@ class SupabaseRepository {
 
     suspend fun updateDriverStatus(uid: String, status: String): Result<Unit> {
         return try {
-            Firebase.database.getReference("driver_locations").child(uid).child("status").setValue(status)
+            val ref = Firebase.database.getReference("driver_locations").child(uid)
+            ref.updateChildren(
+                mapOf(
+                    "status" to status,
+                    "updated_at" to ServerClock.nowMillis().toString()
+                )
+            )
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -318,6 +439,13 @@ class SupabaseRepository {
             e.printStackTrace()
         }
     }
+
+    @kotlinx.serialization.Serializable
+    data class RoutePoint(
+        val lat: Double = 0.0,
+        val lon: Double = 0.0,
+        val timestamp: Long = ServerClock.nowMillis()
+    )
 
     data class TripInfo(
         val tripId: String = "",
@@ -333,7 +461,10 @@ class SupabaseRepository {
         val passengerLon: Double = 0.0,
         val status: String = "", // "requested", "accepted", "completed", "cancelled", "timeout"
         val timestamp: Long = 0L,
-        val acceptedAt: Long = 0L
+        val acceptedAt: Long = 0L,
+        val fare: Double? = null,
+        val distanceKm: Double? = null,
+        val routePoints: List<RoutePoint>? = null
     )
 
     sealed class AcceptTripResult {
@@ -349,7 +480,12 @@ class SupabaseRepository {
         val passenger_lat: Double,
         val passenger_lon: Double,
         val status: String,
-        val message: String
+        val message: String,
+        val fare: Double? = null,
+        val distance_km: Double? = null,
+        val route_points: List<RoutePoint>? = null,
+        val passenger_name: String? = null,
+        val passenger_phone: String? = null
     )
 
     @kotlinx.serialization.Serializable
@@ -362,17 +498,60 @@ class SupabaseRepository {
         val status: String = "",
         val message: String = "",
         val created_at: String = "",
-        var passenger_name: String = "Desconocido",
+        val fare: Double? = null,
+        val distance_km: Double? = null,
+        val route_points: List<RoutePoint>? = null,
+        var passenger_name: String? = "Pasajero",
         var driver_name: String = "Desconocido",
-        var passenger_phone: String = "",
+        var passenger_phone: String? = "",
         var driver_phone: String = ""
-    )
+    ) {
+        val isRegisteredPassenger: Boolean
+            get() = !passenger_id.isNullOrBlank()
+    }
+
+    @kotlinx.serialization.Serializable
+    private data class TripIdOnlyDto(val id: String = "")
+
+    /**
+     * Consulta ligera para contar únicamente los viajes completados hoy por el conductor,
+     * evitando descargar todo el historial histórico en cada apertura de pantalla.
+     */
+    suspend fun getDriverTodayTripsCount(): Result<Int> {
+        return try {
+            val uid = currentUserUid ?: return Result.failure(Exception("No user"))
+            val cal = java.util.Calendar.getInstance().apply {
+                set(java.util.Calendar.HOUR_OF_DAY, 0)
+                set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }
+            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US).apply {
+                timeZone = java.util.TimeZone.getTimeZone("UTC")
+            }
+            val startOfTodayUtc = sdf.format(cal.time)
+
+            val todayTrips = supabase.postgrest["trips"].select {
+                filter {
+                    eq("driver_id", uid)
+                    eq("status", "completed")
+                    gte("created_at", startOfTodayUtc)
+                }
+            }.decodeList<TripIdOnlyDto>()
+            Result.success(todayTrips.size)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
     // History Trips (Supabase)
     suspend fun saveTripRecord(
         tripInfo: TripInfo,
         status: String,
-        driverIdOverride: String? = null
+        driverIdOverride: String? = null,
+        fare: Double? = null,
+        distanceKm: Double? = null,
+        routePoints: List<RoutePoint>? = null
     ): Result<Unit> {
         return try {
             val effectiveDriverId = if (tripInfo.driverId.isNotBlank()) {
@@ -399,6 +578,8 @@ class SupabaseRepository {
                 false
             }
             val passengerIdToSave = if (isValidPassengerUuid) tripInfo.passengerId else null
+            val effectivePassengerName = tripInfo.passengerName.trim().ifBlank { "Pasajero" }
+            val effectivePassengerPhone = tripInfo.passengerPhone.trim().ifBlank { null }
 
             val dto = CompletedTripDto(
                 passenger_id = passengerIdToSave,
@@ -406,7 +587,12 @@ class SupabaseRepository {
                 passenger_lat = tripInfo.passengerLat,
                 passenger_lon = tripInfo.passengerLon,
                 status = status,
-                message = tripInfo.message.ifBlank { "Viaje realizado" }
+                message = tripInfo.message.ifBlank { "Viaje realizado" },
+                fare = fare ?: tripInfo.fare,
+                distance_km = distanceKm ?: tripInfo.distanceKm,
+                route_points = routePoints ?: tripInfo.routePoints,
+                passenger_name = effectivePassengerName,
+                passenger_phone = effectivePassengerPhone
             )
             supabase.postgrest["trips"].insert(dto)
             Result.success(Unit)
@@ -416,8 +602,19 @@ class SupabaseRepository {
         }
     }
 
-    suspend fun saveCompletedTripToSupabase(tripInfo: TripInfo): Result<Unit> {
-        return saveTripRecord(tripInfo, "completed")
+    suspend fun saveCompletedTripToSupabase(
+        tripInfo: TripInfo,
+        fare: Double? = null,
+        distanceKm: Double? = null,
+        routePoints: List<RoutePoint>? = null
+    ): Result<Unit> {
+        return saveTripRecord(
+            tripInfo = tripInfo,
+            status = "completed",
+            fare = fare,
+            distanceKm = distanceKm,
+            routePoints = routePoints
+        )
     }
 
     suspend fun getPassengerTripHistory(): Result<List<CompletedTripResponseDto>> {
@@ -455,15 +652,35 @@ class SupabaseRepository {
             }.decodeList<CompletedTripResponseDto>()
 
             val passengerIds = trips.mapNotNull { it.passenger_id }.filter { it.isNotBlank() }.distinct()
-            if (passengerIds.isNotEmpty()) {
-                val passengers = supabase.postgrest["profiles"].select {
-                    filter { isIn("id", passengerIds) }
-                }.decodeList<Passenger>()
-                val passengerMap = passengers.associateBy({ it.id }, { it.nombre })
-                val passengerPhoneMap = passengers.associateBy({ it.id }, { it.telefono })
-                trips.forEach { trip ->
-                    trip.passenger_name = passengerMap[trip.passenger_id] ?: "Pasajero"
-                    trip.passenger_phone = passengerPhoneMap[trip.passenger_id] ?: ""
+            val passengersList = if (passengerIds.isNotEmpty()) {
+                try {
+                    supabase.postgrest["profiles"].select {
+                        filter { isIn("id", passengerIds) }
+                    }.decodeList<Passenger>()
+                } catch (_: Exception) {
+                    emptyList()
+                }
+            } else {
+                emptyList()
+            }
+            val passengerMap = passengersList.associateBy({ it.id }, { it.nombre })
+            val passengerPhoneMap = passengersList.associateBy({ it.id }, { it.telefono })
+
+            trips.forEach { trip ->
+                val directName = trip.passenger_name?.trim()
+                val fallbackName = trip.passenger_id?.let { passengerMap[it] }
+                trip.passenger_name = when {
+                    !directName.isNullOrBlank() && directName != "Desconocido" -> directName
+                    !fallbackName.isNullOrBlank() -> fallbackName
+                    else -> "Pasajero"
+                }
+
+                val directPhone = trip.passenger_phone?.trim()
+                val fallbackPhone = trip.passenger_id?.let { passengerPhoneMap[it] }
+                trip.passenger_phone = when {
+                    !directPhone.isNullOrBlank() -> directPhone
+                    !fallbackPhone.isNullOrBlank() -> fallbackPhone
+                    else -> ""
                 }
             }
 
@@ -483,7 +700,8 @@ class SupabaseRepository {
         passengerPhone: String = ""
     ): Result<String> {
         return try {
-            val uid = currentUserUid ?: "guest_${System.currentTimeMillis()}"
+            val nowMs = ServerClock.nowMillis()
+            val uid = currentUserUid ?: "guest_$nowMs"
             val tripsRef = Firebase.database.getReference("trips")
             val newTripRef = tripsRef.push()
             val tripId = newTripRef.key ?: java.util.UUID.randomUUID().toString()
@@ -498,7 +716,7 @@ class SupabaseRepository {
                 passengerLat = lat,
                 passengerLon = lon,
                 status = "requested",
-                timestamp = System.currentTimeMillis()
+                timestamp = nowMs
             )
             newTripRef.setValue(trip)
             Result.success(tripId)
@@ -523,7 +741,7 @@ class SupabaseRepository {
                 passengerLat = lat,
                 passengerLon = lon,
                 status = "requested",
-                timestamp = System.currentTimeMillis()
+                timestamp = ServerClock.nowMillis()
             )
             newTripRef.setValue(trip)
             Result.success(tripId)
@@ -555,7 +773,7 @@ class SupabaseRepository {
                     currentData.child("driverName").value = driverName
                     currentData.child("driverPhone").value = driverPhone
                     currentData.child("driverPlate").value = driverPlate
-                    currentData.child("acceptedAt").value = System.currentTimeMillis()
+                    currentData.child("acceptedAt").value = ServerClock.nowMillis()
                     return Transaction.success(currentData)
                 } else {
                     // Ya fue tomado por otro conductor o cancelado: abortar transacción
@@ -580,20 +798,40 @@ class SupabaseRepository {
         })
     }
 
-    fun observePendingTripsForDriver(driverId: String): Flow<List<TripInfo>> = callbackFlow {
+    fun observePendingTripsForDriver(
+        driverId: String,
+        driverCoordProvider: (() -> Pair<Double, Double>?)? = null
+    ): Flow<List<TripInfo>> = callbackFlow {
         val tripsRef = Firebase.database.getReference("trips")
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val pendingTrips = mutableListOf<TripInfo>()
-                val now = System.currentTimeMillis()
+                val now = ServerClock.nowMillis()
+                val maxRadiusMeters = cachedAppConfig.maxSearchRadiusKm * 1000.0
+                val driverCoord = driverCoordProvider?.invoke()
+
                 for (child in snapshot.children) {
                     val trip = child.getValue(TripInfo::class.java)
                     if (trip != null && trip.status == "requested") {
-                        val isForMe = trip.driverId.isBlank() || trip.driverId == "broadcast" || trip.driverId == driverId
-                        if (isForMe) {
-                            // TTL de 60 segundos
-                            if (now - trip.timestamp <= 60000) {
-                                pendingTrips.add(trip)
+                        val isDirectForMe = trip.driverId == driverId
+                        val isBroadcast = trip.driverId.isBlank() || trip.driverId == "broadcast"
+                        if (isDirectForMe || isBroadcast) {
+                            // TTL de 60 segundos usando hora sincronizada del servidor
+                            if (now - trip.timestamp <= 60000L) {
+                                // Geocerca: filtrar solicitudes broadcast lejanas (> maxSearchRadiusKm)
+                                val withinRadius = if (isDirectForMe || driverCoord == null || (driverCoord.first == 0.0 && driverCoord.second == 0.0)) {
+                                    true
+                                } else {
+                                    haversineMeters(
+                                        driverCoord.first,
+                                        driverCoord.second,
+                                        trip.passengerLat,
+                                        trip.passengerLon
+                                    ) <= maxRadiusMeters
+                                }
+                                if (withinRadius) {
+                                    pendingTrips.add(trip)
+                                }
                             } else {
                                 if (trip.passengerId == currentUserUid || trip.driverId == driverId) {
                                     child.ref.removeValue()
@@ -686,6 +924,7 @@ class SupabaseRepository {
                             val nombre = child.child("nombre").getValue(String::class.java) ?: ""
                             val telefono = child.child("telefono").getValue(String::class.java) ?: ""
                             val placas = child.child("placas").getValue(String::class.java) ?: ""
+                            val numeroUnidad = child.child("numeroUnidad").getValue(String::class.java) ?: ""
                             val status = child.child("status").getValue(String::class.java) ?: "disponible"
                             val updatedAt = child.child("updated_at").getValue(String::class.java)
                                 ?: child.child("updated_at").getValue(Long::class.java)?.toString()
@@ -699,6 +938,7 @@ class SupabaseRepository {
                                 nombre = nombre,
                                 telefono = telefono,
                                 placas = placas,
+                                numeroUnidad = numeroUnidad,
                                 status = status,
                                 timestamp = updatedAt
                             )
@@ -732,6 +972,8 @@ class SupabaseRepository {
         }
         
         launch {
+            syncServerTimeAndExpire()
+            getAppConfig()
             channel.subscribe()
             try {
                 val initialProfile = supabase.postgrest["profiles"].select {
@@ -761,6 +1003,7 @@ class SupabaseRepository {
         }
         
         launch {
+            getAppConfig()
             channel.subscribe()
             try {
                 val initialProfile = supabase.postgrest["profiles"].select {

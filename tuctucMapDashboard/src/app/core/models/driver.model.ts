@@ -7,6 +7,17 @@ export type DriverStatus = 'pendiente' | 'aprobado' | 'rechazado' | 'suscripcion
 export type SubscriptionPlan = 'trial' | 'semanal' | 'quincenal' | 'mensual' | 'personalizado';
 export type PaymentMethod = 'efectivo' | 'transferencia' | 'deposito_bancario' | 'gratis_prueba';
 
+export interface AppConfig {
+  id: string;
+  admin_whatsapp_phone: string;
+  banrural_account: string;
+  bi_account: string;
+  price_semanal: number;
+  price_quincenal: number;
+  price_mensual: number;
+  max_search_radius_km: number;
+}
+
 export interface SubscriptionHistory {
   id: string;
   driver_id: string;
@@ -28,6 +39,7 @@ export interface Driver {
   email: string;
   telefono: string;
   placas: string;
+  numeroUnidad?: string;
   estadoAprobacion: DriverStatus;
   fechaVencimientoSuscripcion?: number;
   suscripcionesCount?: number;
@@ -47,6 +59,7 @@ export interface LiveDriverLocation {
   nombre: string;
   telefono: string;
   placas: string;
+  numeroUnidad?: string;
   lat: number;
   lon: number;
   active: boolean;

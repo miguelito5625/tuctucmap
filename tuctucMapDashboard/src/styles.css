@@ -57,3 +57,33 @@ body {
   background: rgba(59, 130, 246, 0.3);
   color: #e2e8f0;
 }
+
+/* ── Global Dialog & Overlay Responsiveness ─────────────── */
+.cdk-overlay-pane {
+  max-width: 95vw !important;
+}
+
+.mat-mdc-dialog-container .mat-mdc-dialog-surface {
+  max-width: 95vw !important;
+  box-sizing: border-box;
+}
+
+.dark-dialog .mat-mdc-dialog-surface {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px !important;
+}
+
+@media (max-width: 640px) {
+  .mat-mdc-dialog-container .mat-mdc-dialog-title {
+    font-size: 1.15rem !important;
+    padding: 16px 16px 8px !important;
+  }
+  .mat-mdc-dialog-container .mat-mdc-dialog-content {
+    padding: 8px 16px !important;
+  }
+  .mat-mdc-dialog-container .mat-mdc-dialog-actions {
+    padding: 8px 16px 16px !important;
+  }
+}

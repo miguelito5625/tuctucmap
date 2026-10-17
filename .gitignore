@@ -20,11 +20,21 @@ tmp/
 out-tsc/
 bazel-out/
 
-# Node
+# Node & Secrets (NUNCA SUBIR A GITHUB)
 node_modules/
 npm-debug.log
 yarn-error.log
 .env
+.env.*
+!.env.example
+ACCESOS_USUARIOS.md
+**/local.properties
+**/keystore.properties
+**/*.jks
+**/*.keystore
+tuctucMapDashboard/src/environments/environment.ts
+tuctucMapDashboard/src/environments/environment.development.ts
+!tuctucMapDashboard/src/environments/environment.example.ts
 
 # IDEs and editors
 .project

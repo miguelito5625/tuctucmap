@@ -190,7 +190,7 @@ import * as L from 'leaflet';
     .map-viewport {
       width: 100%;
       height: 100%;
-      min-height: 500px;
+      min-height: 350px;
     }
 
     .fleet-sidebar {
@@ -306,6 +306,72 @@ import * as L from 'leaflet';
       mat-icon { font-size: 44px; width: 44px; height: 44px; opacity: 0.4; margin-bottom: 8px; }
       p { margin: 0; font-size: 0.85rem; }
     }
+
+    /* ── Responsive Media Queries ───────────────────────────── */
+    @media (max-width: 991.98px) {
+      .fleet-page {
+        padding: 16px;
+        height: auto;
+        min-height: calc(100vh - 64px);
+      }
+
+      .fleet-content {
+        flex-direction: column;
+        height: auto;
+      }
+
+      .map-card {
+        height: 420px;
+        min-height: 350px;
+        flex: none;
+      }
+
+      .fleet-sidebar {
+        width: 100%;
+        max-height: 380px;
+      }
+
+      .driver-list {
+        max-height: 300px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .fleet-page {
+        padding: 12px;
+        gap: 14px;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+      }
+
+      .page-title-group {
+        gap: 12px;
+      }
+
+      .page-title {
+        font-size: 1.2rem;
+      }
+
+      .fleet-actions {
+        width: 100%;
+        gap: 8px;
+
+        button {
+          flex: 1;
+          padding: 0 8px;
+          font-size: 0.8rem;
+        }
+      }
+
+      .map-card {
+        height: 340px;
+        min-height: 280px;
+      }
+    }
   `],
 })
 export class FleetMapComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -420,13 +486,18 @@ export class FleetMapComponent implements OnInit, AfterViewInit, OnDestroy {
         iconAnchor: [18, 18],
       });
 
+      const safeName = this.escapeHtml(driver.nombre || 'Conductor');
+      const safePlate = this.escapeHtml(driver.placas || '');
+      const safePhone = this.escapeHtml(driver.telefono || '');
+      const safeStatus = this.escapeHtml(driver.status || 'Disponible');
+
       const popupContent = `
         <div style="font-family: sans-serif; color: #1e293b; padding: 4px;">
-          <h4 style="margin: 0 0 4px; font-size: 14px; font-weight: bold;">${driver.nombre || 'Conductor'}</h4>
-          <p style="margin: 0 0 2px; font-size: 12px; color: #475569;"><b>Placas:</b> ${driver.placas}</p>
-          <p style="margin: 0 0 2px; font-size: 12px; color: #475569;"><b>Teléfono:</b> ${driver.telefono}</p>
+          <h4 style="margin: 0 0 4px; font-size: 14px; font-weight: bold;">${safeName}</h4>
+          <p style="margin: 0 0 2px; font-size: 12px; color: #475569;"><b>Placas:</b> ${safePlate}</p>
+          <p style="margin: 0 0 2px; font-size: 12px; color: #475569;"><b>Teléfono:</b> ${safePhone}</p>
           <p style="margin: 0; font-size: 12px; color: ${isBusy ? '#ea580c' : '#16a34a'}; font-weight: bold;">
-            Estado: ${driver.status || 'Disponible'}
+            Estado: ${safeStatus}
           </p>
         </div>
       `;
@@ -443,6 +514,15 @@ export class FleetMapComponent implements OnInit, AfterViewInit, OnDestroy {
         this.markers.set(driver.driver_id, marker);
       }
     });
+  }
+
+  private escapeHtml(raw: string): string {
+    return String(raw)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   focusDriver(driver: LiveDriverLocation): void {

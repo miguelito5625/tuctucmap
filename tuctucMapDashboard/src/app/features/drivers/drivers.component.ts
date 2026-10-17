@@ -161,8 +161,10 @@ export interface SubscriptionDialogData {
       color: #f1f5f9;
       border-radius: 20px;
       overflow: hidden;
-      min-width: 420px;
+      width: 100%;
       max-width: 500px;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     .sub-dialog__header {
@@ -306,6 +308,29 @@ export interface SubscriptionDialogData {
         margin-right: 4px;
       }
     }
+
+    @media (max-width: 480px) {
+      .sub-dialog__row {
+        flex-direction: column;
+        gap: 0;
+      }
+      .sub-dialog__plans {
+        grid-template-columns: 1fr;
+      }
+      .sub-dialog__header {
+        padding: 16px 18px 14px;
+      }
+      .sub-dialog__body {
+        padding: 16px 18px 8px;
+      }
+      .sub-dialog__actions {
+        padding: 12px 18px 16px;
+        flex-direction: column-reverse;
+        button {
+          width: 100%;
+        }
+      }
+    }
   `],
 })
 export class SubscriptionDialogComponent implements OnInit {
@@ -329,7 +354,9 @@ export class SubscriptionDialogComponent implements OnInit {
   }
 
   private calculatePlanExpiry(plan: SubscriptionPlan): void {
-    const baseDate = new Date();
+    const currentExpiry = this.data.driver.fechaVencimientoSuscripcion || 0;
+    // Si el conductor paga puntualmente antes de vencer, sumar los días a su vencimiento actual
+    const baseDate = currentExpiry > Date.now() ? new Date(currentExpiry) : new Date();
     switch (plan) {
       case 'semanal':
         baseDate.setDate(baseDate.getDate() + 7);
@@ -415,6 +442,8 @@ export class DriversComponent implements OnInit, OnDestroy {
   readonly isLoading = signal(true);
   readonly selectedTabIndex = signal(0);
   readonly processingUid = signal<string | null>(null);
+  private banruralAccount = '3402-0987-65';
+  private weeklyPrice = 25.00;
 
   // Financial KPIs
   readonly financialKPIs = signal<FinancialKPIs>({
@@ -469,6 +498,10 @@ export class DriversComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subscribeDrivers();
     this.loadFinancialStats();
+    this.supabaseService.getAppConfig().then((cfg) => {
+      this.banruralAccount = cfg.banrural_account;
+      this.weeklyPrice = cfg.price_semanal;
+    });
   }
 
   ngOnDestroy(): void {
@@ -586,7 +619,7 @@ export class DriversComponent implements OnInit, OnDestroy {
     if (phone.length === 8) phone = '502' + phone;
 
     const expiryStr = this.formatExpiryDate(driver.fechaVencimientoSuscripcion);
-    const msg = `Hola ${driver.nombre}, te saludamos de TucTucMap. Te recordamos que tu cuota para el Torito placas ${driver.placas} vence el ${expiryStr}. Para mantenerte visible en el mapa y recibiendo viajes, por favor deposita tu cuota de Q25 al número de cuenta Banrural 3402-0987-65 y envíanos tu boleta. ¡Muchas gracias!`;
+    const msg = `Hola ${driver.nombre}, te saludamos de TucTucMap. Te recordamos que tu cuota para el Torito placas ${driver.placas} vence el ${expiryStr}. Para mantenerte visible en el mapa y recibiendo viajes, por favor deposita tu cuota de Q${this.weeklyPrice.toFixed(2)} al número de cuenta Banrural ${this.banruralAccount} y envíanos tu boleta. ¡Muchas gracias!`;
 
     const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');

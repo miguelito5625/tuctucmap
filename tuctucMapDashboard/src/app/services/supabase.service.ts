@@ -3,8 +3,8 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 import { Observable, BehaviorSubject } from 'rxjs';
 import {
+  AppConfig,
   Driver,
-  DriverStatus,
   SubscriptionHistory,
   SubscriptionPlan,
   PaymentMethod,
@@ -18,6 +18,16 @@ import {
 })
 export class SupabaseService {
   private supabase: SupabaseClient;
+  private cachedConfig: AppConfig = {
+    id: 'default',
+    admin_whatsapp_phone: '50230000000',
+    banrural_account: '3402-0987-65',
+    bi_account: '027-019842-1',
+    price_semanal: 25.00,
+    price_quincenal: 45.00,
+    price_mensual: 80.00,
+    max_search_radius_km: 5.00
+  };
 
   constructor() {
     this.supabase = createClient(environment.supabase.url, environment.supabase.key);
@@ -37,6 +47,40 @@ export class SupabaseService {
 
   async signOut() {
     return this.supabase.auth.signOut();
+  }
+
+  async getAppConfig(): Promise<AppConfig> {
+    try {
+      const { data, error } = await this.supabase
+        .from('app_config')
+        .select('*')
+        .eq('id', 'default')
+        .single();
+      if (!error && data) {
+        this.cachedConfig = {
+          id: data.id,
+          admin_whatsapp_phone: data.admin_whatsapp_phone || '50230000000',
+          banrural_account: data.banrural_account || '3402-0987-65',
+          bi_account: data.bi_account || '027-019842-1',
+          price_semanal: Number(data.price_semanal) || 25.00,
+          price_quincenal: Number(data.price_quincenal) || 45.00,
+          price_mensual: Number(data.price_mensual) || 80.00,
+          max_search_radius_km: Number(data.max_search_radius_km) || 5.00
+        };
+      }
+    } catch {
+      // Fallback a cachedConfig
+    }
+    return this.cachedConfig;
+  }
+
+  async updateAppConfig(config: Partial<AppConfig>): Promise<void> {
+    const { error } = await this.supabase
+      .from('app_config')
+      .update({ ...config, updated_at: new Date().toISOString() })
+      .eq('id', 'default');
+    if (error) throw error;
+    await this.getAppConfig();
   }
 
   async getCurrentUserProfile() {
@@ -88,6 +132,12 @@ export class SupabaseService {
   }
 
   private async fetchDrivers(): Promise<void> {
+    try {
+      await this.supabase.rpc('sync_server_time_and_expire');
+    } catch {
+      // Ignorar si falla silenciosamente
+    }
+
     const { data, error } = await this.supabase
       .from('profiles')
       .select('*, driver_subscriptions(count)')
@@ -105,6 +155,7 @@ export class SupabaseService {
       email: item.email || '',
       telefono: item.phone || '',
       placas: item.plate_number || '',
+      numeroUnidad: item.unit_number || '',
       estadoAprobacion: item.approval_status,
       fechaVencimientoSuscripcion: item.subscription_end_date ? new Date(item.subscription_end_date).getTime() : 0,
       suscripcionesCount: Array.isArray(item.driver_subscriptions) ? (item.driver_subscriptions[0]?.count ?? item.driver_subscriptions.length) : 0
@@ -154,6 +205,7 @@ export class SupabaseService {
   }
 
   async getFinancialStats(): Promise<FinancialKPIs> {
+    const cfg = await this.getAppConfig();
     const { data: subs } = await this.supabase
       .from('driver_subscriptions')
       .select('amount_paid, created_at, end_date');
@@ -200,7 +252,7 @@ export class SupabaseService {
       totalRevenue,
       monthRevenue,
       expiringIn7Days,
-      expiringAmountExpected: expiringIn7Days * 25.00,
+      expiringAmountExpected: expiringIn7Days * cfg.price_semanal,
       activeFleetCount
     };
   }
@@ -237,10 +289,20 @@ export class SupabaseService {
 
   async getLiveDrivers(): Promise<LiveDriverLocation[]> {
     try {
-      const res = await fetch('https://tuctucmap-default-rtdb.firebaseio.com/driver_locations.json');
+      const baseUrl = (environment.firebase?.databaseUrl || 'https://tuctuc-map-default-rtdb.firebaseio.com').replace(/\/+$/, '');
+      const res = await fetch(`${baseUrl}/driver_locations.json`);
       const data = await res.json();
       if (!data) return [];
-      return Object.values(data).filter((d: any) => d && d.active) as LiveDriverLocation[];
+      const now = Date.now();
+      const maxAgeMs = 180_000; // TTL de 3 minutos igual que en la app Android
+      return Object.values(data).filter((d: any) => {
+        if (!d || !d.active) return false;
+        const updatedMs = Number(d.updated_at || 0);
+        if (updatedMs > 0 && now - updatedMs > maxAgeMs) {
+          return false;
+        }
+        return true;
+      }) as LiveDriverLocation[];
     } catch (e) {
       console.error('Error fetching live drivers from Firebase:', e);
       return [];
@@ -259,14 +321,37 @@ export class SupabaseService {
     const profiles = profilesResult.data || [];
     const profileMap = new Map(profiles.map(p => [p.id, p.name]));
 
-    return data.map(trip => ({
+    return data.map(trip => {
+      let routePoints = trip.route_points;
+      if (typeof routePoints === 'string') {
+        try {
+          routePoints = JSON.parse(routePoints);
+        } catch {
+          routePoints = null;
+        }
+      }
+
+      const directPassengerName = trip.passenger_name?.trim();
+      const mappedPassengerName = trip.passenger_id ? profileMap.get(trip.passenger_id) : null;
+      const passengerName = directPassengerName || mappedPassengerName || 'Pasajero (Invitado)';
+      const isRegistered = Boolean(trip.passenger_id);
+
+      return {
         id: trip.id,
-        passengerName: profileMap.get(trip.passenger_id) || 'Desconocido',
-        driverName: profileMap.get(trip.driver_id) || 'Desconocido',
+        passengerName,
+        passengerPhone: trip.passenger_phone || '',
+        isRegistered,
+        driverName: profileMap.get(trip.driver_id) || 'Torito',
         status: trip.status,
         message: trip.message || 'Sin mensaje',
+        fare: trip.fare != null ? Number(trip.fare) : null,
+        distance_km: trip.distance_km != null ? Number(trip.distance_km) : null,
+        route_points: Array.isArray(routePoints) ? routePoints : null,
+        passenger_lat: trip.passenger_lat,
+        passenger_lon: trip.passenger_lon,
         created_at: new Date(trip.created_at).getTime()
-    }));
+      };
+    });
   }
 
   async approveDriver(uid: string): Promise<void> {
@@ -303,9 +388,25 @@ export class SupabaseService {
     paymentMethod: PaymentMethod = 'deposito_bancario',
     referenceNumber: string = ''
   ): Promise<void> {
-    const start = new Date();
+    const now = new Date();
+    let baseTimeMs = now.getTime();
+
+    // Si el conductor aún tiene días vigentes, sumar los nuevos días a su fecha actual de vencimiento
+    const { data: currentProfile } = await this.supabase
+      .from('profiles')
+      .select('subscription_end_date')
+      .eq('id', uid)
+      .single();
+
+    if (currentProfile?.subscription_end_date) {
+      const existingEndMs = new Date(currentProfile.subscription_end_date).getTime();
+      if (existingEndMs > baseTimeMs) {
+        baseTimeMs = existingEndMs;
+      }
+    }
+
     const days = planType === 'mensual' ? 30 : (planType === 'quincenal' ? 15 : 7);
-    const end = new Date(start.getTime() + (days * 24 * 60 * 60 * 1000));
+    const end = new Date(baseTimeMs + (days * 24 * 60 * 60 * 1000));
     
     const { error: profileError } = await this.supabase.from('profiles').update({ 
       approval_status: 'aprobado',
@@ -315,7 +416,7 @@ export class SupabaseService {
 
     const { error: subError } = await this.supabase.from('driver_subscriptions').insert({
       driver_id: uid,
-      start_date: start.toISOString(),
+      start_date: now.toISOString(),
       end_date: end.toISOString(),
       plan_type: planType,
       amount_paid: amountPaid,

@@ -57,10 +57,24 @@ import { SupabaseService } from '../../services/supabase.service';
       font-weight: 600;
       .title-icon { color: #60a5fa; }
     }
-    .subtitle { color: #94a3b8; margin-bottom: 24px; }
+    .subtitle { color: #94a3b8; margin-bottom: 20px; }
     .full-width { width: 100%; }
-    .dialog-content { min-width: 300px; overflow-y: visible; }
-    .dialog-actions { padding: 0 24px 24px; }
+    .dialog-content {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      overflow-y: visible;
+    }
+    .dialog-actions {
+      padding: 0 24px 24px;
+      display: flex;
+      gap: 8px;
+    }
+    @media (max-width: 480px) {
+      .dialog-actions {
+        padding: 0 16px 16px;
+      }
+    }
   `]
 })
 export class ChangeNameDialogComponent {

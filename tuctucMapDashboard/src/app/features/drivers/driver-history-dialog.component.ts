@@ -87,6 +87,14 @@ import { SubscriptionHistory } from '../../core/models/driver.model';
       position: relative;
       min-height: 200px;
       padding: 0 24px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 100%;
+    }
+    @media (max-width: 480px) {
+      .dialog-content {
+        padding: 0 12px;
+      }
     }
     .subtitle {
       color: #94a3b8;
@@ -95,6 +103,7 @@ import { SubscriptionHistory } from '../../core/models/driver.model';
     }
     .full-width-table {
       width: 100%;
+      min-width: 360px;
       background: transparent;
     }
     ::ng-deep .mat-mdc-header-cell {

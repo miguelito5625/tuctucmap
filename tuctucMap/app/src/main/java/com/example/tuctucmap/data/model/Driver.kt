@@ -3,6 +3,42 @@ package com.example.tuctucmap.data.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Reloj sincronizado con el servidor (Firebase .info/serverTimeOffset y Supabase RPC)
+ * para impedir que el cambio manual de fecha/hora del teléfono evada el vencimiento de suscripción.
+ */
+object ServerClock {
+    @Volatile
+    var offsetMillis: Long = 0L
+
+    fun nowMillis(): Long = System.currentTimeMillis() + offsetMillis
+
+    fun updateFromServerEpoch(serverEpochMillis: Long) {
+        if (serverEpochMillis > 1_700_000_000_000L) {
+            offsetMillis = serverEpochMillis - System.currentTimeMillis()
+        }
+    }
+}
+
+@Serializable
+data class AppConfig(
+    val id: String = "default",
+    @SerialName("admin_whatsapp_phone")
+    val adminWhatsappPhone: String = "50230000000",
+    @SerialName("banrural_account")
+    val banruralAccount: String = "3402-0987-65",
+    @SerialName("bi_account")
+    val biAccount: String = "027-019842-1",
+    @SerialName("price_semanal")
+    val priceSemanal: Double = 25.0,
+    @SerialName("price_quincenal")
+    val priceQuincenal: Double = 45.0,
+    @SerialName("price_mensual")
+    val priceMensual: Double = 80.0,
+    @SerialName("max_search_radius_km")
+    val maxSearchRadiusKm: Double = 5.0
+)
+
 @Serializable
 data class Driver(
     val id: String = "",
@@ -13,6 +49,8 @@ data class Driver(
     val telefono: String = "",
     @SerialName("plate_number")
     val placas: String = "",
+    @SerialName("unit_number")
+    val numeroUnidad: String = "",
     @SerialName("approval_status")
     val estadoAprobacion: String = "pendiente",
     @SerialName("subscription_end_date")
@@ -24,23 +62,26 @@ data class Driver(
     val approvalStatus: String get() = estadoAprobacion
 
     /**
+     * Etiqueta amigable que prioriza el número de unidad/padrón si existe, junto con la placa.
+     */
+    val displayIdentifier: String
+        get() = if (numeroUnidad.isNotBlank()) "$numeroUnidad • $placas" else placas
+
+    /**
      * Retorna el timestamp en milisegundos de la fecha de vencimiento, o 0L si es inválida o vacía.
      */
     val expiryTimestampMillis: Long
         get() = parseIsoTimestamp(fechaVencimientoSuscripcion)
 
     /**
-     * Determina si la suscripción está vencida.
-     * Retorna true si:
-     * 1. El estado es explícitamente "suscripcion_vencida", o
-     * 2. El estado es "aprobado", tiene fecha de vencimiento y dicha fecha ya expiró en el pasado.
+     * Determina si la suscripción está vencida usando la hora sincronizada del servidor (ServerClock).
      */
     val isSubscriptionExpired: Boolean
         get() {
             if (estadoAprobacion == "suscripcion_vencida") return true
             if (estadoAprobacion == "aprobado") {
                 val expiryMs = expiryTimestampMillis
-                if (expiryMs > 0L && System.currentTimeMillis() > expiryMs) {
+                if (expiryMs > 0L && ServerClock.nowMillis() > expiryMs) {
                     return true
                 }
             }

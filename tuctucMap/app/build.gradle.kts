@@ -14,6 +14,26 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+val localPropertiesFile = rootProject.file("local.properties")
+val localProperties = Properties()
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
+val rootEnvFile = rootProject.file("../.env")
+val rootEnvProperties = Properties()
+if (rootEnvFile.exists()) {
+    FileInputStream(rootEnvFile).use { rootEnvProperties.load(it) }
+}
+
+fun getSecretProperty(key: String, defaultVal: String): String {
+    val raw = rootEnvProperties.getProperty(key)
+        ?: localProperties.getProperty(key)
+        ?: System.getenv(key)
+        ?: defaultVal
+    return raw.trim().removeSurrounding("\"").removeSurrounding("'")
+}
+
 android {
     namespace = "com.example.tuctucmap"
     compileSdk {
@@ -30,6 +50,14 @@ android {
         versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val supabaseUrl = getSecretProperty("SUPABASE_URL", "https://doypobovndxkbkikkozq.supabase.co")
+        val supabaseKey = getSecretProperty("SUPABASE_ANON_KEY", "")
+        val firebaseRtdbUrl = getSecretProperty("FIREBASE_RTDB_URL", "https://tuctuc-map-default-rtdb.firebaseio.com")
+
+        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+        buildConfigField("String", "SUPABASE_KEY", "\"$supabaseKey\"")
+        buildConfigField("String", "FIREBASE_RTDB_URL", "\"$firebaseRtdbUrl\"")
     }
 
     signingConfigs {
@@ -45,9 +73,12 @@ android {
 
     buildTypes {
         release {
-            optimization {
-                enable = false
-            }
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             ndk {
                 debugSymbolLevel = "FULL"
             }
@@ -62,6 +93,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

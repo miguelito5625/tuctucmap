@@ -6,10 +6,16 @@
 /out-tsc
 /bazel-out
 
-# Node
+# Node & Secrets
 /node_modules
 npm-debug.log
 yarn-error.log
+.env
+.env.*
+!.env.example
+src/environments/environment.ts
+src/environments/environment.development.ts
+!src/environments/environment.example.ts
 
 # IDEs and editors
 .idea/

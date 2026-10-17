@@ -82,10 +82,13 @@
 
 .table-container {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 .dark-table {
   width: 100%;
+  min-width: 720px;
   background: transparent;
 
   th.mat-header-cell {
@@ -131,6 +134,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
+
+    &.registered-icon {
+      color: #4ade80;
+      background-color: rgba(74, 222, 128, 0.12);
+    }
+
+    &.guest-icon {
+      color: #94a3b8;
+      background-color: rgba(148, 163, 184, 0.12);
+    }
   }
 
   &.driver mat-icon {
@@ -138,8 +151,66 @@
     background-color: rgba(249, 212, 35, 0.1);
   }
 
+  .user-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    .user-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .user-name {
+        font-weight: 600;
+        color: #f8fafc;
+        font-size: 0.92rem;
+      }
+    }
+
+    .user-phone {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+
+      .phone-mini-icon {
+        font-size: 12px;
+        width: 12px;
+        height: 12px;
+        padding: 0;
+        background: transparent;
+        color: #22c55e;
+      }
+    }
+  }
+
   span {
     font-weight: 500;
+  }
+}
+
+.account-tag {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 12px;
+  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+
+  &.tag-registered {
+    background-color: rgba(74, 222, 128, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.3);
+  }
+
+  &.tag-guest {
+    background-color: rgba(148, 163, 184, 0.12);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.25);
   }
 }
 
@@ -215,3 +286,274 @@ mat-chip {
     }
   }
 }
+
+.fare-badge {
+  display: inline-block;
+  background: rgba(249, 212, 35, 0.15);
+  color: #f9d423;
+  border: 1px solid rgba(249, 212, 35, 0.3);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.distance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.no-data-text {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.route-btn {
+  color: #94a3b8;
+  transition: all 0.2s ease;
+
+  mat-icon.has-route {
+    color: #f9d423;
+  }
+
+  &:hover:not([disabled]) {
+    color: #60a5fa;
+    background: rgba(59, 130, 246, 0.15);
+  }
+
+  &[disabled] {
+    opacity: 0.25;
+  }
+}
+
+/* Modal de Ruta GPS */
+.route-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeInModal 0.25s ease-out;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.route-modal-card {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 900px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: 90vh;
+}
+
+.route-modal-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  .modal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .modal-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(249, 212, 35, 0.15);
+      color: #f9d423;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      mat-icon {
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+      }
+    }
+
+    h3 {
+      margin: 0;
+      color: #f8fafc;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    p {
+      margin: 2px 0 0;
+      color: #94a3b8;
+      font-size: 0.82rem;
+    }
+  }
+
+  .close-btn {
+    color: #94a3b8;
+    &:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+.route-metrics-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px 20px;
+  background: rgba(30, 41, 59, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+  .metric-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .label {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .value {
+      font-size: 0.95rem;
+      color: #f1f5f9;
+      font-weight: 600;
+    }
+
+    .passenger-modal-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .subvalue-phone {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+
+    &.highlight-fare .value {
+      color: #f9d423;
+      font-weight: 700;
+    }
+
+    &.highlight-dist .value {
+      color: #4ade80;
+      font-weight: 700;
+    }
+  }
+}
+
+.route-map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  background: #1e293b;
+
+  .route-map-viewport {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* ── Responsive Media Queries ───────────────────────────── */
+@media (max-width: 991.98px) {
+  .trips-container {
+    padding: 18px 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .route-modal-backdrop {
+    padding: 10px;
+  }
+
+  .route-modal-card {
+    max-height: 94vh;
+    border-radius: 12px;
+  }
+
+  .route-modal-header {
+    padding: 12px 14px;
+
+    .modal-title-group h3 {
+      font-size: 1.05rem;
+    }
+  }
+
+  .route-metrics-bar {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px 14px;
+  }
+
+  .route-map-wrapper {
+    height: 320px;
+  }
+}
+
+@media (max-width: 640px) {
+  .trips-container {
+    padding: 12px 10px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+
+    .header-left .title h2 {
+      font-size: 1.25rem;
+    }
+
+    .header-actions {
+      width: 100%;
+    }
+
+    .export-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .route-metrics-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .route-map-wrapper {
+    height: 280px;
+  }
+}
+

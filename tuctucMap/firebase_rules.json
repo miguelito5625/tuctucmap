@@ -1,19 +1,18 @@
 {
   "rules": {
-    "drivers": {
-      // Cualquier persona puede leer los perfiles de los conductores (para verificar estado de aprobación)
+    "driver_locations": {
       ".read": "true",
-      "$uid": {
-        // Solo el conductor autenticado puede escribir/modificar su propio perfil al registrarse
-        ".write": "auth != null && auth.uid == $uid"
+      "$driverId": {
+        ".write": "true",
+        ".validate": "!newData.exists() || (newData.hasChildren(['driver_id', 'lat', 'lon', 'status', 'updated_at']) && newData.child('driver_id').val() == $driverId && newData.child('lat').isNumber() && newData.child('lat').val() >= -90 && newData.child('lat').val() <= 90 && newData.child('lon').isNumber() && newData.child('lon').val() >= -180 && newData.child('lon').val() <= 180 && newData.child('status').isString())"
       }
     },
-    "active_locations": {
-      // Cualquier persona (usuarios/pasajeros) puede leer las ubicaciones activas en tiempo real
+    "trips": {
       ".read": "true",
-      "$uid": {
-        // Solo el conductor autenticado puede actualizar su propia ubicación
-        ".write": "auth != null && auth.uid == $uid"
+      ".indexOn": ["status", "driverId", "passengerId", "createdAt"],
+      "$tripId": {
+        ".write": "true",
+        ".validate": "!newData.exists() || (newData.hasChildren(['tripId', 'passengerId', 'passengerLat', 'passengerLon', 'status', 'createdAt']) && newData.child('tripId').val() == $tripId && newData.child('passengerLat').isNumber() && newData.child('passengerLat').val() >= -90 && newData.child('passengerLat').val() <= 90 && newData.child('passengerLon').isNumber() && newData.child('passengerLon').val() >= -180 && newData.child('passengerLon').val() <= 180 && (newData.child('status').val() == 'pending' || newData.child('status').val() == 'accepted' || newData.child('status').val() == 'completed' || newData.child('status').val() == 'cancelled' || newData.child('status').val() == 'rejected'))"
       }
     }
   }

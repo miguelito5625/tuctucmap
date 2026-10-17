@@ -1,7 +1,12 @@
-<mat-sidenav-container class="shell-container">
+<mat-sidenav-container class="shell-container" [hasBackdrop]="isMobile()">
 
   <!-- ─── Sidenav ─────────────────────────────────────── -->
-  <mat-sidenav class="sidenav" mode="side" [opened]="sidenavOpened()">
+  <mat-sidenav
+    class="sidenav"
+    [mode]="sidenavMode()"
+    [opened]="sidenavOpened()"
+    (closed)="sidenavOpened.set(false)"
+  >
 
     <!-- Brand -->
     <div class="brand">
@@ -22,6 +27,7 @@
         mat-list-item
         routerLink="/fleet-map"
         routerLinkActive="active-nav-item"
+        (click)="onNavItemClick()"
         matTooltip="Mapa de flota en tiempo real"
         matTooltipPosition="right"
       >
@@ -33,6 +39,7 @@
         mat-list-item
         routerLink="/drivers"
         routerLinkActive="active-nav-item"
+        (click)="onNavItemClick()"
         matTooltip="Gestión de conductores"
         matTooltipPosition="right"
       >
@@ -44,6 +51,7 @@
         mat-list-item
         routerLink="/subscriptions"
         routerLinkActive="active-nav-item"
+        (click)="onNavItemClick()"
         matTooltip="Historial y cobros de suscripciones"
         matTooltipPosition="right"
       >
@@ -55,6 +63,7 @@
         mat-list-item
         routerLink="/passengers"
         routerLinkActive="active-nav-item"
+        (click)="onNavItemClick()"
         matTooltip="Directorio de pasajeros"
         matTooltipPosition="right"
       >
@@ -66,6 +75,7 @@
         mat-list-item
         routerLink="/trips"
         routerLinkActive="active-nav-item"
+        (click)="onNavItemClick()"
         matTooltip="Historial de Viajes"
         matTooltipPosition="right"
       >
@@ -95,7 +105,7 @@
         <mat-icon>menu</mat-icon>
       </button>
 
-      <div class="toolbar-breadcrumb">
+      <div class="toolbar-breadcrumb hide-on-mobile">
         <mat-icon class="breadcrumb-icon">dashboard</mat-icon>
         <span>Dashboard</span>
       </div>
@@ -105,7 +115,7 @@
       <!-- User Menu Trigger -->
       <div class="toolbar-user" [matMenuTriggerFor]="userMenu" tabindex="0" role="button" aria-haspopup="true">
         <div class="user-avatar">{{ adminName().charAt(0).toUpperCase() }}</div>
-        <div style="display: flex; flex-direction: column; line-height: 1.2;">
+        <div class="user-text-group" style="display: flex; flex-direction: column; line-height: 1.2;">
           <span class="user-name">{{ adminName() }}</span>
           <span style="font-size: 0.65rem; color: #94a3b8; font-weight: 500;">Super Admin</span>
         </div>

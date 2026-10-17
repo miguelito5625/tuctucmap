@@ -9,7 +9,10 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
+import com.example.tuctucmap.data.SecurePrefs
 import com.example.tuctucmap.data.model.Driver
+import com.example.tuctucmap.data.model.ServerClock
+import com.example.tuctucmap.data.model.parseIsoTimestamp
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.data.supabase
 import com.example.tuctucmap.ui.AppNavigation
@@ -18,15 +21,10 @@ import com.example.tuctucmap.ui.screens.AnimatedSplashScreen
 import com.example.tuctucmap.ui.theme.TuctucMapTheme
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.status.SessionStatus
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import org.osmdroid.config.Configuration
-
-import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+import org.osmdroid.config.Configuration
 
 class MainActivity : ComponentActivity() {
 
@@ -72,6 +70,13 @@ class MainActivity : ComponentActivity() {
                     val sharedPrefs = getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
                     val savedRole = sharedPrefs.getString("user_role", null)
 
+                    // Precargar configuración dinámica y sincronizar reloj del servidor en paralelo
+                    try {
+                        withTimeoutOrNull(1500L) {
+                            repository.getAppConfig()
+                        }
+                    } catch (_: Exception) {}
+
                     if (savedRole.isNullOrBlank()) {
                         // Usuario sin sesión previa iniciada: acceso público directo al mapa como invitado
                         initialScreen = Screen.PassengerMap
@@ -101,20 +106,18 @@ class MainActivity : ComponentActivity() {
                                     ?: (status as? SessionStatus.Authenticated)?.session?.user?.id
                                     ?: ""
 
-                                val cachedApproval = sharedPrefs.getString("driver_last_approval_status", null)
-                                val cachedSubEnd = sharedPrefs.getString("driver_last_sub_end", null)
+                                val cachedApproval = SecurePrefs.getDriverApprovalStatusCache(this@MainActivity)
+                                val cachedSubEnd = SecurePrefs.getDriverSubEndCache(this@MainActivity)
 
                                 val isSubExpiredCached = cachedSubEnd?.let {
-                                    try {
-                                        val expiryInstant = java.time.Instant.parse(it)
-                                        java.time.Instant.now().isAfter(expiryInstant)
-                                    } catch (_: Exception) { false }
+                                    val expiryMs = parseIsoTimestamp(it)
+                                    expiryMs > 0L && ServerClock.nowMillis() > expiryMs
                                 } ?: false
 
                                 // Intentar refrescar perfil del conductor en tiempo real (timeout rápido)
                                 val driver = if (uid.isNotBlank()) {
                                     try {
-                                        withTimeoutOrNull(2000L) {
+                                        withTimeoutOrNull(2500L) {
                                             kotlinx.coroutines.suspendCancellableCoroutine<Driver?> { continuation ->
                                                 repository.getDriverProfileOnce(uid) { d ->
                                                     if (continuation.isActive) continuation.resumeWith(Result.success(d))
@@ -125,14 +128,15 @@ class MainActivity : ComponentActivity() {
                                 } else null
 
                                 if (driver != null) {
-                                    sharedPrefs.edit()
-                                        .putString("driver_last_approval_status", driver.estadoAprobacion)
-                                        .putString("driver_last_sub_end", driver.subscriptionEndDate)
-                                        .apply()
+                                    SecurePrefs.saveDriverSubscriptionCache(
+                                        this@MainActivity,
+                                        driver.estadoAprobacion,
+                                        driver.subscriptionEndDate
+                                    )
                                     initialScreen = com.example.tuctucmap.ui.resolveDriverScreen(driver)
                                 } else {
                                     // Si no hubo respuesta inmediata de red pero el conductor está autenticado:
-                                    // Entrar según caché o DriverHome (DriverHomeScreen vigila el estado en tiempo real)
+                                    // Entrar según caché cifrada o DriverHome (DriverHomeScreen vigila el estado en tiempo real)
                                     initialScreen = when {
                                         isSubExpiredCached -> Screen.DriverSubscriptionExpired
                                         cachedApproval == "pendiente" || cachedApproval == "rechazado" -> Screen.DriverPending

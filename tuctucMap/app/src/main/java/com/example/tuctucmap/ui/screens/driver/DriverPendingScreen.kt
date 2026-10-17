@@ -43,13 +43,11 @@ fun DriverPendingScreen(
             repository.observeDriverProfile(uid).collectLatest { driver ->
                 if (driver != null) {
                     driverName = driver.nombre
-                    try {
-                        context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
-                            .edit()
-                            .putString("driver_last_approval_status", driver.estadoAprobacion)
-                            .putString("driver_last_sub_end", driver.subscriptionEndDate)
-                            .apply()
-                    } catch (_: Exception) {}
+                    com.example.tuctucmap.data.SecurePrefs.saveDriverSubscriptionCache(
+                        context,
+                        driver.estadoAprobacion,
+                        driver.subscriptionEndDate
+                    )
                     when {
                         driver.isSubscriptionExpired -> onSubscriptionExpired()
                         driver.estadoAprobacion == "aprobado" -> onApproved()

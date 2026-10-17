@@ -175,13 +175,24 @@ fun PassengerMapScreen(
 
     // Ubicación actual del pasajero
     val myLocGeo = myLocationOverlayInstance?.myLocation
+    val maxRadiusMeters = remember { SupabaseRepository.cachedAppConfig.maxSearchRadiusKm * 1000.0 }
 
-    // Separar conductores disponibles vs en pausa/ocupados
-    val availableDrivers = remember(rawDriverLocations) {
-        rawDriverLocations.filter { it.isAvailable }
+    // Separar conductores disponibles vs en pausa/ocupados dentro de la geocerca del municipio
+    val nearbyDriverLocations = remember(rawDriverLocations, myLocGeo?.latitude, myLocGeo?.longitude) {
+        if (myLocGeo == null || (myLocGeo.latitude == 0.0 && myLocGeo.longitude == 0.0)) {
+            rawDriverLocations
+        } else {
+            rawDriverLocations.filter {
+                it.distanceMetersTo(myLocGeo.latitude, myLocGeo.longitude) <= maxRadiusMeters
+            }
+        }
     }
-    val pausedDrivers = remember(rawDriverLocations) {
-        rawDriverLocations.filter { !it.isAvailable }
+
+    val availableDrivers = remember(nearbyDriverLocations) {
+        nearbyDriverLocations.filter { it.isAvailable }
+    }
+    val pausedDrivers = remember(nearbyDriverLocations) {
+        nearbyDriverLocations.filter { !it.isAvailable }
     }
 
     ModalNavigationDrawer(
@@ -1049,10 +1060,11 @@ fun PassengerMapScreen(
                         }
 
                         val hasAvailableDrivers = availableDrivers.isNotEmpty()
+                        val isValidGuestPhone = guestPhone.replace(Regex("[^0-9]"), "").length >= 8
                         val canRequest = if (repository.isUserLoggedIn) {
                             !isRequestingTrip && myLocGeo != null && hasAvailableDrivers
                         } else {
-                            !isRequestingTrip && myLocGeo != null && guestName.isNotBlank() && guestPhone.isNotBlank() && hasAvailableDrivers
+                            !isRequestingTrip && myLocGeo != null && guestName.trim().length >= 2 && isValidGuestPhone && hasAvailableDrivers
                         }
 
                         // Alerta si todos los toritos están en pausa
@@ -1134,8 +1146,8 @@ fun PassengerMapScreen(
                                 Text(
                                     text = when {
                                         !hasAvailableDrivers && pausedDrivers.isNotEmpty() -> "No hay toritos disponibles (en pausa)"
-                                        !hasAvailableDrivers -> "Sin toritos activos en la red"
-                                        !repository.isUserLoggedIn && (guestName.isBlank() || guestPhone.isBlank()) -> "Ingresa tu nombre y teléfono"
+                                        !hasAvailableDrivers -> "Sin toritos cercanos disponibles"
+                                        !repository.isUserLoggedIn && (guestName.trim().length < 2 || !isValidGuestPhone) -> "Ingresa nombre y teléfono (8 dígitos)"
                                         else -> "Pedir Torito Cercano"
                                     },
                                     fontWeight = FontWeight.Bold,
@@ -1188,7 +1200,7 @@ fun PassengerMapScreen(
                                             fontSize = 16.sp
                                         )
                                         Text(
-                                            text = "Notificando a ${rawDriverLocations.size} toritos. El primero en aceptar vendrá hacia ti.",
+                                            text = "Notificando a ${availableDrivers.size} toritos cercanos. El primero en aceptar vendrá hacia ti.",
                                             color = Color.LightGray,
                                             fontSize = 12.sp
                                         )
@@ -1238,7 +1250,7 @@ fun PassengerMapScreen(
                                             fontWeight = FontWeight.SemiBold
                                         )
                                         Text(
-                                            text = "Placas: ${activeTrip!!.driverPlate.ifBlank { "..." }}",
+                                            text = "Unidad/Placas: ${activeTrip!!.driverPlate.ifBlank { "..." }}",
                                             color = Color(0xFFF9D423),
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Medium
@@ -1305,25 +1317,17 @@ fun PassengerMapScreen(
 
                                 Spacer(modifier = Modifier.height(10.dp))
 
+                                // Solo oculta el panel local del pasajero; el conductor es quien guarda el viaje
+                                // completado con tarifa y ruta real en Supabase al llegar al destino.
                                 Button(
                                     onClick = {
-                                        coroutineScope.launch {
-                                            val current = activeTrip
-                                            val tid = activeTripId
-                                            activeTripId = null
-                                            activeTrip = null
-                                            if (current != null) {
-                                                repository.saveTripRecord(current, "completed")
-                                            }
-                                            if (tid != null) {
-                                                repository.deleteTrip(tid)
-                                            }
-                                        }
+                                        activeTripId = null
+                                        activeTrip = null
                                     },
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF334155))
                                 ) {
-                                    Text("Finalizar / Cerrar Viaje")
+                                    Text("Ocultar Tarjeta de Seguimiento")
                                 }
                             }
                             "completed" -> {

@@ -16,10 +16,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,8 +32,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.tuctucmap.data.SecurePrefs
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import java.util.Locale
 
 @Composable
 fun DriverSubscriptionExpiredScreen(
@@ -44,11 +47,21 @@ fun DriverSubscriptionExpiredScreen(
     onApprovalRevoked: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val uid = repository.currentUserUid ?: ""
     var driverName by remember { mutableStateOf("") }
     var driverPlate by remember { mutableStateOf("") }
     var driverPhone by remember { mutableStateOf("") }
     var expiredDateText by remember { mutableStateOf("") }
+    var appConfig by remember { mutableStateOf(SupabaseRepository.cachedAppConfig) }
+
+    var boletaRefInput by remember { mutableStateOf("") }
+    var selectedPlan by remember { mutableStateOf("semanal") }
+    var isSubmittingBoleta by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        appConfig = repository.getAppConfig()
+    }
 
     // Escuchar en tiempo real si el admin renueva la suscripción
     LaunchedEffect(uid) {
@@ -56,21 +69,19 @@ fun DriverSubscriptionExpiredScreen(
             repository.observeDriverProfile(uid).collectLatest { driver ->
                 if (driver != null) {
                     driverName = driver.nombre
-                    driverPlate = driver.placas
+                    driverPlate = driver.displayIdentifier
                     driverPhone = driver.telefono
 
                     val expiryMs = driver.expiryTimestampMillis
                     if (expiryMs > 0L) {
-                        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
                         expiredDateText = sdf.format(java.util.Date(expiryMs))
                     }
-                    try {
-                        context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
-                            .edit()
-                            .putString("driver_last_approval_status", driver.estadoAprobacion)
-                            .putString("driver_last_sub_end", driver.subscriptionEndDate)
-                            .apply()
-                    } catch (_: Exception) {}
+                    SecurePrefs.saveDriverSubscriptionCache(
+                        context,
+                        driver.estadoAprobacion,
+                        driver.subscriptionEndDate
+                    )
 
                     when {
                         driver.estadoAprobacion in listOf("rechazado", "pendiente") -> {
@@ -121,6 +132,7 @@ fun DriverSubscriptionExpiredScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 36.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -184,7 +196,7 @@ fun DriverSubscriptionExpiredScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // ── Planes Disponibles ────────────────────────────────────────────
+            // ── Planes Disponibles (Dinámicos desde Supabase app_config) ──────
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
@@ -204,7 +216,12 @@ fun DriverSubscriptionExpiredScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("• Plan Semanal (7 días):", color = Color.LightGray, fontSize = 13.sp)
-                        Text("Q 25.00", color = Color(0xFFF9D423), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(
+                            String.format(Locale.US, "Q %.2f", appConfig.priceSemanal),
+                            color = Color(0xFFF9D423),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
                     }
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(
@@ -212,7 +229,12 @@ fun DriverSubscriptionExpiredScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("• Plan Quincenal (15 días):", color = Color.LightGray, fontSize = 13.sp)
-                        Text("Q 45.00", color = Color(0xFFF9D423), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(
+                            String.format(Locale.US, "Q %.2f", appConfig.priceQuincenal),
+                            color = Color(0xFFF9D423),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
                     }
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(
@@ -220,7 +242,12 @@ fun DriverSubscriptionExpiredScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("• Plan Mensual (30 días):", color = Color.LightGray, fontSize = 13.sp)
-                        Text("Q 80.00", color = Color(0xFF4ADE80), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(
+                            String.format(Locale.US, "Q %.2f", appConfig.priceMensual),
+                            color = Color(0xFF4ADE80),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
                     }
                 }
             }
@@ -254,9 +281,9 @@ fun DriverSubscriptionExpiredScreen(
                     ) {
                         Column {
                             Text("Banrural Monetaria:", color = Color.LightGray, fontSize = 12.sp)
-                            Text("3402-0987-65", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                            Text(appConfig.banruralAccount, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                         }
-                        IconButton(onClick = { copyToClipboard("Cuenta Banrural", "3402098765") }) {
+                        IconButton(onClick = { copyToClipboard("Cuenta Banrural", appConfig.banruralAccount.replace("-", "")) }) {
                             Icon(Icons.Default.ContentCopy, contentDescription = "Copiar", tint = Color(0xFFF9D423), modifier = Modifier.size(18.dp))
                         }
                     }
@@ -271,23 +298,98 @@ fun DriverSubscriptionExpiredScreen(
                     ) {
                         Column {
                             Text("Banco Industrial Monetaria:", color = Color.LightGray, fontSize = 12.sp)
-                            Text("027-019842-1", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                            Text(appConfig.biAccount, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                         }
-                        IconButton(onClick = { copyToClipboard("Cuenta Banco Industrial", "0270198421") }) {
+                        IconButton(onClick = { copyToClipboard("Cuenta Banco Industrial", appConfig.biAccount.replace("-", "")) }) {
                             Icon(Icons.Default.ContentCopy, contentDescription = "Copiar", tint = Color(0xFFF9D423), modifier = Modifier.size(18.dp))
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── Registro Rápido de Número de Boleta en App ────────────────────
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Registrar Número de Boleta",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        fontSize = 14.sp
+                    )
+                    OutlinedTextField(
+                        value = boletaRefInput,
+                        onValueChange = { boletaRefInput = it },
+                        label = { Text("Número de boleta o comprobante", fontSize = 12.sp) },
+                        placeholder = { Text("Ej. 84920145") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFFF9D423),
+                            unfocusedBorderColor = Color(0x55FFFFFF),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedLabelColor = Color(0xFFF9D423),
+                            unfocusedLabelColor = Color.LightGray
+                        )
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        listOf("semanal" to "Semanal", "quincenal" to "Quincenal", "mensual" to "Mensual").forEach { (key, label) ->
+                            FilterChip(
+                                selected = selectedPlan == key,
+                                onClick = { selectedPlan = key },
+                                label = { Text(label, fontSize = 12.sp) }
+                            )
+                        }
+                    }
+                    if (boletaRefInput.isNotBlank()) {
+                        Button(
+                            onClick = {
+                                isSubmittingBoleta = true
+                                val amount = when (selectedPlan) {
+                                    "quincenal" -> appConfig.priceQuincenal
+                                    "mensual" -> appConfig.priceMensual
+                                    else -> appConfig.priceSemanal
+                                }
+                                coroutineScope.launch {
+                                    val res = repository.submitPaymentRequest(
+                                        planType = selectedPlan,
+                                        amount = amount,
+                                        referenceNumber = boletaRefInput
+                                    )
+                                    isSubmittingBoleta = false
+                                    res.onSuccess {
+                                        Toast.makeText(context, "Boleta registrada. Ahora envía la foto por WhatsApp para activación inmediata.", Toast.LENGTH_LONG).show()
+                                    }.onFailure { err ->
+                                        Toast.makeText(context, "Error: ${err.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            },
+                            enabled = !isSubmittingBoleta,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9D423), contentColor = Color(0xFF0F2027))
+                        ) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Notificar N° de Boleta en App", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
 
             // ── Botón: Enviar Boleta por WhatsApp ─────────────────────────────
             Button(
                 onClick = {
-                    val message = "Hola Administrador de TucTucMap, soy el conductor $driverName (Placas: $driverPlate, Tel: $driverPhone). Acabo de realizar el depósito para renovar mi suscripción. Adjunto mi comprobante:"
-                    // Número de atención del administrador de la app
-                    val adminPhone = "50230000000"
+                    val refExtra = if (boletaRefInput.isNotBlank()) " (Boleta N°: ${boletaRefInput.trim()})" else ""
+                    val message = "Hola Administrador de TucTucMap, soy el conductor $driverName ($driverPlate, Tel: $driverPhone). Acabo de realizar el depósito para renovar mi suscripción ($selectedPlan)$refExtra. Adjunto mi comprobante:"
+                    val adminPhone = appConfig.adminWhatsappPhone.replace(Regex("[^0-9]"), "")
                     val waUrl = "https://api.whatsapp.com/send?phone=$adminPhone&text=${Uri.encode(message)}"
                     val waIntent = Intent(Intent.ACTION_VIEW, Uri.parse(waUrl))
                     context.startActivity(waIntent)

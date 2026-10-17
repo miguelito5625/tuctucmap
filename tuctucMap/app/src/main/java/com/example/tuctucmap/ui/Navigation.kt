@@ -180,13 +180,11 @@ fun AppNavigation(
                     val uid = repository.currentUserUid ?: ""
                     repository.getDriverProfileOnce(uid) { driver ->
                         if (driver != null) {
-                            try {
-                                context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
-                                    .edit()
-                                    .putString("driver_last_approval_status", driver.estadoAprobacion)
-                                    .putString("driver_last_sub_end", driver.subscriptionEndDate)
-                                    .apply()
-                            } catch (_: Exception) {}
+                            com.example.tuctucmap.data.SecurePrefs.saveDriverSubscriptionCache(
+                                context,
+                                driver.estadoAprobacion,
+                                driver.subscriptionEndDate
+                            )
                             navigate(resolveDriverScreen(driver, defaultIfNull = Screen.DriverHome), clearStack = true)
                         } else {
                             navigate(Screen.DriverHome, clearStack = true)
@@ -213,13 +211,19 @@ fun AppNavigation(
                 },
                 onRegisterSuccess = {
                     saveRole("driver")
-                    try {
-                        context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
-                            .edit()
-                            .putString("driver_last_approval_status", "aprobado")
-                            .apply()
-                    } catch (_: Exception) {}
-                    navigate(Screen.DriverHome, clearStack = true)  // Auto-aprobado con 7 días de prueba
+                    val uid = repository.currentUserUid ?: ""
+                    repository.getDriverProfileOnce(uid) { driver ->
+                        if (driver != null) {
+                            com.example.tuctucmap.data.SecurePrefs.saveDriverSubscriptionCache(
+                                context,
+                                driver.estadoAprobacion,
+                                driver.subscriptionEndDate
+                            )
+                            navigate(resolveDriverScreen(driver, defaultIfNull = Screen.DriverHome), clearStack = true)
+                        } else {
+                            navigate(Screen.DriverHome, clearStack = true)
+                        }
+                    }
                 },
                 onBackToOnboarding = {
                     if (backStack.size > 1) {

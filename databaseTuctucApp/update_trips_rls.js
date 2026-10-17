@@ -1,12 +1,7 @@
 const { Client } = require('pg');
+const { dbConfig } = require('./db_config');
 
-const client = new Client({
-  host: 'db.doypobovndxkbkikkozq.supabase.co',
-  port: 5432,
-  user: 'postgres',
-  password: 'mariobross5625',
-  database: 'postgres'
-});
+const client = new Client(dbConfig);
 
 async function main() {
   await client.connect();

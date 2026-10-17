@@ -17,6 +17,7 @@ data class DriverLocation(
     val nombre: String = "",
     val telefono: String = "",
     val placas: String = "",
+    val numeroUnidad: String = "",
     val status: String = "disponible" // "disponible", "ocupado", "en_pausa"
 ) {
     val latitud: Double get() = lat
@@ -44,7 +45,7 @@ data class DriverLocation(
         if (!activo) return false
         val lastMs = updatedAtMillis
         if (lastMs <= 0L) return true // Compatibilidad si no venía timestamp
-        return (System.currentTimeMillis() - lastMs) <= maxAgeMillis
+        return (ServerClock.nowMillis() - lastMs) <= maxAgeMillis
     }
 
     /**

@@ -268,7 +268,7 @@ fun DriverTripHistoryScreen(
                                     openGoogleMaps(context, trip.passenger_lat, trip.passenger_lon)
                                 },
                                 onWhatsApp = {
-                                    openWhatsApp(context, trip.passenger_phone)
+                                    openWhatsApp(context, trip.passenger_phone ?: "")
                                 },
                                 onClick = {
                                     selectedTrip = trip
@@ -297,7 +297,7 @@ fun DriverTripHistoryScreen(
                                 modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(trip.passenger_name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            Text(trip.passenger_name?.ifBlank { "Pasajero" } ?: "Pasajero", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         }
                     },
                     text = {
@@ -319,13 +319,66 @@ fun DriverTripHistoryScreen(
                                 )
                             }
 
+                            // Tipo de pasajero (Cuenta registrada vs Invitado)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Tipo: ", color = Color.LightGray, fontSize = 14.sp)
+                                Surface(
+                                    color = if (trip.isRegisteredPassenger) Color(0x284ADE80) else Color(0x2494A3B8),
+                                    shape = RoundedCornerShape(6.dp),
+                                    border = BorderStroke(1.dp, if (trip.isRegisteredPassenger) Color(0x664ADE80) else Color(0x4494A3B8))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = if (trip.isRegisteredPassenger) Icons.Default.CheckCircle else Icons.Default.PersonOutline,
+                                            contentDescription = null,
+                                            tint = if (trip.isRegisteredPassenger) Color(0xFF4ADE80) else Color(0xFFCBD5E1),
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = if (trip.isRegisteredPassenger) "Usuario con Cuenta Registrada" else "Invitado (Solicitó sin cuenta)",
+                                            color = if (trip.isRegisteredPassenger) Color(0xFF4ADE80) else Color(0xFFCBD5E1),
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+
                             Spacer(modifier = Modifier.height(8.dp))
                             Text("Mensaje: ${trip.message}", color = Color.White, fontSize = 14.sp)
 
-                            Spacer(modifier = Modifier.height(4.dp))
+                            if (trip.fare != null) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Paid, contentDescription = null, tint = Color(0xFFF9D423), modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Cobro registrado: Q${String.format(Locale.US, "%.2f", trip.fare)}", color = Color(0xFFF9D423), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+                            }
+
+                            if (trip.distance_km != null) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Navigation, contentDescription = null, tint = Color(0xFF4ADE80), modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Distancia recorrida: ${String.format(Locale.US, "%.2f", trip.distance_km)} km", color = Color(0xFF4ADE80), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+                            }
+
+                            if (!trip.route_points.isNullOrEmpty()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Puntos GPS de telemetría: ${trip.route_points.size}", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text("Fecha: ${parseDate(trip.created_at)}", color = Color.LightGray, fontSize = 13.sp)
 
-                            if (trip.passenger_phone.isNotBlank()) {
+                            if (!trip.passenger_phone.isNullOrBlank()) {
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text("Teléfono: ${trip.passenger_phone}", color = Color.LightGray, fontSize = 13.sp)
                             }
@@ -348,11 +401,11 @@ fun DriverTripHistoryScreen(
                             }
 
                             // Botón WhatsApp
-                            if (trip.passenger_phone.isNotBlank()) {
+                            if (!trip.passenger_phone.isNullOrBlank()) {
                                 Spacer(modifier = Modifier.height(10.dp))
                                 Button(
                                     onClick = {
-                                        openWhatsApp(context, trip.passenger_phone)
+                                        openWhatsApp(context, trip.passenger_phone ?: "")
                                         selectedTrip = null
                                     },
                                     modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -436,27 +489,54 @@ private fun DriverTripCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(34.dp)
                             .clip(CircleShape)
-                            .background(Color(0x33F9D423)),
+                            .background(if (trip.isRegisteredPassenger) Color(0x334ADE80) else Color(0x33F9D423)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Person,
+                            imageVector = if (trip.isRegisteredPassenger) Icons.Default.VerifiedUser else Icons.Default.Person,
                             contentDescription = null,
-                            tint = Color(0xFFF9D423),
+                            tint = if (trip.isRegisteredPassenger) Color(0xFF4ADE80) else Color(0xFFF9D423),
                             modifier = Modifier.size(18.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = trip.passenger_name,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = trip.passenger_name?.ifBlank { "Pasajero" } ?: "Pasajero",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Surface(
+                            color = if (trip.isRegisteredPassenger) Color(0x284ADE80) else Color(0x2494A3B8),
+                            shape = RoundedCornerShape(4.dp),
+                            border = BorderStroke(0.5.dp, if (trip.isRegisteredPassenger) Color(0x664ADE80) else Color(0x4494A3B8))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = if (trip.isRegisteredPassenger) Icons.Default.CheckCircle else Icons.Default.PersonOutline,
+                                    contentDescription = null,
+                                    tint = if (trip.isRegisteredPassenger) Color(0xFF4ADE80) else Color(0xFFCBD5E1),
+                                    modifier = Modifier.size(10.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = if (trip.isRegisteredPassenger) "Registrado" else "Sin cuenta",
+                                    color = if (trip.isRegisteredPassenger) Color(0xFF4ADE80) else Color(0xFFCBD5E1),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
                 }
 
                 // Badge de estado
@@ -531,6 +611,70 @@ private fun DriverTripCard(
                 }
             }
 
+            // Métricas del viaje: Cobro registrado y Distancia recorrida
+            if (trip.fare != null || trip.distance_km != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (trip.fare != null) {
+                        Surface(
+                            color = Color(0x28F9D423),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0x66F9D423))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Paid,
+                                    contentDescription = null,
+                                    tint = Color(0xFFF9D423),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Cobro: Q${String.format(Locale.US, "%.2f", trip.fare)}",
+                                    color = Color(0xFFF9D423),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+
+                    if (trip.distance_km != null) {
+                        Surface(
+                            color = Color(0x284ADE80),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0x664ADE80))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Navigation,
+                                    contentDescription = null,
+                                    tint = Color(0xFF4ADE80),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "${String.format(Locale.US, "%.2f", trip.distance_km)} km",
+                                    color = Color(0xFF4ADE80),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(14.dp))
 
             // ── Botones de acción directos ─────────────────────────────────
@@ -567,7 +711,7 @@ private fun DriverTripCard(
                 }
 
                 // Botón secundario: WhatsApp si hay teléfono
-                if (trip.passenger_phone.isNotBlank()) {
+                if (!trip.passenger_phone.isNullOrBlank()) {
                     IconButton(
                         onClick = onWhatsApp,
                         modifier = Modifier

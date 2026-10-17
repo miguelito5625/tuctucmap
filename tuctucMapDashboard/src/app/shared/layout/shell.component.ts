@@ -1,5 +1,7 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, OnDestroy } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { Subscription } from 'rxjs';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -32,15 +34,29 @@ import { ChangePasswordDialogComponent } from '../dialogs/change-password-dialog
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
 })
-export class ShellComponent implements OnInit {
-  readonly sidenavOpened = signal(true);
+export class ShellComponent implements OnInit, OnDestroy {
+  private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly supabaseService = inject(SupabaseService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
 
+  readonly isMobile = signal<boolean>(false);
+  readonly sidenavOpened = signal<boolean>(true);
+  readonly sidenavMode = computed<'over' | 'side'>(() => (this.isMobile() ? 'over' : 'side'));
+
+  private breakpointSub?: Subscription;
+
   adminName = signal<string>('Cargando...');
 
-  ngOnInit() {
+  ngOnInit(): void {
+    this.breakpointSub = this.breakpointObserver
+      .observe(['(max-width: 991.98px)'])
+      .subscribe((result) => {
+        const mobile = result.matches;
+        this.isMobile.set(mobile);
+        this.sidenavOpened.set(!mobile);
+      });
+
     this.loadProfile();
   }
 
@@ -54,6 +70,16 @@ export class ShellComponent implements OnInit {
       }
     } catch {
       this.adminName.set('Administrador');
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.breakpointSub?.unsubscribe();
+  }
+
+  onNavItemClick(): void {
+    if (this.isMobile()) {
+      this.sidenavOpened.set(false);
     }
   }
 

@@ -48,40 +48,44 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
 
 ---
 
-## 4. Telemetría GPS y Optimización de Batería
-1. **Modelo `DriverLocation`:**
+## 4. Telemetría GPS, Geocerca y Alertas en Segundo Plano
+1. **Modelo `DriverLocation` y Geocerca Rural (`search_radius_km`):**
    - Cálculo esférico Haversine (`distanceMetersTo`, `estimatedArrivalMinutes`, `formattedDistance`).
    - TTL de descarte automático: un conductor se considera inactivo si su última actualización supera los 3 minutos (`isRecentlyActive`).
+   - **Filtro de Radio Geográfico:** Tanto `PassengerMapScreen` como `SupabaseRepository.observePendingTripsForDriver` filtran toritos y solicitudes de viaje utilizando el radio configurado en `AppConfig.search_radius_km` (por defecto 15 km), evitando que conductores o pasajeros de otros municipios lejanos se mezclen.
 2. **Servicio en Segundo Plano (`LocationTrackingService`):**
    - Ubicación: `tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt`.
-   - Emisión adaptativa hacia Firebase Realtime Database:
-     - Emite si el desplazamiento respecto a la última coordenada es `>= 8 metros`.
-     - Si está en reposo, emite un latido (heartbeat) de refresco cada `45 segundos`.
-     - Esto minimiza drásticamente el consumo de batería y datos del conductor.
+   - Emisión adaptativa hacia Firebase Realtime Database (`>= 8 metros` o heartbeat cada `45 segundos`).
+   - **Alerta de Viaje con Pantalla Apagada o en WhatsApp:** El servicio observa `observePendingTripsForDriver(driverId)` directamente en segundo plano. Cuando entra una solicitud dentro del radio del conductor, reproduce el timbre de llamada, anuncia por voz (`TextToSpeech` en español) el nombre del pasajero y la distancia, y lanza una notificación de alta prioridad (`IMPORTANCE_HIGH`) que abre `MainActivity`. Comparte `announcedTripIds` e `ignoredBroadcastTripIds` con `DriverHomeScreen` para no duplicar anuncios.
 
 ---
 
-## 5. Reglas de Negocio del Conductor
-1. **Ciclo de Suscripción:**
-   - El modelo `Driver.kt` evalúa `isSubscriptionExpired` y `isApprovedAndActive` parseando `subscription_end_date` (ISO-8601 UTC).
+## 5. Reglas de Negocio del Conductor y Suscripciones Anti-Fraude
+1. **Reloj del Servidor (`ServerClock`) y Ciclo de Suscripción:**
+   - El objeto `ServerClock` en `Driver.kt` se sincroniza con `sync_server_time_and_expire()` de Supabase y `.info/serverTimeOffset` de Firebase para que `isSubscriptionExpired` sea inmune a manipulaciones de la fecha del teléfono.
    - Si la suscripción expira, la navegación redirige forzosamente a `DriverSubscriptionExpiredScreen.kt`.
-   - Banner de advertencia preventiva en `DriverHomeScreen.kt` si restan menos de 72 horas para expirar.
-2. **Historial de Viajes:**
-   - Al aceptar o rechazar solicitudes, se actualiza el registro en Supabase con `'accepted'` o `'rejected'`.
-   - `DriverTripHistoryScreen.kt` filtra por `driver_id = auth.uid()` y provee botón para re-abrir la ruta en Google Maps.
+   - El estado de aprobación y fecha de vencimiento se guardan cifrados en `SecurePrefs` (`EncryptedSharedPreferences`) y nunca en texto plano.
+2. **Configuración Comercial Dinámica (`AppConfig`) y Reporte de Boletas:**
+   - `DriverHomeScreen` y `DriverSubscriptionExpiredScreen` cargan desde `SupabaseRepository.getAppConfig()` las cuentas bancarias, precios y el WhatsApp del administrador.
+   - Los conductores pueden registrar el número de boleta/referencia bancaria directamente en la app (`submitPaymentRequest`) además de enviarlo por WhatsApp.
+3. **Número de Unidad (`unit_number`) y Protección de Solicitudes:**
+   - Los conductores pueden registrar su Número de Torito/Unidad municipal (`unit_number` / `displayIdentifier`) además de la placa.
+   - En `DriverHomeScreen`, el botón `X` sobre una solicitud abierta para todos (`driver_id == ""`) solo la ignora localmente para ese conductor sin cancelarla en Firebase para los demás toritos.
+4. **Historial de Viajes, Pasajero y Cobro:**
+   - Al aceptar o rechazar solicitudes directas, se actualiza el registro en Supabase con `'accepted'` o `'rejected'`.
+   - **Identidad del Pasajero (Registrado o Invitado):** `saveTripRecord` almacena directamente `passenger_name` y `passenger_phone` en la tabla `trips` (validando 8 dígitos locales para invitados).
+   - **Rastreo de Trayecto en Viaje Activo:** `LocationTrackingService.startTripTracking` acumula la distancia en metros (`activeTripDistanceMeters`) y registra puntos de coordenadas `RoutePoint` (>= 8m) desde que el conductor acepta la solicitud hasta que finaliza el viaje.
+   - **Sugerencias de Precios Dinámicas:** Gestionadas en `DriverFarePreferences.kt` vía SharedPreferences (`tuctuc_prefs`).
+   - **Diálogo de Finalización:** En `DriverHomeScreen.kt`, el conductor selecciona o ingresa el monto cobrado (con `.imePadding()` y `.verticalScroll()`), visualiza la distancia total recorrida en km y persiste `fare`, `distance_km`, `route_points`, `passenger_name` y `passenger_phone` en Supabase `trips`.
 
 ---
 
-## 6. Persistencia de Sesión y Autenticación Segura
-1. **Gestor de Sesión Nativo (`SecurePrefs` & `SessionManager`):**
-   - Implementa `io.github.jan.supabase.auth.SessionManager` y se conecta directamente a `install(Auth) { sessionManager = SecurePrefs }`.
-   - Cifra el objeto completo `UserSession` (tokens, usuario y expiración) con AES-256 GCM mediante `AndroidKeyStore`.
-   - Permite que Supabase restaure e intercambie tokens expirados de forma transparente al iniciar la aplicación (`autoLoadFromStorage = true`).
-2. **Ciclo de Inicio en `MainActivity.kt`:**
-   - Detecta `user_role` guardado en `tuctuc_prefs`.
-   - Espera a que Supabase resuelva la sesión (filtra `it !is SessionStatus.Initializing`).
-   - Los pasajeros van directo a `PassengerMapScreen` con su sesión activa.
-   - Los conductores se dirigen a `DriverHomeScreen` (o estado correspondiente) respaldados por la caché local de aprobación, evitando que una mala red o un reinicio los expulse a `DriverLoginScreen`.
+## 6. Secretos (`BuildConfig`), Persistencia de Sesión y Ofuscación R8
+1. **Inyección de Secretos desde `.env`:**
+   - `tuctucMap/app/build.gradle.kts` lee las credenciales desde el archivo raíz `../.env` (o `local.properties`) e inyecta `BuildConfig.SUPABASE_URL`, `BuildConfig.SUPABASE_KEY` y `BuildConfig.FIREBASE_RTDB_URL`. Nunca hardcodear llaves en `SupabaseClient.kt`.
+   - El build `release` tiene habilitado `isMinifyEnabled = true` y `isShrinkResources = true` con reglas para Kotlin Serialization, Supabase y OSMDroid en `proguard-rules.pro`, además de `android:allowBackup="false"` en `AndroidManifest.xml`.
+2. **Gestor de Sesión Nativo (`SecurePrefs` & `SessionManager`):**
+   - Cifra el objeto completo `UserSession` y la caché de suscripción con AES-256 GCM mediante `AndroidKeyStore`, sin fallbacks inseguros en texto plano.
 
 ---
 

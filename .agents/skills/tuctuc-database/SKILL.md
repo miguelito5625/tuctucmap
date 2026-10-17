@@ -13,28 +13,32 @@ Esta guía define los estándares, esquemas y procedimientos de ejecución SQL p
 ## 1. Arquitectura de Datos & Tablas Principales
 - **Motor:** PostgreSQL alojado en Supabase.
 - **Tablas Principales:**
-  - `profiles`: Perfiles de usuarios con columna `role` (`passenger`, `driver`, `admin`), teléfono, nombre, datos de torito (número de placas) y estado de aprobación para conductores (`is_approved`).
-  - `trips`: Ciclo de vida y auditoría de viajes (`requested`, `accepted`, `completed`, `cancelled`, `rejected`), con referencias a `passenger_id` y `driver_id`.
+  - `profiles`: Perfiles de usuarios con columna `role` (`passenger`, `driver`, `admin`), teléfono, nombre, datos de torito (`vehicle_plate`, `unit_number` para Número de Torito/Unidad municipal) y estado de aprobación/suscripción (`approval_status`, `subscription_status`, `subscription_end_date`).
+  - `trips`: Ciclo de vida y auditoría de viajes (`requested`, `accepted`, `completed`, `cancelled`, `rejected`), con referencias a `passenger_id`, `driver_id`, tarifa cobrada (`fare NUMERIC`), distancia recorrida (`distance_km NUMERIC`) y trayectoria GPS paso a paso (`route_points JSONB`).
   - `driver_subscriptions`: Monetización y control de membresías de conductores. Contiene `plan_type` (`trial`, `semanal`, `quincenal`, `mensual`, `personalizado`), `amount_paid` (NUMERIC), `payment_method` (`efectivo`, `transferencia`, `deposito_bancario`, `gratis_prueba`), `reference_number` (TEXT) y fechas de vigencia.
+  - `app_config`: Configuración comercial dinámica (fila única `id = 1`) con teléfono de WhatsApp del administrador, cuentas bancarias (`bank_1_*`, `bank_2_*`), titular, precios de planes y radio de geocerca (`search_radius_km`).
+  - `subscription_payment_requests`: Solicitudes de renovación y números de boleta/referencia bancaria enviados por los conductores desde la app Android para conciliación administrativa.
   - `driver_locations`: Coordenadas persistentes de respaldo en PostgreSQL (mientras que la telemetría en tiempo real de alta frecuencia se opera en Firebase Realtime Database).
 
 ---
 
-## 2. Row Level Security (RLS) - Reglas Obligatorias
+## 2. Row Level Security (RLS), Triggers y Funciones RPC
 Toda tabla creada o modificada en Supabase **DEBE** tener habilitado RLS (`ALTER TABLE ... ENABLE ROW LEVEL SECURITY;`).
-1. **Perfiles (`profiles`):**
-   - Lectura: Los usuarios pueden leer sus propios perfiles; los administradores pueden leer todos. Los pasajeros pueden consultar información pública del conductor asignado.
-   - Modificación: Solo el propio usuario autenticado (`auth.uid() = id`) o administradores pueden actualizar el perfil.
-2. **Viajes (`trips`):**
-   - Lectura e Inserción: Restringida a los participantes del viaje (`passenger_id = auth.uid()` o `driver_id = auth.uid()`) y a los administradores.
-3. **Suscripciones (`driver_subscriptions`):**
-   - Lectura: El conductor puede consultar sus propias suscripciones; el administrador puede consultar todas.
-   - Creación/Edición: Estrictamente reservado a administradores (`role = 'admin'`).
+1. **Perfiles (`profiles`) y Triggers de Seguridad:**
+   - Función `public.is_admin()` (`SECURITY DEFINER`) para verificar rol de administrador sin recursión RLS.
+   - Trigger `trg_profile_insert_security`: Impide que un cliente se registre como `admin`, valida que la placa o número de unidad no estén duplicados y asigna automáticamente los 7 días de prueba (`NOW() + INTERVAL '7 days'`) desde el reloj del servidor.
+   - Trigger `trg_create_initial_driver_trial`: Crea automáticamente el registro `'trial'` en `driver_subscriptions` al registrarse un conductor.
+   - Trigger `trg_protect_profile_sensitive_columns`: Impide que un usuario no administrador modifique `role`, `approval_status`, `subscription_status` o `subscription_end_date`.
+2. **Reloj del Servidor y Auto-Expiración (`sync_server_time_and_expire`):**
+   - Función RPC que marca como `'expired'` las suscripciones vencidas según `NOW()` de PostgreSQL y devuelve la hora exacta del servidor (`server_time_ms`) para evitar fraudes por cambio de fecha en el teléfono.
+3. **Configuración y Pagos (`app_config`, `subscription_payment_requests`):**
+   - `app_config`: Lectura pública (`SELECT`), escritura exclusiva para administradores (`public.is_admin()`).
+   - `subscription_payment_requests`: Los conductores pueden insertar y leer sus propios comprobantes; solo los administradores pueden aprobarlos o rechazarlos.
 
 ---
 
-## 3. Ejecución de Consultas y Modificaciones (`run_sql.js`)
-Para consultar o modificar la base de datos directamente desde la terminal, utilizar el script Node.js ubicado en `databaseTuctucApp/run_sql.js`.
+## 3. Ejecución de Consultas y Modificaciones (`run_sql.js` + `.env`)
+Las credenciales de conexión ya **no** están hardcodeadas en los scripts; se leen automáticamente desde el archivo raíz `.env` mediante `databaseTuctucApp/db_config.js`.
 
 ### Procedimiento de Uso:
 ```powershell

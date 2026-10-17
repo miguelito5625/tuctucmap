@@ -1,12 +1,13 @@
 package com.example.tuctucmap.data
 
+import com.example.tuctucmap.BuildConfig
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 
-const val SUPABASE_URL = "https://doypobovndxkbkikkozq.supabase.co"
-const val SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRveXBvYm92bmR4a2JraWtrb3pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwMjMwMjQsImV4cCI6MjA5ODU5OTAyNH0.RCqCfUBCD1E_HXiWi9vw6OxwVlf7chddvVLCCTRewZU"
+val SUPABASE_URL: String = BuildConfig.SUPABASE_URL
+val SUPABASE_KEY: String = BuildConfig.SUPABASE_KEY
 
 val supabase by lazy {
     createSupabaseClient(

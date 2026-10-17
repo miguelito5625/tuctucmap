@@ -239,8 +239,15 @@ import { PassengerProfile } from '../../core/models/driver.model';
       overflow: hidden;
     }
 
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+    }
+
     .dark-table {
       width: 100%;
+      min-width: 680px;
       background: transparent !important;
 
       th {
@@ -359,6 +366,51 @@ import { PassengerProfile } from '../../core/models/driver.model';
       background: transparent !important;
       color: #94a3b8 !important;
       border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* ── Responsive Media Queries ─────────────────────────── */
+    @media (max-width: 991.98px) {
+      .passengers-container {
+        padding: 18px 16px;
+        gap: 16px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .passengers-container {
+        padding: 12px 10px;
+        gap: 14px;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+      }
+
+      .title-group h2 {
+        font-size: 1.25rem;
+      }
+
+      .actions-group button {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+
+      .search-field {
+        max-width: 100%;
+        width: 100%;
+      }
+
+      .stats-badge {
+        text-align: center;
+      }
     }
   `]
 })

@@ -52,6 +52,7 @@ fun DriverProfileScreen(
     var nombre by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
     var placas by remember { mutableStateOf("") }
+    var numeroUnidad by remember { mutableStateOf("") }
     var isSavingData by remember { mutableStateOf(false) }
 
     // Formulario de contraseña
@@ -70,6 +71,7 @@ fun DriverProfileScreen(
                     nombre = driver.nombre
                     telefono = driver.telefono
                     placas = driver.placas
+                    numeroUnidad = driver.numeroUnidad
                 }
                 isLoadingProfile = false
             }
@@ -237,7 +239,7 @@ fun DriverProfileScreen(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "Placas: ${driverProfile?.placas?.ifBlank { "Sin placas" } ?: "Sin placas"}",
+                                        text = driverProfile?.displayIdentifier?.ifBlank { "Sin placas" } ?: "Sin placas",
                                         fontSize = 13.sp,
                                         color = Color.White,
                                         fontWeight = FontWeight.SemiBold
@@ -364,6 +366,27 @@ fun DriverProfileScreen(
                                 }
                             )
 
+                            OutlinedTextField(
+                                value = numeroUnidad,
+                                onValueChange = { numeroUnidad = it },
+                                label = { Text("N° de Unidad / Padrón (Opcional)") },
+                                placeholder = { Text("Ej. Torito #14") },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Tag, contentDescription = null)
+                                },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = textFieldColors,
+                                shape = RoundedCornerShape(12.dp),
+                                supportingText = {
+                                    Text(
+                                        text = "Número visible en el techo/puerta de tu mototaxi",
+                                        color = Color(0xFFB0BEC5),
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            )
+
                             val emailToShow = driverProfile?.email?.ifBlank { authEmail } ?: authEmail
                             OutlinedTextField(
                                 value = emailToShow,
@@ -410,7 +433,8 @@ fun DriverProfileScreen(
                                         val result = repository.updateDriverProfile(
                                             name = nombre.trim(),
                                             phone = telefono.trim(),
-                                            plateNumber = placas.trim()
+                                            plateNumber = placas.trim(),
+                                            unitNumber = numeroUnidad.trim()
                                         )
                                         isSavingData = false
                                         if (result.isSuccess) {

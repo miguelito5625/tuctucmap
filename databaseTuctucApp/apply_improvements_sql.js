@@ -1,12 +1,7 @@
 const { Client } = require('pg');
+const { dbConfig } = require('./db_config');
 
-const client = new Client({
-  host: 'db.doypobovndxkbkikkozq.supabase.co',
-  port: 5432,
-  user: 'postgres',
-  password: 'mariobross5625',
-  database: 'postgres'
-});
+const client = new Client(dbConfig);
 
 async function main() {
   await client.connect();
@@ -29,7 +24,7 @@ async function main() {
          RAISE EXCEPTION 'No autorizado: se requiere rol admin';
        END IF;
      END;
-     $$ LANGUAGE plpgsql SECURITY DEFINER;`
+     $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;`
   ];
 
   for (const q of queries) {

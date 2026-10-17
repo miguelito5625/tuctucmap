@@ -39,6 +39,7 @@ fun DriverRegisterScreen(
     var nombre by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
     var placas by remember { mutableStateOf("") }
+    var numeroUnidad by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     
@@ -148,7 +149,7 @@ fun DriverRegisterScreen(
                     telefono = it
                     errorMessage = null
                 },
-                label = { Text("Número de Teléfono", color = Color.LightGray) },
+                label = { Text("Número de Teléfono (8 dígitos)", color = Color.LightGray) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Phone,
@@ -180,6 +181,36 @@ fun DriverRegisterScreen(
                     errorMessage = null
                 },
                 label = { Text("Número de Placas del Torito", color = Color.LightGray) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.DirectionsCar,
+                        contentDescription = null,
+                        tint = Color.LightGray
+                    )
+                },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFFF9D423),
+                    unfocusedBorderColor = Color.White,
+                    focusedLabelColor = Color(0xFFF9D423),
+                    unfocusedLabelColor = Color.White,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Campo Número de Unidad / Padrón (Opcional en pueblos)
+            OutlinedTextField(
+                value = numeroUnidad,
+                onValueChange = {
+                    numeroUnidad = it
+                    errorMessage = null
+                },
+                label = { Text("N° de Torito / Padrón (Ej. Torito #14 - Opcional)", color = Color.LightGray) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.DirectionsCar,
@@ -283,7 +314,12 @@ fun DriverRegisterScreen(
                 Button(
                     onClick = {
                         if (nombre.isBlank() || telefono.isBlank() || placas.isBlank() || email.isBlank() || password.isBlank()) {
-                            errorMessage = "Todos los campos son obligatorios"
+                            errorMessage = "Todos los campos principales son obligatorios"
+                            return@Button
+                        }
+                        val cleanDigits = telefono.replace(Regex("[^0-9]"), "")
+                        if (cleanDigits.length < 8) {
+                            errorMessage = "Ingresa un número de teléfono válido (al menos 8 dígitos)"
                             return@Button
                         }
                         if (password.length < 6) {
@@ -297,7 +333,8 @@ fun DriverRegisterScreen(
                                 telefono = telefono.trim(),
                                 placas = placas.trim(),
                                 email = email.trim(),
-                                contrasena = password
+                                contrasena = password,
+                                numeroUnidad = numeroUnidad.trim()
                             )
                             isLoading = false
                             if (result.isSuccess) {

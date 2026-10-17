@@ -217,4 +217,34 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Responsive Breakpoints ───────────────────────────────── */
+@media (max-width: 991.98px) {
+  .sidenav {
+    position: fixed !important;
+    z-index: 1000 !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.6) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .user-text-group {
+    display: none !important;
+  }
+
+  .main-toolbar {
+    padding: 0 8px !important;
+    height: 56px !important;
+  }
+
+  .toolbar-user {
+    padding: 4px 6px;
+    gap: 4px;
+  }
 }

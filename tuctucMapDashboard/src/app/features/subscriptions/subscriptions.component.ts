@@ -141,6 +141,11 @@ import { SubscriptionHistory } from '../../core/models/driver.model';
     </div>
   `,
   styles: [`
+    :host {
+      display: block;
+      padding: 24px 32px;
+    }
+
     .page-header {
       margin-bottom: 24px;
       display: flex;
@@ -190,7 +195,9 @@ import { SubscriptionHistory } from '../../core/models/driver.model';
       position: relative;
       background: rgba(30, 41, 59, 0.7);
       border-radius: 12px;
-      overflow: hidden;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
@@ -209,6 +216,7 @@ import { SubscriptionHistory } from '../../core/models/driver.model';
 
     .full-width-table {
       width: 100%;
+      min-width: 760px;
       background: transparent;
     }
 
@@ -362,6 +370,34 @@ import { SubscriptionHistory } from '../../core/models/driver.model';
       p {
         margin: 0;
         font-size: 1.1rem;
+      }
+    }
+
+    /* ── Responsive Media Queries ─────────────────────────── */
+    @media (max-width: 991.98px) {
+      :host {
+        padding: 18px 16px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      :host {
+        padding: 12px 10px;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+      }
+
+      .header-title h1 {
+        font-size: 1.25rem;
+      }
+
+      .export-btn {
+        width: 100%;
+        justify-content: center;
       }
     }
   `]

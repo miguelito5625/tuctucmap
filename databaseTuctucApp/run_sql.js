@@ -1,4 +1,5 @@
 const { Client } = require('pg');
+const { dbConfig } = require('./db_config');
 
 // Recibe la sentencia SQL por parámetro
 const query = process.argv[2];
@@ -9,13 +10,7 @@ if (!query) {
   process.exit(1);
 }
 
-const client = new Client({
-  host: 'db.doypobovndxkbkikkozq.supabase.co',
-  port: 5432,
-  user: 'postgres',
-  password: 'mariobross5625',
-  database: 'postgres'
-});
+const client = new Client(dbConfig);
 
 async function runSQL() {
   try {

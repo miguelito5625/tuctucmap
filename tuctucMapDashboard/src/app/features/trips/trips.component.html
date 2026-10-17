@@ -5,7 +5,7 @@
         <mat-icon>history</mat-icon>
         <h2>Historial de Viajes Completados</h2>
       </div>
-      <p class="subtitle">Registro de todos los viajes finalizados en la plataforma</p>
+      <p class="subtitle">Auditoría con telemetría GPS, distancias recorridas y tarifas cobradas por conductor</p>
     </div>
     <div class="header-actions">
       <button mat-flat-button class="export-btn" (click)="exportToCsv()" [disabled]="dataSource.data.length === 0">
@@ -24,8 +24,20 @@
           <th mat-header-cell *matHeaderCellDef mat-sort-header> Pasajero </th>
           <td mat-cell *matCellDef="let trip">
             <div class="user-info">
-              <mat-icon>person</mat-icon>
-              <span>{{ trip.passengerName }}</span>
+              <mat-icon [class.registered-icon]="trip.isRegistered" [class.guest-icon]="!trip.isRegistered">
+                {{ trip.isRegistered ? 'verified_user' : 'person_outline' }}
+              </mat-icon>
+              <div class="user-meta">
+                <div class="user-name-row">
+                  <span class="user-name">{{ trip.passengerName }}</span>
+                  <span class="account-tag" [class.tag-registered]="trip.isRegistered" [class.tag-guest]="!trip.isRegistered">
+                    {{ trip.isRegistered ? 'Registrado' : 'Sin cuenta' }}
+                  </span>
+                </div>
+                <span *ngIf="trip.passengerPhone" class="user-phone">
+                  <mat-icon class="phone-mini-icon">phone</mat-icon> {{ trip.passengerPhone }}
+                </span>
+              </div>
             </div>
           </td>
         </ng-container>
@@ -41,9 +53,32 @@
           </td>
         </ng-container>
 
+        <!-- Fare Column -->
+        <ng-container matColumnDef="fare">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Tarifa </th>
+          <td mat-cell *matCellDef="let trip">
+            <span *ngIf="trip.fare != null" class="fare-badge">
+              Q{{ trip.fare | number:'1.2-2' }}
+            </span>
+            <span *ngIf="trip.fare == null" class="no-data-text">-</span>
+          </td>
+        </ng-container>
+
+        <!-- Distance Column -->
+        <ng-container matColumnDef="distance_km">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Distancia </th>
+          <td mat-cell *matCellDef="let trip">
+            <span *ngIf="trip.distance_km != null" class="distance-badge">
+              <mat-icon>straighten</mat-icon>
+              {{ trip.distance_km | number:'1.1-2' }} km
+            </span>
+            <span *ngIf="trip.distance_km == null" class="no-data-text">-</span>
+          </td>
+        </ng-container>
+
         <!-- Message Column -->
         <ng-container matColumnDef="message">
-          <th mat-header-cell *matHeaderCellDef> Mensaje </th>
+          <th mat-header-cell *matHeaderCellDef> Rumbo / Mensaje </th>
           <td mat-cell *matCellDef="let trip"> 
             <span class="message-text">"{{ trip.message }}"</span> 
           </td>
@@ -67,12 +102,25 @@
           <td mat-cell *matCellDef="let trip"> {{ trip.created_at | date:'dd/MM/yyyy HH:mm' }} </td>
         </ng-container>
 
+        <!-- Actions Column (Route Map) -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef> Ruta GPS </th>
+          <td mat-cell *matCellDef="let trip">
+            <button mat-icon-button class="route-btn"
+                    [matTooltip]="trip.route_points?.length ? 'Ver recorrido GPS interactivo' : (trip.passenger_lat ? 'Ver ubicación de recogida' : 'Sin telemetría')"
+                    [disabled]="!trip.route_points?.length && !trip.passenger_lat"
+                    (click)="openRouteMap(trip)">
+              <mat-icon [class.has-route]="trip.route_points?.length">route</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         
         <!-- No data row -->
         <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell empty-cell" colspan="5">
+          <td class="mat-cell empty-cell" [attr.colspan]="displayedColumns.length">
             <div class="empty-state">
               <mat-icon>sentiment_dissatisfied</mat-icon>
               <p>No se encontraron viajes en el historial</p>
@@ -88,4 +136,61 @@
       class="dark-paginator">
     </mat-paginator>
   </mat-card>
+
+  <!-- MODAL DE VISUALIZACIÓN DE RECORRIDO GPS EN LEAFLET -->
+  <div class="route-modal-backdrop" *ngIf="selectedTripForMap" (click)="closeRouteMap()">
+    <div class="route-modal-card" (click)="$event.stopPropagation()">
+      <div class="route-modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon">
+            <mat-icon>route</mat-icon>
+          </div>
+          <div>
+            <h3>Recorrido GPS del Conductor</h3>
+            <p>Trayectoria trazada desde aceptación hasta finalización del viaje</p>
+          </div>
+        </div>
+        <button mat-icon-button class="close-btn" (click)="closeRouteMap()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Barra de KPIs y Métricas del Viaje -->
+      <div class="route-metrics-bar">
+        <div class="metric-item">
+          <span class="label">Pasajero</span>
+          <div class="passenger-modal-name-row">
+            <span class="value">{{ selectedTripForMap.passengerName }}</span>
+            <span class="account-tag" [class.tag-registered]="selectedTripForMap.isRegistered" [class.tag-guest]="!selectedTripForMap.isRegistered">
+              {{ selectedTripForMap.isRegistered ? 'Cuenta Registrada' : 'Sin cuenta (Invitado)' }}
+            </span>
+          </div>
+          <span *ngIf="selectedTripForMap.passengerPhone" class="subvalue-phone">
+            📞 {{ selectedTripForMap.passengerPhone }}
+          </span>
+        </div>
+        <div class="metric-item">
+          <span class="label">Conductor</span>
+          <span class="value">{{ selectedTripForMap.driverName }}</span>
+        </div>
+        <div class="metric-item highlight-fare">
+          <span class="label">Tarifa Cobrada</span>
+          <span class="value">{{ selectedTripForMap.fare != null ? ('Q' + (selectedTripForMap.fare | number:'1.2-2')) : 'No especificado' }}</span>
+        </div>
+        <div class="metric-item highlight-dist">
+          <span class="label">Distancia Recorrida</span>
+          <span class="value">{{ selectedTripForMap.distance_km != null ? ((selectedTripForMap.distance_km | number:'1.1-2') + ' km') : 'No registrada' }}</span>
+        </div>
+        <div class="metric-item">
+          <span class="label">Puntos Telemetría</span>
+          <span class="value">{{ selectedTripForMap.route_points?.length || 0 }} waypoints</span>
+        </div>
+      </div>
+
+      <!-- Mapa Leaflet Interactivo -->
+      <div class="route-map-wrapper">
+        <div id="routeMapModal" class="route-map-viewport"></div>
+      </div>
+    </div>
+  </div>
 </div>

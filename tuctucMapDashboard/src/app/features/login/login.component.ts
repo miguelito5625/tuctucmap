@@ -240,6 +240,40 @@ import { SupabaseService } from '../../services/supabase.service';
         }
       }
     }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 16px;
+      }
+      .login-card {
+        padding: 32px 20px;
+        border-radius: 20px;
+      }
+      .login-header {
+        margin-bottom: 24px;
+        .brand-logo {
+          width: 52px;
+          height: 52px;
+          border-radius: 16px;
+          margin-bottom: 14px;
+          mat-icon {
+            font-size: 28px;
+            width: 28px;
+            height: 28px;
+          }
+        }
+        h1 {
+          font-size: 1.4rem;
+        }
+        p {
+          font-size: 0.85rem;
+        }
+      }
+      .submit-btn {
+        height: 48px;
+        font-size: 0.95rem !important;
+      }
+    }
   `]
 })
 export class LoginComponent {

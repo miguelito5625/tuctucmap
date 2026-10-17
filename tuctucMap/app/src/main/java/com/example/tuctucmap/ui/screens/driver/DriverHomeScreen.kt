@@ -19,11 +19,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.input.KeyboardType
+import com.example.tuctucmap.data.DriverFarePreferences
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -75,27 +79,30 @@ fun DriverHomeScreen(
     var pendingTrips by remember { mutableStateOf<List<SupabaseRepository.TripInfo>>(emptyList()) }
     var showRenewalDialog by remember { mutableStateOf(false) }
     var activeAcceptedTrip by remember { mutableStateOf<SupabaseRepository.TripInfo?>(null) }
+    var showFinishTripDialog by remember { mutableStateOf(false) }
+    var fareInputText by remember { mutableStateOf("") }
+    var suggestedFares by remember { mutableStateOf<List<Double>>(emptyList()) }
+    val liveTripDistanceMeters by LocationTrackingService.activeTripDistanceMeters.collectAsState()
 
     val currentLocation by LocationTrackingService.currentLocation.collectAsState()
     val driverAvailability by LocationTrackingService.driverStatus.collectAsState()
     var isServiceRunning by remember { mutableStateOf(LocationTrackingService.isRunning) }
     var showPermissionError by remember { mutableStateOf(false) }
     var driverProfile by remember { mutableStateOf<Driver?>(null) }
+    var appConfig by remember { mutableStateOf(SupabaseRepository.cachedAppConfig) }
 
-    // Contador de viajes completados hoy
+    // Contador ligero de viajes completados hoy (filtrado en servidor)
     var completedTripsToday by remember { mutableIntStateOf(0) }
     fun refreshTripStats() {
         coroutineScope.launch {
-            repository.getDriverTripHistory().onSuccess { tripList ->
-                val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                completedTripsToday = tripList.count {
-                    (it.status == "accepted" || it.status == "completed") && it.created_at.startsWith(todayStr)
-                }
+            repository.getDriverTodayTripsCount().onSuccess { count ->
+                completedTripsToday = count
             }
         }
     }
 
     LaunchedEffect(uid) {
+        appConfig = repository.getAppConfig()
         refreshTripStats()
     }
 
@@ -134,23 +141,25 @@ fun DriverHomeScreen(
         }
     }
 
-    // Alarma auditiva y voz al llegar solicitudes pendientes
+    // Alarma auditiva y voz al llegar solicitudes pendientes (coordinado con LocationTrackingService para no duplicar audio)
     var previousTripsCount by remember { mutableIntStateOf(0) }
     LaunchedEffect(pendingTrips.size, activeAcceptedTrip, driverAvailability, isServiceRunning) {
         if (activeAcceptedTrip == null && isServiceRunning && driverAvailability == "disponible") {
             if (pendingTrips.size > previousTripsCount) {
                 val latestTrip = pendingTrips.firstOrNull()
-                try {
-                    val uri = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION)
-                    val r = android.media.RingtoneManager.getRingtone(context, uri)
-                    r.play()
-                } catch (_: Exception) {}
-
-                if (latestTrip != null && textToSpeech != null) {
+                if (latestTrip != null && LocationTrackingService.announcedTripIds.add(latestTrip.tripId)) {
                     try {
-                        val msg = latestTrip.message.ifBlank { "Solicitud de viaje" }
-                        textToSpeech?.speak("¡Nueva solicitud de viaje! $msg", TextToSpeech.QUEUE_FLUSH, null, null)
+                        val uri = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION)
+                        val r = android.media.RingtoneManager.getRingtone(context, uri)
+                        r.play()
                     } catch (_: Exception) {}
+
+                    if (textToSpeech != null) {
+                        try {
+                            val msg = latestTrip.message.ifBlank { "Solicitud de viaje" }
+                            textToSpeech?.speak("¡Nueva solicitud de viaje! $msg", TextToSpeech.QUEUE_FLUSH, null, null)
+                        } catch (_: Exception) {}
+                    }
                 }
             }
         } else {
@@ -159,11 +168,17 @@ fun DriverHomeScreen(
         previousTripsCount = pendingTrips.size
     }
 
-    // Escuchar solicitudes pendientes en Firebase
+    // Escuchar solicitudes pendientes en Firebase dentro del radio configurado y excluyendo ignoradas localmente
     LaunchedEffect(uid) {
         if (uid.isNotBlank()) {
-            repository.observePendingTripsForDriver(uid).collectLatest { trips ->
-                pendingTrips = trips
+            repository.observePendingTripsForDriver(
+                driverId = uid,
+                driverCoordProvider = {
+                    val loc = currentLocation
+                    if (loc != null) Pair(loc.latitude, loc.longitude) else null
+                }
+            ).collectLatest { trips ->
+                pendingTrips = trips.filterNot { LocationTrackingService.ignoredBroadcastTripIds.contains(it.tripId) }
             }
         }
     }
@@ -179,6 +194,13 @@ fun DriverHomeScreen(
         }
     }
 
+    LaunchedEffect(activeAcceptedTrip?.tripId) {
+        val active = activeAcceptedTrip
+        if (active != null && active.tripId.isNotBlank()) {
+            LocationTrackingService.startTripTracking(active.tripId, currentLocation)
+        }
+    }
+
     // Escuchar perfil del conductor en Supabase
     LaunchedEffect(uid) {
         if (uid.isNotBlank()) {
@@ -188,13 +210,11 @@ fun DriverHomeScreen(
             repository.observeDriverProfile(uid).collectLatest { driver ->
                 if (driver == null) return@collectLatest
                 driverProfile = driver
-                try {
-                    context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
-                        .edit()
-                        .putString("driver_last_approval_status", driver.estadoAprobacion)
-                        .putString("driver_last_sub_end", driver.subscriptionEndDate)
-                        .apply()
-                } catch (_: Exception) {}
+                com.example.tuctucmap.data.SecurePrefs.saveDriverSubscriptionCache(
+                    context,
+                    driver.estadoAprobacion,
+                    driver.subscriptionEndDate
+                )
 
                 when {
                     driver.estadoAprobacion in listOf("rechazado", "pendiente") -> {
@@ -301,9 +321,9 @@ fun DriverHomeScreen(
         Toast.makeText(context, "$label copiado al portapapeles", Toast.LENGTH_SHORT).show()
     }
 
-    // Cálculo preventivo de suscripción
+    // Cálculo preventivo de suscripción con reloj sincronizado del servidor
     val expiryMs = driverProfile?.expiryTimestampMillis ?: 0L
-    val now = System.currentTimeMillis()
+    val now = com.example.tuctucmap.data.model.ServerClock.nowMillis()
     val hoursRemaining = if (expiryMs > now) (expiryMs - now) / (1000 * 3600) else 0L
     val isExpiringSoon = hoursRemaining in 1..72 // Menos de 3 días
 
@@ -390,7 +410,7 @@ fun DriverHomeScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = driverProfile?.placas?.let { "Placas: $it" } ?: "Torito en línea",
+                                    text = driverProfile?.displayIdentifier?.takeIf { it.isNotBlank() }?.let { "Unidad/Placas: $it" } ?: "Torito en línea",
                                     color = Color(0xFFF9D423),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold
@@ -1022,6 +1042,34 @@ fun DriverHomeScreen(
                             }
                         }
 
+                        // Distancia en tiempo real recorrida por el conductor desde que aceptó
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Surface(
+                            color = Color(0xFF1E293B),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0x334ADE80)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Navigation,
+                                    contentDescription = null,
+                                    tint = Color(0xFF4ADE80),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Distancia en trayecto: ${String.format(Locale.US, "%.2f", liveTripDistanceMeters / 1000.0)} km",
+                                    color = Color(0xFF4ADE80),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Row(
@@ -1066,27 +1114,13 @@ fun DriverHomeScreen(
 
                         Button(
                             onClick = {
-                                coroutineScope.launch {
-                                    val tripToFinish = activeAcceptedTrip
-                                    val tid = tripToFinish?.tripId
-                                    if (tid != null) {
-                                        repository.updateTripStatus(tid, "completed")
-                                        val saveResult = repository.saveTripRecord(
-                                            tripInfo = tripToFinish.copy(driverId = uid),
-                                            status = "completed",
-                                            driverIdOverride = uid
-                                        )
-                                        if (saveResult.isFailure) {
-                                            android.util.Log.e("DriverHomeScreen", "Error al guardar viaje en Supabase", saveResult.exceptionOrNull())
-                                        }
-                                    }
-                                    LocationTrackingService.driverStatus.value = "disponible"
-                                    repository.updateDriverStatus(uid, "disponible")
-                                    activeAcceptedTrip = null
-                                    try { textToSpeech?.stop() } catch (_: Exception) {}
-                                    refreshTripStats()
-                                    Toast.makeText(context, "Viaje finalizado. ¡Estás disponible nuevamente!", Toast.LENGTH_SHORT).show()
+                                val list = DriverFarePreferences.getRecentFares(context)
+                                suggestedFares = list
+                                if (fareInputText.isBlank() && list.isNotEmpty()) {
+                                    val first = list.first()
+                                    fareInputText = if (first % 1.0 == 0.0) first.toInt().toString() else first.toString()
                                 }
+                                showFinishTripDialog = true
                             },
                             modifier = Modifier.fillMaxWidth().height(48.dp),
                             shape = RoundedCornerShape(10.dp),
@@ -1094,10 +1128,260 @@ fun DriverHomeScreen(
                         ) {
                             Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Terminar Viaje / Volver a Disponible", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text("Terminar Viaje / Cobrar al Pasajero", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         }
                     }
                 }
+            }
+
+            // ── DIÁLOGO DE FINALIZACIÓN Y COBRO CON SUGERENCIAS DE LOCALSTORAGE ────
+            if (showFinishTripDialog && activeAcceptedTrip != null) {
+                val tripToFinish = activeAcceptedTrip!!
+                val currentDistKm = LocationTrackingService.getCurrentTripDistanceKm()
+
+                // Si no se detectó suficiente desplazamiento (ej: mock o estático), calcular Haversine con pasajero
+                val estimatedDistanceKm = remember(tripToFinish, currentDistKm) {
+                    if (currentDistKm > 0.0) {
+                        currentDistKm
+                    } else if (currentLocation != null && tripToFinish.passengerLat != 0.0) {
+                        val results = FloatArray(1)
+                        android.location.Location.distanceBetween(
+                            currentLocation!!.latitude, currentLocation!!.longitude,
+                            tripToFinish.passengerLat, tripToFinish.passengerLon,
+                            results
+                        )
+                        Math.round((results[0] / 1000.0) * 100.0) / 100.0
+                    } else {
+                        0.0
+                    }
+                }
+
+                AlertDialog(
+                    onDismissRequest = { showFinishTripDialog = false },
+                    containerColor = Color(0xFF0F172A),
+                    titleContentColor = Color.White,
+                    textContentColor = Color.LightGray,
+                    shape = RoundedCornerShape(20.dp),
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = Color(0xFF4ADE80),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Finalizar Viaje",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = Color.White
+                            )
+                        }
+                    },
+                    text = {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(rememberScrollState())
+                                .imePadding()
+                        ) {
+                            // Resumen del trayecto
+                            Surface(
+                                color = Color(0xFF1E293B),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, Color(0x33F9D423)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Default.Person,
+                                            contentDescription = null,
+                                            tint = Color(0xFFF9D423),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "Pasajero: ${tripToFinish.passengerName.ifBlank { "Pasajero" }}",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Default.Navigation,
+                                            contentDescription = null,
+                                            tint = Color(0xFF4ADE80),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "Distancia recorrida: $estimatedDistanceKm km",
+                                            color = Color(0xFF4ADE80),
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp
+                                        )
+                                    }
+                                    if (tripToFinish.message.isNotBlank()) {
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            text = "Rumbo: \"${tripToFinish.message}\"",
+                                            color = Color(0xFF94A3B8),
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                text = "¿Cuánto cobraste por este viaje?",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = "Precios habituales (de tus últimos viajes):",
+                                color = Color(0xFF94A3B8),
+                                fontSize = 12.sp
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // Sugerencias extraídas del LocalStorage del teléfono
+                            LazyRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(suggestedFares) { fare ->
+                                    val fareStr = if (fare % 1.0 == 0.0) fare.toInt().toString() else fare.toString()
+                                    val isSelected = fareInputText == fareStr
+
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = { fareInputText = fareStr },
+                                        label = {
+                                            Text(
+                                                text = "Q${if (fare % 1.0 == 0.0) fare.toInt() else String.format(Locale.US, "%.2f", fare)}",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp
+                                            )
+                                        },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = Color(0xFFF9D423),
+                                            selectedLabelColor = Color(0xFF0F2027),
+                                            containerColor = Color(0xFF1E293B),
+                                            labelColor = Color.White
+                                        ),
+                                        border = BorderStroke(
+                                            1.dp,
+                                            if (isSelected) Color(0xFFF9D423) else Color(0x44FFFFFF)
+                                        )
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Campo de entrada editable para el monto cobrado
+                            OutlinedTextField(
+                                value = fareInputText,
+                                onValueChange = { input ->
+                                    if (input.all { it.isDigit() || it == '.' }) {
+                                        fareInputText = input
+                                    }
+                                },
+                                label = { Text("Monto cobrado al pasajero") },
+                                prefix = {
+                                    Text(
+                                        "Q ",
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = Color(0xFFF9D423),
+                                        fontSize = 16.sp
+                                    )
+                                },
+                                placeholder = { Text("0.00") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFFF9D423),
+                                    unfocusedBorderColor = Color(0x66FFFFFF),
+                                    focusedLabelColor = Color(0xFFF9D423),
+                                    unfocusedLabelColor = Color(0xFF94A3B8),
+                                    cursorColor = Color(0xFFF9D423),
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White
+                                )
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                val fareValue = fareInputText.toDoubleOrNull()
+                                if (fareValue == null || fareValue <= 0.0) {
+                                    Toast.makeText(context, "Por favor ingresa un monto válido mayor a 0", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
+
+                                // Guardar en LocalStorage para actualizar las sugerencias
+                                DriverFarePreferences.saveFare(context, fareValue)
+
+                                coroutineScope.launch {
+                                    val tid = tripToFinish.tripId
+                                    val (trackedDistanceKm, points) = LocationTrackingService.finishTripTracking()
+                                    val finalDistance = if (trackedDistanceKm > 0.0) trackedDistanceKm else estimatedDistanceKm
+
+                                    if (tid.isNotBlank()) {
+                                        repository.updateTripStatus(tid, "completed")
+                                        val saveResult = repository.saveTripRecord(
+                                            tripInfo = tripToFinish.copy(driverId = uid),
+                                            status = "completed",
+                                            driverIdOverride = uid,
+                                            fare = fareValue,
+                                            distanceKm = finalDistance,
+                                            routePoints = points
+                                        )
+                                        if (saveResult.isFailure) {
+                                            android.util.Log.e("DriverHomeScreen", "Error al guardar viaje en Supabase", saveResult.exceptionOrNull())
+                                        }
+                                    }
+
+                                    LocationTrackingService.driverStatus.value = "disponible"
+                                    repository.updateDriverStatus(uid, "disponible")
+                                    activeAcceptedTrip = null
+                                    showFinishTripDialog = false
+                                    try { textToSpeech?.stop() } catch (_: Exception) {}
+                                    refreshTripStats()
+                                    Toast.makeText(
+                                        context,
+                                        "¡Viaje finalizado! Cobro: Q${String.format(Locale.US, "%.2f", fareValue)} | Distancia: ${finalDistance} km",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9D423), contentColor = Color(0xFF0F2027)),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Guardar y Finalizar", fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { showFinishTripDialog = false },
+                            colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF94A3B8))
+                        ) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
             }
 
             // ── CAPA FLOTANTE: SOLICITUDES DE VIAJE ENTRANTES (60s) ──────────────
@@ -1169,12 +1453,21 @@ fun DriverHomeScreen(
                                         IconButton(
                                             onClick = {
                                                 isVisible = false
-                                                coroutineScope.launch {
-                                                    kotlinx.coroutines.delay(200)
-                                                    repository.saveTripRecord(trip, "rejected")
-                                                    repository.updateTripStatus(trip.tripId, "cancelled")
-                                                    kotlinx.coroutines.delay(10000)
-                                                    repository.deleteTrip(trip.tripId)
+                                                val isBroadcast = trip.driverId.isBlank() || trip.driverId == "broadcast"
+                                                if (isBroadcast) {
+                                                    // Solicitud general (broadcast): solo ignorar localmente en este teléfono
+                                                    // sin cancelar el viaje para el pasajero ni para los demás conductores.
+                                                    LocationTrackingService.ignoredBroadcastTripIds.add(trip.tripId)
+                                                    pendingTrips = pendingTrips.filterNot { it.tripId == trip.tripId }
+                                                } else {
+                                                    // Solicitud directa a este conductor específico
+                                                    coroutineScope.launch {
+                                                        kotlinx.coroutines.delay(200)
+                                                        repository.saveTripRecord(trip, "rejected")
+                                                        repository.updateTripStatus(trip.tripId, "cancelled")
+                                                        kotlinx.coroutines.delay(10000)
+                                                        repository.deleteTrip(trip.tripId)
+                                                    }
                                                 }
                                             },
                                             modifier = Modifier
@@ -1219,12 +1512,12 @@ fun DriverHomeScreen(
 
                                     Spacer(modifier = Modifier.height(12.dp))
 
-                                    // Barra de tiempo restante (60s)
-                                    var timeLeft by remember { mutableLongStateOf(60000L - (System.currentTimeMillis() - trip.timestamp)) }
+                                    // Barra de tiempo restante (60s) sincronizada con ServerClock
+                                    var timeLeft by remember { mutableLongStateOf(60000L - (com.example.tuctucmap.data.model.ServerClock.nowMillis() - trip.timestamp)) }
                                     LaunchedEffect(trip.timestamp) {
                                         while (timeLeft > 0) {
                                             kotlinx.coroutines.delay(1000)
-                                            timeLeft = 60000L - (System.currentTimeMillis() - trip.timestamp)
+                                            timeLeft = 60000L - (com.example.tuctucmap.data.model.ServerClock.nowMillis() - trip.timestamp)
                                         }
                                         if (timeLeft <= 0) {
                                             isVisible = false
@@ -1263,13 +1556,14 @@ fun DriverHomeScreen(
                                                     driverId = uid,
                                                     driverName = driverProfile?.nombre ?: "Conductor",
                                                     driverPhone = driverProfile?.telefono ?: "",
-                                                    driverPlate = driverProfile?.placas ?: ""
+                                                    driverPlate = driverProfile?.displayIdentifier?.ifBlank { driverProfile?.placas ?: "" } ?: ""
                                                 )
 
                                                 when (acceptResult) {
                                                     is SupabaseRepository.AcceptTripResult.Success -> {
                                                         LocationTrackingService.driverStatus.value = "ocupado"
                                                         repository.updateDriverStatus(uid, "ocupado")
+                                                        LocationTrackingService.startTripTracking(trip.tripId, currentLocation)
                                                         val acceptedTrip = trip.copy(driverId = uid)
                                                         activeAcceptedTrip = acceptedTrip
                                                         try { textToSpeech?.stop() } catch (_: Exception) {}
@@ -1321,8 +1615,12 @@ fun DriverHomeScreen(
                 }
             }
 
-            // ── MODAL DE RENOVACIÓN DE SUSCRIPCIÓN ──────────────────────────────
+            // ── MODAL DE RENOVACIÓN DE SUSCRIPCIÓN (DINÁMICO DESDE SUPABASE APP_CONFIG) ──
             if (showRenewalDialog) {
+                var boletaRefInput by remember { mutableStateOf("") }
+                var selectedPlan by remember { mutableStateOf("semanal") }
+                var isSubmittingBoleta by remember { mutableStateOf(false) }
+
                 AlertDialog(
                     onDismissRequest = { showRenewalDialog = false },
                     icon = { Icon(Icons.Default.AccountBalance, contentDescription = null, tint = Color(0xFFF9D423), modifier = Modifier.size(36.dp)) },
@@ -1330,34 +1628,119 @@ fun DriverHomeScreen(
                         Text("Renovar Suscripción de Conductor", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     },
                     text = {
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Text("Para renovar tu cuenta, deposita el monto de tu plan y envía la foto de tu boleta al administrador:", fontSize = 13.sp, color = Color.LightGray)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .imePadding()
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text("Para renovar tu cuenta, deposita el monto de tu plan (los días se sumarán a tu fecha actual de vencimiento sin perder vigencia):", fontSize = 13.sp, color = Color.LightGray)
 
                             Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B))) {
                                 Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Text("• Semanal (7 días): Q 25.00", color = Color(0xFFF9D423), fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                    Text("• Quincenal (15 días): Q 45.00", color = Color(0xFFF9D423), fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                                    Text("• Mensual (30 días): Q 80.00", color = Color(0xFF4ADE80), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    Text(
+                                        text = String.format(Locale.US, "• Semanal (7 días): Q %.2f", appConfig.priceSemanal),
+                                        color = Color(0xFFF9D423),
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.sp
+                                    )
+                                    Text(
+                                        text = String.format(Locale.US, "• Quincenal (15 días): Q %.2f", appConfig.priceQuincenal),
+                                        color = Color(0xFFF9D423),
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.sp
+                                    )
+                                    Text(
+                                        text = String.format(Locale.US, "• Mensual (30 días): Q %.2f", appConfig.priceMensual),
+                                        color = Color(0xFF4ADE80),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp
+                                    )
                                 }
                             }
 
                             Card(colors = CardDefaults.cardColors(containerColor = Color(0x22FFFFFF))) {
-                                Column(modifier = Modifier.padding(10.dp)) {
+                                Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                        Text("Banrural: 3402-0987-65", color = Color.White, fontSize = 13.sp)
-                                        IconButton(onClick = { copyToClipboard("Banrural", "3402098765") }, modifier = Modifier.size(24.dp)) {
+                                        Text("Banrural: ${appConfig.banruralAccount}", color = Color.White, fontSize = 13.sp)
+                                        IconButton(onClick = { copyToClipboard("Banrural", appConfig.banruralAccount.replace("-", "")) }, modifier = Modifier.size(24.dp)) {
+                                            Icon(Icons.Default.ContentCopy, contentDescription = null, tint = Color(0xFFF9D423), modifier = Modifier.size(16.dp))
+                                        }
+                                    }
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                        Text("Industrial: ${appConfig.biAccount}", color = Color.White, fontSize = 13.sp)
+                                        IconButton(onClick = { copyToClipboard("Banco Industrial", appConfig.biAccount.replace("-", "")) }, modifier = Modifier.size(24.dp)) {
                                             Icon(Icons.Default.ContentCopy, contentDescription = null, tint = Color(0xFFF9D423), modifier = Modifier.size(16.dp))
                                         }
                                     }
                                 }
                             }
 
+                            OutlinedTextField(
+                                value = boletaRefInput,
+                                onValueChange = { boletaRefInput = it },
+                                label = { Text("N° de Boleta o Transferencia (Opcional)", fontSize = 12.sp) },
+                                placeholder = { Text("Ej. 84920145") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFFF9D423),
+                                    unfocusedBorderColor = Color(0x55FFFFFF),
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White,
+                                    focusedLabelColor = Color(0xFFF9D423),
+                                    unfocusedLabelColor = Color.LightGray
+                                )
+                            )
+
+                            if (boletaRefInput.isNotBlank()) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                                    listOf("semanal" to "7d", "quincenal" to "15d", "mensual" to "30d").forEach { (planKey, label) ->
+                                        FilterChip(
+                                            selected = selectedPlan == planKey,
+                                            onClick = { selectedPlan = planKey },
+                                            label = { Text(label, fontSize = 12.sp) }
+                                        )
+                                    }
+                                }
+                                Button(
+                                    onClick = {
+                                        isSubmittingBoleta = true
+                                        val amount = when (selectedPlan) {
+                                            "quincenal" -> appConfig.priceQuincenal
+                                            "mensual" -> appConfig.priceMensual
+                                            else -> appConfig.priceSemanal
+                                        }
+                                        coroutineScope.launch {
+                                            val res = repository.submitPaymentRequest(
+                                                planType = selectedPlan,
+                                                amount = amount,
+                                                referenceNumber = boletaRefInput
+                                            )
+                                            isSubmittingBoleta = false
+                                            res.onSuccess {
+                                                Toast.makeText(context, "Boleta registrada en el sistema. Envía también la foto por WhatsApp.", Toast.LENGTH_LONG).show()
+                                            }.onFailure { err ->
+                                                Toast.makeText(context, "Error: ${err.message}", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    },
+                                    enabled = !isSubmittingBoleta,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9D423), contentColor = Color(0xFF0F172A))
+                                ) {
+                                    Text("Registrar N° de Boleta en App", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                }
+                            }
+
                             Button(
                                 onClick = {
                                     val driverName = driverProfile?.nombre ?: ""
-                                    val plate = driverProfile?.placas ?: ""
-                                    val msg = "Hola Administrador de TucTucMap, soy $driverName (Placas: $plate). Deseo renovar mi suscripción. Adjunto mi boleta de pago:"
-                                    val adminPhone = "50230000000"
+                                    val plate = driverProfile?.displayIdentifier ?: ""
+                                    val refExtra = if (boletaRefInput.isNotBlank()) " (Boleta N°: ${boletaRefInput.trim()})" else ""
+                                    val msg = "Hola Administrador de TucTucMap, soy $driverName ($plate). Deseo renovar mi suscripción$refExtra. Adjunto mi boleta de pago:"
+                                    val adminPhone = appConfig.adminWhatsappPhone.replace(Regex("[^0-9]"), "")
                                     val waUrl = "https://api.whatsapp.com/send?phone=$adminPhone&text=${Uri.encode(msg)}"
                                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(waUrl)))
                                     showRenewalDialog = false
@@ -1393,6 +1776,7 @@ private fun toggleService(context: Context, driver: Driver?, start: Boolean) {
         intent.putExtra("DRIVER_NOMBRE", driver.nombre)
         intent.putExtra("DRIVER_TELEFONO", driver.telefono)
         intent.putExtra("DRIVER_PLACAS", driver.placas)
+        intent.putExtra("DRIVER_UNIDAD", driver.numeroUnidad)
         ContextCompat.startForegroundService(context, intent)
     } else {
         context.stopService(intent)

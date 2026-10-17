@@ -16,9 +16,9 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 /**
- * Gestor de almacenamiento seguro para tokens y sesiones de autenticación en Android.
+ * Gestor de almacenamiento seguro para tokens, sesiones y estado de suscripción en Android.
  * Implementa [SessionManager] de Supabase-kt con cifrado por hardware AES-256 en modo GCM
- * respaldado por Android KeyStore.
+ * respaldado por Android KeyStore, sin fallback en texto plano.
  */
 object SecurePrefs : SessionManager {
     private const val PREFS_NAME = "tuctuc_prefs"
@@ -61,7 +61,7 @@ object SecurePrefs : SessionManager {
         return keyGenerator.generateKey()
     }
 
-    fun encrypt(plainText: String): String {
+    fun encrypt(plainText: String): String? {
         return try {
             val cipher = Cipher.getInstance(TRANSFORMATION)
             cipher.init(Cipher.ENCRYPT_MODE, getOrCreateSecretKey())
@@ -71,14 +71,14 @@ object SecurePrefs : SessionManager {
             val cipherBase64 = Base64.encodeToString(cipherText, Base64.NO_WRAP)
             "$ivBase64$IV_SEPARATOR$cipherBase64"
         } catch (_: Exception) {
-            plainText
+            null
         }
     }
 
     fun decrypt(encryptedText: String): String? {
         return try {
             if (!encryptedText.contains(IV_SEPARATOR)) {
-                return encryptedText
+                return null
             }
             val parts = encryptedText.split(IV_SEPARATOR, limit = 2)
             val iv = Base64.decode(parts[0], Base64.NO_WRAP)
@@ -89,7 +89,7 @@ object SecurePrefs : SessionManager {
             cipher.init(Cipher.DECRYPT_MODE, getOrCreateSecretKey(), spec)
             String(cipher.doFinal(cipherText), Charsets.UTF_8)
         } catch (_: Exception) {
-            if (encryptedText.startsWith("eyJ") || encryptedText.startsWith("{")) encryptedText else null
+            null
         }
     }
 
@@ -122,25 +122,16 @@ object SecurePrefs : SessionManager {
 
     fun saveUserSession(context: Context, session: UserSession) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        try {
-            val sessionJsonStr = json.encodeToString(session)
-            val encSession = encrypt(sessionJsonStr)
-            val encAccess = encrypt(session.accessToken)
-            val encRefresh = encrypt(session.refreshToken)
+        val sessionJsonStr = json.encodeToString(session)
+        val encSession = encrypt(sessionJsonStr) ?: return
+        val encAccess = encrypt(session.accessToken) ?: return
+        val encRefresh = encrypt(session.refreshToken) ?: return
 
-            prefs.edit()
-                .putString("supabase_session", encSession)
-                .putString("supabase_access", encAccess)
-                .putString("supabase_refresh", encRefresh)
-                .apply()
-        } catch (_: Exception) {
-            val sessionJsonStr = json.encodeToString(session)
-            prefs.edit()
-                .putString("supabase_session", sessionJsonStr)
-                .putString("supabase_access", session.accessToken)
-                .putString("supabase_refresh", session.refreshToken)
-                .apply()
-        }
+        prefs.edit()
+            .putString("supabase_session", encSession)
+            .putString("supabase_access", encAccess)
+            .putString("supabase_refresh", encRefresh)
+            .apply()
     }
 
     fun loadUserSession(context: Context): UserSession? {
@@ -157,7 +148,6 @@ object SecurePrefs : SessionManager {
             }
         }
 
-        // Migración de respaldo si venía de tokens individuales previos
         val (access, refresh) = getTokens(context)
         if (!access.isNullOrBlank() && !refresh.isNullOrBlank()) {
             return UserSession(
@@ -172,19 +162,12 @@ object SecurePrefs : SessionManager {
 
     fun saveTokens(context: Context, accessToken: String, refreshToken: String) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        try {
-            val encAccess = encrypt(accessToken)
-            val encRefresh = encrypt(refreshToken)
-            prefs.edit()
-                .putString("supabase_access", encAccess)
-                .putString("supabase_refresh", encRefresh)
-                .apply()
-        } catch (_: Exception) {
-            prefs.edit()
-                .putString("supabase_access", accessToken)
-                .putString("supabase_refresh", refreshToken)
-                .apply()
-        }
+        val encAccess = encrypt(accessToken) ?: return
+        val encRefresh = encrypt(refreshToken) ?: return
+        prefs.edit()
+            .putString("supabase_access", encAccess)
+            .putString("supabase_refresh", encRefresh)
+            .apply()
     }
 
     fun getTokens(context: Context): Pair<String?, String?> {
@@ -195,6 +178,32 @@ object SecurePrefs : SessionManager {
         val access = rawAccess?.let { decrypt(it) }
         val refresh = rawRefresh?.let { decrypt(it) }
         return Pair(access, refresh)
+    }
+
+    // --- Caché cifrada del estado de aprobación y suscripción del conductor ---
+
+    fun saveDriverSubscriptionCache(context: Context, approvalStatus: String, subscriptionEndDate: String?) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val encStatus = encrypt(approvalStatus) ?: return
+        val editor = prefs.edit().putString("driver_last_approval_status", encStatus)
+        if (subscriptionEndDate != null) {
+            encrypt(subscriptionEndDate)?.let { editor.putString("driver_last_sub_end", it) }
+        } else {
+            editor.remove("driver_last_sub_end")
+        }
+        editor.apply()
+    }
+
+    fun getDriverApprovalStatusCache(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val raw = prefs.getString("driver_last_approval_status", null) ?: return null
+        return decrypt(raw)
+    }
+
+    fun getDriverSubEndCache(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val raw = prefs.getString("driver_last_sub_end", null) ?: return null
+        return decrypt(raw)
     }
 
     fun clearTokens(context: Context) {
