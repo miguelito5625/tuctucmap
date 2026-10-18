@@ -45,6 +45,11 @@ Para optimizar el uso de tokens y mantener procedimientos estandarizados, este p
    - Protocolo de versionamiento y push automático a GitHub tras agregar o modificar funciones.
    - Mensajes semánticos, prevención de fuga de credenciales y sincronización remota con `origin/main`.
 
+5. **[`tuctuc-playstore-release`](./skills/tuctuc-playstore-release/SKILL.md):**
+   - Generación del paquete oficial firmado `.aab` (`.\gradlew.bat bundleRelease`).
+   - Incremento secuencial de `versionCode` y `versionName` en `build.gradle.kts`.
+   - Extracción y síntesis de commits desde la fecha de modificación del último `.aab` para redactar el Nombre y las Notas de la versión en formato Google Play Console (`<es-419>`).
+
 ---
 
 ## 3. Reglas Obligatorias del Agente (AI Rules)
