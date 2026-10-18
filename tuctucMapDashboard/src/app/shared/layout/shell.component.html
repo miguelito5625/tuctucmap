@@ -85,6 +85,20 @@
         <mat-icon matListItemIcon>history</mat-icon>
         <span matListItemTitle>Viajes Completados</span>
       </a>
+
+      <div class="nav-section-label" style="margin-top: 12px;">Parámetros</div>
+
+      <a
+        mat-list-item
+        routerLink="/config"
+        routerLinkActive="active-nav-item"
+        (click)="onNavItemClick()"
+        matTooltip="Configuración comercial y parámetros del negocio"
+        matTooltipPosition="right"
+      >
+        <mat-icon matListItemIcon>tune</mat-icon>
+        <span matListItemTitle>Configuración Negocio</span>
+      </a>
     </mat-nav-list>
 
     <!-- Footer -->
@@ -127,6 +141,11 @@
 
       <!-- User Menu Definition -->
       <mat-menu #userMenu="matMenu" xPosition="before" class="dark-menu">
+        <button mat-menu-item routerLink="/config">
+          <mat-icon>tune</mat-icon>
+          <span>Configuración Negocio</span>
+        </button>
+        <mat-divider></mat-divider>
         <button mat-menu-item (click)="openChangeNameDialog()">
           <mat-icon>badge</mat-icon>
           <span>Cambiar nombre</span>

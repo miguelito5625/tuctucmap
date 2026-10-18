@@ -1,0 +1,492 @@
+<div class="config-page">
+  <!-- ─── Page Header ─────────────────────────────────────────── -->
+  <header class="page-header">
+    <div class="header-info">
+      <div class="header-icon-badge">
+        <mat-icon>tune</mat-icon>
+      </div>
+      <div>
+        <h1 class="page-title">Configuración Comercial del Negocio</h1>
+        <p class="page-subtitle">
+          Administra las cuentas de recaudación, WhatsApp de soporte, tarifario y radio de búsqueda en tiempo real sin recompilar la app.
+        </p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      @if (lastUpdated()) {
+        <div class="sync-badge" matTooltip="Última modificación registrada en base de datos">
+          <mat-icon class="sync-icon">cloud_done</mat-icon>
+          <span>Sincronizado: {{ lastUpdated() | date:'short' }}</span>
+        </div>
+      }
+
+      <button
+        mat-stroked-button
+        class="btn-reset"
+        type="button"
+        (click)="resetForm()"
+        [disabled]="!hasChanges() || isSaving() || isLoading()"
+      >
+        <mat-icon>restart_alt</mat-icon>
+        Deshacer
+      </button>
+
+      <button
+        mat-flat-button
+        class="btn-save"
+        type="button"
+        (click)="saveConfig()"
+        [disabled]="configForm.invalid || !hasChanges() || isSaving() || isLoading()"
+      >
+        @if (isSaving()) {
+          <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+          <span>Guardando...</span>
+        } @else {
+          <span style="display: inline-flex; align-items: center; gap: 8px;">
+            <mat-icon>save</mat-icon>
+            <span>Guardar Cambios</span>
+          </span>
+        }
+      </button>
+    </div>
+  </header>
+
+  <!-- ─── Notice Banner ───────────────────────────────────────── -->
+  <div class="notice-banner">
+    <div class="notice-icon">
+      <mat-icon>info</mat-icon>
+    </div>
+    <div class="notice-content">
+      <span class="notice-title">Actualización Instantánea en la App Móvil:</span>
+      <p class="notice-text">
+        Cualquier cambio realizado en esta sección se aplica inmediatamente en las apps de conductores y pasajeros gracias a la tabla maestra <code>public.app_config</code> de Supabase. No requiere compilar APKs ni publicar actualizaciones en Google Play Store.
+      </p>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Cargando parámetros comerciales desde Supabase...</p>
+    </div>
+  } @else {
+    <form [formGroup]="configForm" class="config-layout">
+      <!-- ─── Columna Izquierda: Formularios de Configuración ─── -->
+      <div class="forms-column">
+
+        <!-- Tarjeta 1: WhatsApp Administrativo de Cobros y Soporte -->
+        <section class="config-card config-card--whatsapp">
+          <div class="card-header">
+            <div class="card-icon-wrapper card-icon--green">
+              <mat-icon>chat</mat-icon>
+            </div>
+            <div>
+              <h2 class="card-title">1. WhatsApp de Soporte y Cobranza</h2>
+              <p class="card-desc">Número al que los conductores envían sus comprobantes de pago y solicitan ayuda.</p>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Número de WhatsApp (con código de país sin '+')</mat-label>
+              <input
+                matInput
+                formControlName="admin_whatsapp"
+                placeholder="Ej. 50255801894"
+                maxlength="16"
+              />
+              <mat-icon matPrefix class="field-icon">phone_android</mat-icon>
+              <mat-hint>Ingresa solo dígitos, incluyendo código de país (ej. 502 para Guatemala, 52 para México).</mat-hint>
+              @if (configForm.get('admin_whatsapp')?.hasError('required')) {
+                <mat-error>El número de WhatsApp es obligatorio.</mat-error>
+              }
+              @if (configForm.get('admin_whatsapp')?.hasError('pattern')) {
+                <mat-error>Debe contener entre 8 y 16 dígitos numéricos sin símbolos ni espacios.</mat-error>
+              }
+            </mat-form-field>
+
+            <div class="action-test-row">
+              <button
+                mat-stroked-button
+                type="button"
+                class="btn-test-wa"
+                (click)="testWhatsAppLink()"
+              >
+                <mat-icon>open_in_new</mat-icon>
+                Probar Enlace de WhatsApp
+              </button>
+              <span class="test-hint">Abre un chat directo con el número configurado para verificar recepción.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tarjeta 2: Cuentas Bancarias y Titular de Recaudación -->
+        <section class="config-card config-card--banks">
+          <div class="card-header">
+            <div class="card-icon-wrapper card-icon--blue">
+              <mat-icon>account_balance</mat-icon>
+            </div>
+            <div>
+              <h2 class="card-title">2. Cuentas Bancarias y Titular de Recaudación</h2>
+              <p class="card-desc">Cuentas donde los conductores depositan o transfieren el valor de su suscripción.</p>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <!-- Titular de Cuentas -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Nombre Completo del Titular de Cuentas</mat-label>
+              <input
+                matInput
+                formControlName="account_holder_name"
+                placeholder="Ej. Administración TucTuc Map o Tu Nombre Completo"
+              />
+              <mat-icon matPrefix class="field-icon">badge</mat-icon>
+              <mat-hint>El conductor verá este nombre en su app para verificar la cuenta antes de transferir.</mat-hint>
+              @if (configForm.get('account_holder_name')?.hasError('required')) {
+                <mat-error>El nombre del titular es obligatorio.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-divider class="section-divider"></mat-divider>
+
+            <!-- Cuenta 1 -->
+            <div class="bank-subgroup">
+              <div class="bank-subgroup-title">
+                <mat-icon>looks_one</mat-icon>
+                <span>Cuenta Bancaria Principal (Banco 1)</span>
+              </div>
+              <div class="grid-2-cols">
+                <mat-form-field appearance="outline">
+                  <mat-label>Banco y Tipo de Cuenta 1</mat-label>
+                  <input
+                    matInput
+                    formControlName="bank_1_name"
+                    placeholder="Ej. Banrural (Monetaria)"
+                  />
+                  <mat-icon matPrefix class="field-icon">account_balance</mat-icon>
+                  @if (configForm.get('bank_1_name')?.hasError('required')) {
+                    <mat-error>El nombre del banco 1 es requerido.</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Número de Cuenta 1</mat-label>
+                  <input
+                    matInput
+                    formControlName="bank_1_account"
+                    placeholder="Ej. 3402-0987-65"
+                  />
+                  <mat-icon matPrefix class="field-icon">tag</mat-icon>
+                  @if (configForm.get('bank_1_account')?.hasError('required')) {
+                    <mat-error>El número de cuenta 1 es requerido.</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+            </div>
+
+            <mat-divider class="section-divider"></mat-divider>
+
+            <!-- Cuenta 2 -->
+            <div class="bank-subgroup">
+              <div class="bank-subgroup-title">
+                <mat-icon>looks_two</mat-icon>
+                <span>Cuenta Bancaria Secundaria / Billetera Móvil (Banco 2)</span>
+              </div>
+              <div class="grid-2-cols">
+                <mat-form-field appearance="outline">
+                  <mat-label>Banco o Método Alternativo 2</mat-label>
+                  <input
+                    matInput
+                    formControlName="bank_2_name"
+                    placeholder="Ej. Banco Industrial (Ahorro) / Tigo Money"
+                  />
+                  <mat-icon matPrefix class="field-icon">account_balance_wallet</mat-icon>
+                  @if (configForm.get('bank_2_name')?.hasError('required')) {
+                    <mat-error>El nombre del banco 2 es requerido.</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Número de Cuenta o Billetera 2</mat-label>
+                  <input
+                    matInput
+                    formControlName="bank_2_account"
+                    placeholder="Ej. 027-019842-1"
+                  />
+                  <mat-icon matPrefix class="field-icon">tag</mat-icon>
+                  @if (configForm.get('bank_2_account')?.hasError('required')) {
+                    <mat-error>El número de cuenta 2 es requerido.</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tarjeta 3: Moneda y Tarifario de Membresías -->
+        <section class="config-card config-card--pricing">
+          <div class="card-header">
+            <div class="card-icon-wrapper card-icon--amber">
+              <mat-icon>payments</mat-icon>
+            </div>
+            <div>
+              <h2 class="card-title">3. Moneda y Tarifas de Suscripción</h2>
+              <p class="card-desc">Define el símbolo monetario y los precios de los planes disponibles para los conductores.</p>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <!-- Símbolo de Moneda -->
+            <mat-form-field appearance="outline" class="currency-field">
+              <mat-label>Símbolo de Moneda Local</mat-label>
+              <input
+                matInput
+                formControlName="currency_symbol"
+                placeholder="Ej. Q, $, S/, C$"
+                maxlength="5"
+              />
+              <mat-icon matPrefix class="field-icon">currency_exchange</mat-icon>
+              <mat-hint>Se antepone a todas las tarifas y reportes (ej. Q25.00 o $10.00).</mat-hint>
+              @if (configForm.get('currency_symbol')?.hasError('required')) {
+                <mat-error>El símbolo de moneda es requerido.</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Precios de los Planes -->
+            <div class="pricing-grid">
+              <div class="price-box">
+                <span class="price-box-title">Plan Diario (1 día)</span>
+                <mat-form-field appearance="outline">
+                  <mat-label>Precio Diario</mat-label>
+                  <span matPrefix class="currency-prefix">{{ previewCurrency() }}&nbsp;</span>
+                  <input
+                    matInput
+                    type="number"
+                    step="0.50"
+                    min="0"
+                    formControlName="price_daily"
+                  />
+                  @if (configForm.get('price_daily')?.hasError('required') || configForm.get('price_daily')?.hasError('min')) {
+                    <mat-error>Valor inválido.</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+
+              <div class="price-box">
+                <span class="price-box-title">Plan Semanal (7 días)</span>
+                <mat-form-field appearance="outline">
+                  <mat-label>Precio Semanal</mat-label>
+                  <span matPrefix class="currency-prefix">{{ previewCurrency() }}&nbsp;</span>
+                  <input
+                    matInput
+                    type="number"
+                    step="0.50"
+                    min="0"
+                    formControlName="price_weekly"
+                  />
+                  @if (configForm.get('price_weekly')?.hasError('required') || configForm.get('price_weekly')?.hasError('min')) {
+                    <mat-error>Valor inválido.</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+
+              <div class="price-box">
+                <span class="price-box-title">Plan Quincenal (15 días)</span>
+                <mat-form-field appearance="outline">
+                  <mat-label>Precio Quincenal</mat-label>
+                  <span matPrefix class="currency-prefix">{{ previewCurrency() }}&nbsp;</span>
+                  <input
+                    matInput
+                    type="number"
+                    step="0.50"
+                    min="0"
+                    formControlName="price_quincenal"
+                  />
+                  @if (configForm.get('price_quincenal')?.hasError('required') || configForm.get('price_quincenal')?.hasError('min')) {
+                    <mat-error>Valor inválido.</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+
+              <div class="price-box">
+                <span class="price-box-title">Plan Mensual (30 días)</span>
+                <mat-form-field appearance="outline">
+                  <mat-label>Precio Mensual</mat-label>
+                  <span matPrefix class="currency-prefix">{{ previewCurrency() }}&nbsp;</span>
+                  <input
+                    matInput
+                    type="number"
+                    step="0.50"
+                    min="0"
+                    formControlName="price_monthly"
+                  />
+                  @if (configForm.get('price_monthly')?.hasError('required') || configForm.get('price_monthly')?.hasError('min')) {
+                    <mat-error>Valor inválido.</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tarjeta 4: Geocerca y Parámetros Operativos -->
+        <section class="config-card config-card--radius">
+          <div class="card-header">
+            <div class="card-icon-wrapper card-icon--purple">
+              <mat-icon>radar</mat-icon>
+            </div>
+            <div>
+              <h2 class="card-title">4. Radio Máximo de Búsqueda de Toritos</h2>
+              <p class="card-desc">Límite geográfico para conectar pasajeros y toritos disponibles.</p>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="radius-control-box">
+              <div class="radius-slider-group">
+                <div class="radius-header">
+                  <span class="slider-label">Radio de Búsqueda (km a la redonda):</span>
+                  <span class="slider-badge">{{ previewRadius() }} km</span>
+                </div>
+
+                <mat-slider min="1" max="50" step="0.5" discrete [displayWith]="formatKm">
+                  <input matSliderThumb formControlName="search_radius_km" />
+                </mat-slider>
+              </div>
+
+              <mat-form-field appearance="outline" class="radius-input">
+                <mat-label>Kilómetros</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  step="0.5"
+                  min="1"
+                  max="100"
+                  formControlName="search_radius_km"
+                />
+                <span matSuffix>&nbsp;km&nbsp;</span>
+              </mat-form-field>
+            </div>
+
+            <p class="radius-recommendation">
+              <mat-icon>lightbulb</mat-icon>
+              <span><strong>Recomendación:</strong> En cascos urbanos o pueblos pequeños se aconseja entre <strong>5.0 km y 15.0 km</strong> para evitar viajes fuera de la zona de servicio local.</span>
+            </p>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- ─── Columna Derecha: Simulador Móvil en Tiempo Real ─── -->
+      <aside class="preview-column">
+        <div class="mobile-mockup-wrapper">
+          <div class="mockup-header">
+            <div class="mockup-header-title">
+              <mat-icon>devices</mat-icon>
+              <span>Vista Previa en App Android</span>
+            </div>
+            <span class="mockup-live-indicator">EN VIVO</span>
+          </div>
+
+          <p class="mockup-explainer">
+            Así es exactamente como los conductores visualizarán tus datos en la app de Android en tiempo real:
+          </p>
+
+          <!-- Tarjeta Mockup Teléfono Móvil -->
+          <div class="phone-frame">
+            <!-- Barra superior simulada -->
+            <div class="phone-topbar">
+              <span class="phone-time">9:41</span>
+              <div class="phone-notch"></div>
+              <div class="phone-icons">
+                <mat-icon>wifi</mat-icon>
+                <mat-icon>battery_full</mat-icon>
+              </div>
+            </div>
+
+            <!-- Contenido simulado de DriverSubscriptionScreen -->
+            <div class="phone-screen-content">
+              <!-- Banner titular -->
+              <div class="sim-card sim-card--bank">
+                <div class="sim-card-title">
+                  <mat-icon>account_balance</mat-icon>
+                  <span>Cuentas para Depósito / Transferencia</span>
+                </div>
+
+                <div class="sim-holder">
+                  <span class="sim-sub">Titular de las cuentas:</span>
+                  <span class="sim-val sim-val--highlight">{{ previewHolder() }}</span>
+                </div>
+
+                <!-- Cuenta 1 -->
+                <div class="sim-account-row">
+                  <div>
+                    <span class="sim-sub">{{ previewBank1Name() }}:</span>
+                    <span class="sim-account-num">{{ previewBank1Account() }}</span>
+                  </div>
+                  <button mat-icon-button class="sim-copy-btn" (click)="copyToClipboard(previewBank1Account(), previewBank1Name())" matTooltip="Copiar cuenta">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                </div>
+
+                <div class="sim-divider"></div>
+
+                <!-- Cuenta 2 -->
+                <div class="sim-account-row">
+                  <div>
+                    <span class="sim-sub">{{ previewBank2Name() }}:</span>
+                    <span class="sim-account-num">{{ previewBank2Account() }}</span>
+                  </div>
+                  <button mat-icon-button class="sim-copy-btn" (click)="copyToClipboard(previewBank2Account(), previewBank2Name())" matTooltip="Copiar cuenta">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Selector de planes simulado -->
+              <div class="sim-section-label">Planes de Renovación Disponibles:</div>
+              <div class="sim-plans-grid">
+                <div class="sim-plan-card">
+                  <span class="sim-plan-name">Diario</span>
+                  <span class="sim-plan-price">{{ previewCurrency() }}{{ previewPriceDaily() | number:'1.0-2' }}</span>
+                  <span class="sim-plan-dur">1 día</span>
+                </div>
+                <div class="sim-plan-card sim-plan-card--active">
+                  <span class="sim-plan-name">Semanal</span>
+                  <span class="sim-plan-price">{{ previewCurrency() }}{{ previewPriceWeekly() | number:'1.0-2' }}</span>
+                  <span class="sim-plan-dur">7 días</span>
+                </div>
+                <div class="sim-plan-card">
+                  <span class="sim-plan-name">Quincenal</span>
+                  <span class="sim-plan-price">{{ previewCurrency() }}{{ previewPriceQuincenal() | number:'1.0-2' }}</span>
+                  <span class="sim-plan-dur">15 días</span>
+                </div>
+                <div class="sim-plan-card">
+                  <span class="sim-plan-name">Mensual</span>
+                  <span class="sim-plan-price">{{ previewCurrency() }}{{ previewPriceMonthly() | number:'1.0-2' }}</span>
+                  <span class="sim-plan-dur">30 días</span>
+                </div>
+              </div>
+
+              <!-- Botón simulado de WhatsApp -->
+              <div class="sim-wa-box">
+                <button mat-flat-button class="sim-wa-button" (click)="testWhatsAppLink()">
+                  <mat-icon>chat</mat-icon>
+                  <span>Enviar Boleta por WhatsApp (+{{ previewWhatsApp() }})</span>
+                </button>
+              </div>
+
+              <!-- Indicador de radio simulado -->
+              <div class="sim-radius-box">
+                <mat-icon>radar</mat-icon>
+                <span>Radio de cobertura: <strong>{{ previewRadius() }} km</strong> a la redonda</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </form>
+  }
+</div>

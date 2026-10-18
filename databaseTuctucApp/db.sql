@@ -39,17 +39,93 @@ ALTER TABLE public.driver_subscriptions ADD CONSTRAINT driver_subscriptions_plan
 CREATE TABLE IF NOT EXISTS public.app_config (
     id TEXT PRIMARY KEY DEFAULT 'default',
     admin_whatsapp_phone TEXT NOT NULL DEFAULT '50230000000',
+    admin_whatsapp TEXT NOT NULL DEFAULT '50230000000',
     banrural_account TEXT NOT NULL DEFAULT '3402-0987-65',
+    bank_1_name TEXT NOT NULL DEFAULT 'Banrural (Monetaria)',
+    bank_1_account TEXT NOT NULL DEFAULT '3402-0987-65',
     bi_account TEXT NOT NULL DEFAULT '027-019842-1',
+    bank_2_name TEXT NOT NULL DEFAULT 'Banco Industrial (Ahorro)',
+    bank_2_account TEXT NOT NULL DEFAULT '027-019842-1',
+    account_holder_name TEXT NOT NULL DEFAULT 'Administración TucTuc Map',
+    currency_symbol TEXT NOT NULL DEFAULT 'Q',
+    price_daily NUMERIC(10,2) NOT NULL DEFAULT 10.00,
     price_semanal NUMERIC(10,2) NOT NULL DEFAULT 25.00,
+    price_weekly NUMERIC(10,2) NOT NULL DEFAULT 25.00,
     price_quincenal NUMERIC(10,2) NOT NULL DEFAULT 45.00,
     price_mensual NUMERIC(10,2) NOT NULL DEFAULT 80.00,
+    price_monthly NUMERIC(10,2) NOT NULL DEFAULT 80.00,
     max_search_radius_km NUMERIC(5,2) NOT NULL DEFAULT 5.00,
+    search_radius_km NUMERIC(5,2) NOT NULL DEFAULT 5.00,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-INSERT INTO public.app_config (id, admin_whatsapp_phone, banrural_account, bi_account, price_semanal, price_quincenal, price_mensual, max_search_radius_km)
-VALUES ('default', '50230000000', '3402-0987-65', '027-019842-1', 25.00, 45.00, 80.00, 5.00)
+-- Sincronizar trigger para mantener consistencia bidireccional entre nombres legacy y canónicos
+CREATE OR REPLACE FUNCTION public.sync_app_config_fields()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.admin_whatsapp IS NOT NULL AND (OLD IS NULL OR OLD.admin_whatsapp IS DISTINCT FROM NEW.admin_whatsapp OR NEW.admin_whatsapp_phone IS NULL) THEN
+        NEW.admin_whatsapp_phone := NEW.admin_whatsapp;
+    ELSIF NEW.admin_whatsapp_phone IS NOT NULL THEN
+        NEW.admin_whatsapp := NEW.admin_whatsapp_phone;
+    END IF;
+
+    IF NEW.bank_1_account IS NOT NULL AND (OLD IS NULL OR OLD.bank_1_account IS DISTINCT FROM NEW.bank_1_account OR NEW.banrural_account IS NULL) THEN
+        NEW.banrural_account := NEW.bank_1_account;
+    ELSIF NEW.banrural_account IS NOT NULL THEN
+        NEW.bank_1_account := NEW.banrural_account;
+    END IF;
+
+    IF NEW.bank_2_account IS NOT NULL AND (OLD IS NULL OR OLD.bank_2_account IS DISTINCT FROM NEW.bank_2_account OR NEW.bi_account IS NULL) THEN
+        NEW.bi_account := NEW.bank_2_account;
+    ELSIF NEW.bi_account IS NOT NULL THEN
+        NEW.bank_2_account := NEW.bi_account;
+    END IF;
+
+    IF NEW.price_weekly IS NOT NULL AND (OLD IS NULL OR OLD.price_weekly IS DISTINCT FROM NEW.price_weekly OR NEW.price_semanal IS NULL) THEN
+        NEW.price_semanal := NEW.price_weekly;
+    ELSIF NEW.price_semanal IS NOT NULL THEN
+        NEW.price_weekly := NEW.price_semanal;
+    END IF;
+
+    IF NEW.price_monthly IS NOT NULL AND (OLD IS NULL OR OLD.price_monthly IS DISTINCT FROM NEW.price_monthly OR NEW.price_mensual IS NULL) THEN
+        NEW.price_mensual := NEW.price_monthly;
+    ELSIF NEW.price_mensual IS NOT NULL THEN
+        NEW.price_monthly := NEW.price_mensual;
+    END IF;
+
+    IF NEW.search_radius_km IS NOT NULL AND (OLD IS NULL OR OLD.search_radius_km IS DISTINCT FROM NEW.search_radius_km OR NEW.max_search_radius_km IS NULL) THEN
+        NEW.max_search_radius_km := NEW.search_radius_km;
+    ELSIF NEW.max_search_radius_km IS NOT NULL THEN
+        NEW.search_radius_km := NEW.max_search_radius_km;
+    END IF;
+
+    NEW.updated_at := NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_sync_app_config_fields ON public.app_config;
+CREATE TRIGGER trg_sync_app_config_fields
+BEFORE INSERT OR UPDATE ON public.app_config
+FOR EACH ROW
+EXECUTE FUNCTION public.sync_app_config_fields();
+
+INSERT INTO public.app_config (
+    id, admin_whatsapp_phone, admin_whatsapp,
+    banrural_account, bank_1_name, bank_1_account,
+    bi_account, bank_2_name, bank_2_account,
+    account_holder_name, currency_symbol,
+    price_daily, price_semanal, price_weekly, price_quincenal, price_mensual, price_monthly,
+    max_search_radius_km, search_radius_km
+)
+VALUES (
+    'default', '50230000000', '50230000000',
+    '3402-0987-65', 'Banrural (Monetaria)', '3402-0987-65',
+    '027-019842-1', 'Banco Industrial (Ahorro)', '027-019842-1',
+    'Administración TucTuc Map', 'Q',
+    10.00, 25.00, 25.00, 45.00, 80.00, 80.00,
+    5.00, 5.00
+)
 ON CONFLICT (id) DO NOTHING;
 
 -- 2.5 Crear tabla de notificaciones de boletas de pago enviadas por conductores

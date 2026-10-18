@@ -42,10 +42,18 @@ Se creó la tabla maestra `public.app_config` en Supabase (definida en [`databas
 | `search_radius_km` | `15.0` | Radio máximo en kilómetros a la redonda para mostrar toritos cercanos y notificar viajes pendientes (recomendado para pueblos: `8.0` a `15.0` km). |
 
 ### ¿Cómo actualizar estos datos en un segundo?
-Puedes hacerlo desde el **Table Editor** de tu panel de Supabase (tabla `app_config`, fila `id = 1`), o ejecutando este comando desde la carpeta `databaseTuctucApp/`:
+
+**1. Opción Recomendada: Directamente desde el Dashboard Administrativo Web**
+Ingresa a `tuctucMapDashboard` con tu usuario administrador y navega a la nueva sección **Configuración Negocio** (`/config`, disponible en el menú lateral y en el menú de usuario).
+- Te permite modificar números de WhatsApp, cuentas bancarias, titular, símbolo de moneda, tarifas de planes y radio en kilómetros.
+- Cuenta con un **Simulador Móvil en Vivo** que te muestra en tiempo real exactamente cómo verán los conductores la información antes y después de guardar.
+- Incluye un botón para probar tu enlace de WhatsApp con un solo clic.
+
+**2. Opción Alternativa: Desde el Table Editor de Supabase o mediante script**
+Puedes actualizar la fila `id = 'default'` en la tabla `app_config` ejecutando este comando desde la carpeta `databaseTuctucApp/`:
 
 ```powershell
-node run_sql.js "UPDATE public.app_config SET admin_whatsapp = '502TUNUMERO', bank_1_account = 'TU-CUENTA-1', bank_2_account = 'TU-CUENTA-2', account_holder_name = 'TU NOMBRE COMPLETO', updated_at = NOW() WHERE id = 1;"
+node run_sql.js "UPDATE public.app_config SET admin_whatsapp = '502TUNUMERO', bank_1_account = 'TU-CUENTA-1', bank_2_account = 'TU-CUENTA-2', account_holder_name = 'TU NOMBRE COMPLETO', updated_at = NOW() WHERE id = 'default';"
 ```
 
 También te recomendamos actualizar esos mismos valores en tu archivo raíz [`.env`](file:///c:/Users/exbinario/Documents/desarrollo/antigravity/Android/tuctucmap/.env) para que la app Android los tenga como respaldo offline predeterminado.

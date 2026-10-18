@@ -25,18 +25,40 @@ data class AppConfig(
     val id: String = "default",
     @SerialName("admin_whatsapp_phone")
     val adminWhatsappPhone: String = "50230000000",
+    @SerialName("admin_whatsapp")
+    val adminWhatsapp: String = "50230000000",
     @SerialName("banrural_account")
     val banruralAccount: String = "3402-0987-65",
+    @SerialName("bank_1_name")
+    val bank1Name: String = "Banrural (Monetaria)",
+    @SerialName("bank_1_account")
+    val bank1Account: String = "3402-0987-65",
     @SerialName("bi_account")
     val biAccount: String = "027-019842-1",
+    @SerialName("bank_2_name")
+    val bank2Name: String = "Banco Industrial (Ahorro)",
+    @SerialName("bank_2_account")
+    val bank2Account: String = "027-019842-1",
+    @SerialName("account_holder_name")
+    val accountHolderName: String = "Administración TucTuc Map",
+    @SerialName("currency_symbol")
+    val currencySymbol: String = "Q",
+    @SerialName("price_daily")
+    val priceDaily: Double = 10.0,
     @SerialName("price_semanal")
     val priceSemanal: Double = 25.0,
+    @SerialName("price_weekly")
+    val priceWeekly: Double = 25.0,
     @SerialName("price_quincenal")
     val priceQuincenal: Double = 45.0,
     @SerialName("price_mensual")
     val priceMensual: Double = 80.0,
+    @SerialName("price_monthly")
+    val priceMonthly: Double = 80.0,
     @SerialName("max_search_radius_km")
-    val maxSearchRadiusKm: Double = 5.0
+    val maxSearchRadiusKm: Double = 5.0,
+    @SerialName("search_radius_km")
+    val searchRadiusKm: Double = 5.0
 )
 
 @Serializable

@@ -443,6 +443,9 @@ export class DriversComponent implements OnInit, OnDestroy {
   readonly selectedTabIndex = signal(0);
   readonly processingUid = signal<string | null>(null);
   private banruralAccount = '3402-0987-65';
+  private bankName = 'Banrural';
+  private accountHolder = 'Administración TucTuc Map';
+  private currencySymbol = 'Q';
   private weeklyPrice = 25.00;
 
   // Financial KPIs
@@ -499,8 +502,11 @@ export class DriversComponent implements OnInit, OnDestroy {
     this.subscribeDrivers();
     this.loadFinancialStats();
     this.supabaseService.getAppConfig().then((cfg) => {
-      this.banruralAccount = cfg.banrural_account;
-      this.weeklyPrice = cfg.price_semanal;
+      this.banruralAccount = cfg.bank_1_account || cfg.banrural_account;
+      this.bankName = cfg.bank_1_name || 'Banrural';
+      this.accountHolder = cfg.account_holder_name || 'Administración TucTuc Map';
+      this.currencySymbol = cfg.currency_symbol || 'Q';
+      this.weeklyPrice = cfg.price_weekly || cfg.price_semanal;
     });
   }
 
@@ -619,7 +625,7 @@ export class DriversComponent implements OnInit, OnDestroy {
     if (phone.length === 8) phone = '502' + phone;
 
     const expiryStr = this.formatExpiryDate(driver.fechaVencimientoSuscripcion);
-    const msg = `Hola ${driver.nombre}, te saludamos de TucTucMap. Te recordamos que tu cuota para el Torito placas ${driver.placas} vence el ${expiryStr}. Para mantenerte visible en el mapa y recibiendo viajes, por favor deposita tu cuota de Q${this.weeklyPrice.toFixed(2)} al número de cuenta Banrural ${this.banruralAccount} y envíanos tu boleta. ¡Muchas gracias!`;
+    const msg = `Hola ${driver.nombre}, te saludamos de TucTucMap. Te recordamos que tu cuota para el Torito placas ${driver.placas} vence el ${expiryStr}. Para mantenerte visible en el mapa y recibiendo viajes, por favor deposita tu cuota de ${this.currencySymbol}${this.weeklyPrice.toFixed(2)} al número de cuenta ${this.bankName} ${this.banruralAccount} a nombre de ${this.accountHolder} y envíanos tu boleta. ¡Muchas gracias!`;
 
     const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');

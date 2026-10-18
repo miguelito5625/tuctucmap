@@ -9,13 +9,25 @@ export type PaymentMethod = 'efectivo' | 'transferencia' | 'deposito_bancario' |
 
 export interface AppConfig {
   id: string;
+  admin_whatsapp: string;
   admin_whatsapp_phone: string;
+  bank_1_name: string;
+  bank_1_account: string;
   banrural_account: string;
+  bank_2_name: string;
+  bank_2_account: string;
   bi_account: string;
+  account_holder_name: string;
+  currency_symbol: string;
+  price_daily: number;
+  price_weekly: number;
   price_semanal: number;
   price_quincenal: number;
+  price_monthly: number;
   price_mensual: number;
+  search_radius_km: number;
   max_search_radius_km: number;
+  updated_at?: string;
 }
 
 export interface SubscriptionHistory {

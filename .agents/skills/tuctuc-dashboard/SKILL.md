@@ -52,7 +52,12 @@ Esta guía define la arquitectura, normas de seguridad y procedimientos operativ
 4. **Directorio de Pasajeros (`/passengers`):**
    - Búsqueda en tiempo real por nombre/teléfono, historial de viajes solicitados y enlace directo de WhatsApp para atención y soporte.
 
-5. **Diseño Responsivo Multi-Dispositivo (Desktop, Tablet, Mobile):**
+5. **Configuración Comercial en Tiempo Real (`/config`):**
+   - Implementado en `BusinessConfigComponent` (`business-config.component.ts`).
+   - Permite al administrador editar y sincronizar en vivo todos los datos comerciales del negocio (`public.app_config`): número de WhatsApp administrativo con prueba directa de enlace, cuentas bancarias principal y secundaria, titular de cuentas, símbolo monetario, precios de suscripción (diario, semanal, quincenal, mensual) y radio de geocerca en kilómetros.
+   - Incluye **Simulador Móvil en Vivo** interactivo que muestra cómo los conductores ven los cambios inmediatamente en su teléfono Android.
+
+6. **Diseño Responsivo Multi-Dispositivo (Desktop, Tablet, Mobile):**
    - **Shell (`shell.component`):** Usa `BreakpointObserver` (`(max-width: 991.98px)`) para alternar automáticamente el sidenav entre modo `'side'` (escritorio) y `'over'` (móvil/tablet con backdrop y cierre automático tras clic en ítem). Toolbar con reducción de elementos en pantallas ultra-compactas (`< 640px`).
    - **Tablas de Datos (`drivers`, `subscriptions`, `passengers`, `trips`):** Contenedores con scroll horizontal táctil suave (`-webkit-overflow-scrolling: touch`) y anchos mínimos de celda para evitar deformación o truncamiento de badges y acciones en pantallas reducidas.
    - **Mapa de Flota (`fleet-map`):** Layout adaptativo que conmuta de fila horizontal a columna vertical en pantallas `< 992px`, con altura contenida y scroll interno para la lista de conductores.

@@ -315,9 +315,9 @@ fun DriverSubscriptionScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             listOf(
-                                Triple("semanal", "Semanal", "Q${appConfig.priceSemanal.toInt()} (7d)"),
-                                Triple("quincenal", "Quincenal", "Q${appConfig.priceQuincenal.toInt()} (15d)"),
-                                Triple("mensual", "Mensual", "Q${appConfig.priceMensual.toInt()} (30d)")
+                                Triple("semanal", "Semanal", "${appConfig.currencySymbol}${appConfig.priceSemanal.toInt()} (7d)"),
+                                Triple("quincenal", "Quincenal", "${appConfig.currencySymbol}${appConfig.priceQuincenal.toInt()} (15d)"),
+                                Triple("mensual", "Mensual", "${appConfig.currencySymbol}${appConfig.priceMensual.toInt()} (30d)")
                             ).forEach { (key, label, price) ->
                                 val isSelected = selectedPlan == key
                                 Surface(
@@ -358,24 +358,44 @@ fun DriverSubscriptionScreen(
                                 .padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            if (appConfig.accountHolderName.isNotBlank()) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Titular: ",
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF94A3B8)
+                                    )
+                                    Text(
+                                        text = appConfig.accountHolderName,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFFF1F5F9)
+                                    )
+                                }
+                                HorizontalDivider(color = Color(0x22FFFFFF))
+                            }
+
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column {
-                                    Text("Banrural (Depósito/Transferencia):", fontSize = 11.sp, color = Color(0xFF94A3B8))
-                                    Text(appConfig.banruralAccount, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF38BDF8))
+                                    Text("${appConfig.bank1Name}:", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                                    Text(appConfig.bank1Account, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF38BDF8))
                                 }
                                 IconButton(
-                                    onClick = { copyToClipboard("Cuenta Banrural", appConfig.banruralAccount) },
+                                    onClick = { copyToClipboard(appConfig.bank1Name, appConfig.bank1Account) },
                                     modifier = Modifier.size(32.dp)
                                 ) {
                                     Icon(Icons.Default.ContentCopy, contentDescription = "Copiar", tint = Color(0xFF38BDF8), modifier = Modifier.size(16.dp))
                                 }
                             }
 
-                            if (appConfig.biAccount.isNotBlank()) {
+                            if (appConfig.bank2Account.isNotBlank()) {
                                 HorizontalDivider(color = Color(0x22FFFFFF))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -383,11 +403,11 @@ fun DriverSubscriptionScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column {
-                                        Text("Banco Industrial:", fontSize = 11.sp, color = Color(0xFF94A3B8))
-                                        Text(appConfig.biAccount, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF38BDF8))
+                                        Text("${appConfig.bank2Name}:", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                                        Text(appConfig.bank2Account, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF38BDF8))
                                     }
                                     IconButton(
-                                        onClick = { copyToClipboard("Cuenta BI", appConfig.biAccount) },
+                                        onClick = { copyToClipboard(appConfig.bank2Name, appConfig.bank2Account) },
                                         modifier = Modifier.size(32.dp)
                                     ) {
                                         Icon(Icons.Default.ContentCopy, contentDescription = "Copiar", tint = Color(0xFF38BDF8), modifier = Modifier.size(16.dp))

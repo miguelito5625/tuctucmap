@@ -21,12 +21,23 @@ export class SupabaseService {
   private supabase: SupabaseClient;
   private cachedConfig: AppConfig = {
     id: 'default',
+    admin_whatsapp: '50230000000',
     admin_whatsapp_phone: '50230000000',
+    bank_1_name: 'Banrural (Monetaria)',
+    bank_1_account: '3402-0987-65',
     banrural_account: '3402-0987-65',
+    bank_2_name: 'Banco Industrial (Ahorro)',
+    bank_2_account: '027-019842-1',
     bi_account: '027-019842-1',
+    account_holder_name: 'Administración TucTuc Map',
+    currency_symbol: 'Q',
+    price_daily: 10.00,
+    price_weekly: 25.00,
     price_semanal: 25.00,
     price_quincenal: 45.00,
+    price_monthly: 80.00,
     price_mensual: 80.00,
+    search_radius_km: 5.00,
     max_search_radius_km: 5.00
   };
 
@@ -50,7 +61,7 @@ export class SupabaseService {
     return this.supabase.auth.signOut();
   }
 
-  async getAppConfig(): Promise<AppConfig> {
+  async getAppConfig(forceRefresh = false): Promise<AppConfig> {
     try {
       const { data, error } = await this.supabase
         .from('app_config')
@@ -60,13 +71,25 @@ export class SupabaseService {
       if (!error && data) {
         this.cachedConfig = {
           id: data.id,
-          admin_whatsapp_phone: data.admin_whatsapp_phone || '50230000000',
-          banrural_account: data.banrural_account || '3402-0987-65',
-          bi_account: data.bi_account || '027-019842-1',
-          price_semanal: Number(data.price_semanal) || 25.00,
+          admin_whatsapp: data.admin_whatsapp || data.admin_whatsapp_phone || '50230000000',
+          admin_whatsapp_phone: data.admin_whatsapp_phone || data.admin_whatsapp || '50230000000',
+          bank_1_name: data.bank_1_name || 'Banrural (Monetaria)',
+          bank_1_account: data.bank_1_account || data.banrural_account || '3402-0987-65',
+          banrural_account: data.banrural_account || data.bank_1_account || '3402-0987-65',
+          bank_2_name: data.bank_2_name || 'Banco Industrial (Ahorro)',
+          bank_2_account: data.bank_2_account || data.bi_account || '027-019842-1',
+          bi_account: data.bi_account || data.bank_2_account || '027-019842-1',
+          account_holder_name: data.account_holder_name || 'Administración TucTuc Map',
+          currency_symbol: data.currency_symbol || 'Q',
+          price_daily: Number(data.price_daily) || 10.00,
+          price_weekly: Number(data.price_weekly || data.price_semanal) || 25.00,
+          price_semanal: Number(data.price_semanal || data.price_weekly) || 25.00,
           price_quincenal: Number(data.price_quincenal) || 45.00,
-          price_mensual: Number(data.price_mensual) || 80.00,
-          max_search_radius_km: Number(data.max_search_radius_km) || 5.00
+          price_monthly: Number(data.price_monthly || data.price_mensual) || 80.00,
+          price_mensual: Number(data.price_mensual || data.price_monthly) || 80.00,
+          search_radius_km: Number(data.search_radius_km || data.max_search_radius_km) || 5.00,
+          max_search_radius_km: Number(data.max_search_radius_km || data.search_radius_km) || 5.00,
+          updated_at: data.updated_at
         };
       }
     } catch {
@@ -75,13 +98,56 @@ export class SupabaseService {
     return this.cachedConfig;
   }
 
-  async updateAppConfig(config: Partial<AppConfig>): Promise<void> {
+  async updateAppConfig(config: Partial<AppConfig>): Promise<AppConfig> {
+    const payload: Record<string, any> = {
+      ...config,
+      updated_at: new Date().toISOString()
+    };
+    // Asegurar sincronización cruzada antes de enviar
+    if (payload['admin_whatsapp']) {
+      payload['admin_whatsapp_phone'] = payload['admin_whatsapp'];
+    } else if (payload['admin_whatsapp_phone']) {
+      payload['admin_whatsapp'] = payload['admin_whatsapp_phone'];
+    }
+
+    if (payload['bank_1_account']) {
+      payload['banrural_account'] = payload['bank_1_account'];
+    } else if (payload['banrural_account']) {
+      payload['bank_1_account'] = payload['banrural_account'];
+    }
+
+    if (payload['bank_2_account']) {
+      payload['bi_account'] = payload['bank_2_account'];
+    } else if (payload['bi_account']) {
+      payload['bank_2_account'] = payload['bi_account'];
+    }
+
+    if (payload['price_weekly']) {
+      payload['price_semanal'] = payload['price_weekly'];
+    } else if (payload['price_semanal']) {
+      payload['price_weekly'] = payload['price_semanal'];
+    }
+
+    if (payload['price_monthly']) {
+      payload['price_mensual'] = payload['price_monthly'];
+    } else if (payload['price_mensual']) {
+      payload['price_monthly'] = payload['price_mensual'];
+    }
+
+    if (payload['search_radius_km']) {
+      payload['max_search_radius_km'] = payload['search_radius_km'];
+    } else if (payload['max_search_radius_km']) {
+      payload['search_radius_km'] = payload['max_search_radius_km'];
+    }
+
+    delete payload['id'];
+
     const { error } = await this.supabase
       .from('app_config')
-      .update({ ...config, updated_at: new Date().toISOString() })
+      .update(payload)
       .eq('id', 'default');
     if (error) throw error;
-    await this.getAppConfig();
+    return await this.getAppConfig(true);
   }
 
   async getCurrentUserProfile() {

@@ -48,6 +48,12 @@ export const routes: Routes = [
           import('./features/trips/trips.component').then((m) => m.TripsComponent),
         title: 'Viajes — TucTucMap Admin',
       },
+      {
+        path: 'config',
+        loadComponent: () =>
+          import('./features/business-config/business-config.component').then((m) => m.BusinessConfigComponent),
+        title: 'Configuración Comercial — TucTucMap Admin',
+      },
     ]
   },
   {
