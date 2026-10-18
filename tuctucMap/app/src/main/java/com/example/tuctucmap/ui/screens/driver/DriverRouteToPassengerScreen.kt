@@ -1,5 +1,6 @@
 package com.example.tuctucmap.ui.screens.driver
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -692,6 +693,10 @@ fun DriverRouteToPassengerScreen(
                             repository.deleteTrip(trip.tripId)
                             LocationTrackingService.driverStatus.value = "disponible"
                             repository.updateDriverStatus(uid, "disponible")
+
+                            // Limpiar estado de viaje activo compartido y caché local persistente
+                            LocationTrackingService.activeAcceptedTrip.value = null
+                            context.getSharedPreferences("driver_active_trip_prefs", Context.MODE_PRIVATE).edit().clear().apply()
 
                             isSubmittingFinish = false
                             showFinishTripDialog = false

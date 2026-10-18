@@ -82,26 +82,30 @@ fun DriverHomeScreen(
     var pendingTrips by remember { mutableStateOf<List<SupabaseRepository.TripInfo>>(emptyList()) }
     var showRenewalDialog by remember { mutableStateOf(false) }
 
-    // Cache local persistente para no perder el punto de recogida si el pasajero sale de la app o si el sistema recicla la vista
+    // Cache local persistente y estado compartido de viaje activo del conductor
     val tripSharedPrefs = remember(context) { context.getSharedPreferences("driver_active_trip_prefs", Context.MODE_PRIVATE) }
-    var activeAcceptedTrip by remember {
-        val cachedTripId = tripSharedPrefs.getString("trip_id", null)
-        val initialTrip = if (!cachedTripId.isNullOrBlank()) {
-            SupabaseRepository.TripInfo(
-                tripId = cachedTripId,
-                passengerId = tripSharedPrefs.getString("passenger_id", "") ?: "",
-                passengerName = tripSharedPrefs.getString("passenger_name", "") ?: "",
-                passengerPhone = tripSharedPrefs.getString("passenger_phone", "") ?: "",
-                message = tripSharedPrefs.getString("message", "") ?: "",
-                status = tripSharedPrefs.getString("status", "accepted") ?: "accepted",
-                passengerLat = tripSharedPrefs.getString("passenger_lat", "0.0")?.toDoubleOrNull() ?: 0.0,
-                passengerLon = tripSharedPrefs.getString("passenger_lon", "0.0")?.toDoubleOrNull() ?: 0.0
-            )
-        } else null
-        mutableStateOf(initialTrip)
+    val activeAcceptedTrip by LocationTrackingService.activeAcceptedTrip.collectAsState()
+
+    // Inicializar desde caché persistente si el servicio aún no tiene viaje cargado
+    LaunchedEffect(Unit) {
+        if (LocationTrackingService.activeAcceptedTrip.value == null) {
+            val cachedTripId = tripSharedPrefs.getString("trip_id", null)
+            if (!cachedTripId.isNullOrBlank()) {
+                LocationTrackingService.activeAcceptedTrip.value = SupabaseRepository.TripInfo(
+                    tripId = cachedTripId,
+                    passengerId = tripSharedPrefs.getString("passenger_id", "") ?: "",
+                    passengerName = tripSharedPrefs.getString("passenger_name", "") ?: "",
+                    passengerPhone = tripSharedPrefs.getString("passenger_phone", "") ?: "",
+                    message = tripSharedPrefs.getString("message", "") ?: "",
+                    status = tripSharedPrefs.getString("status", "accepted") ?: "accepted",
+                    passengerLat = tripSharedPrefs.getString("passenger_lat", "0.0")?.toDoubleOrNull() ?: 0.0,
+                    passengerLon = tripSharedPrefs.getString("passenger_lon", "0.0")?.toDoubleOrNull() ?: 0.0
+                )
+            }
+        }
     }
 
-    // Persistir o limpiar el caché local automáticamente según el estado del viaje
+    // Persistir o limpiar el caché local automáticamente según el estado del viaje compartido
     LaunchedEffect(activeAcceptedTrip) {
         if (activeAcceptedTrip != null) {
             val t = activeAcceptedTrip!!
@@ -246,8 +250,9 @@ fun DriverHomeScreen(
     LaunchedEffect(uid) {
         if (uid.isNotBlank()) {
             repository.observeAcceptedTripForDriver(uid).collectLatest { active ->
-                if (active != null) {
-                    activeAcceptedTrip = active
+                LocationTrackingService.activeAcceptedTrip.value = active
+                if (active == null) {
+                    tripSharedPrefs.edit().clear().apply()
                 }
             }
         }
@@ -1614,11 +1619,13 @@ fun DriverHomeScreen(
                                         if (saveResult.isFailure) {
                                             android.util.Log.e("DriverHomeScreen", "Error al guardar viaje en Supabase", saveResult.exceptionOrNull())
                                         }
+                                        repository.deleteTrip(tid)
                                     }
 
                                     LocationTrackingService.driverStatus.value = "disponible"
                                     repository.updateDriverStatus(uid, "disponible")
-                                    activeAcceptedTrip = null
+                                    LocationTrackingService.activeAcceptedTrip.value = null
+                                    tripSharedPrefs.edit().clear().apply()
                                     showFinishTripDialog = false
                                     try { textToSpeech?.stop() } catch (_: Exception) {}
                                     refreshTripStats()
@@ -1827,9 +1834,8 @@ fun DriverHomeScreen(
                                                     is SupabaseRepository.AcceptTripResult.Success -> {
                                                         LocationTrackingService.driverStatus.value = "ocupado"
                                                         repository.updateDriverStatus(uid, "ocupado")
-                                                        LocationTrackingService.startTripTracking(trip.tripId, currentLocation)
                                                         val acceptedTrip = trip.copy(driverId = uid)
-                                                        activeAcceptedTrip = acceptedTrip
+                                                        LocationTrackingService.startTripTracking(trip.tripId, currentLocation, acceptedTrip)
                                                         try { textToSpeech?.stop() } catch (_: Exception) {}
                                                         Toast.makeText(context, "¡Viaje aceptado! En camino a recoger al pasajero.", Toast.LENGTH_SHORT).show()
                                                         onNavigateToRoute(acceptedTrip)

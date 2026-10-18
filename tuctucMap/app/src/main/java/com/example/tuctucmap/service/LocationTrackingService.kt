@@ -73,6 +73,7 @@ class LocationTrackingService : Service() {
         // Control de rastreo de viaje activo del conductor
         var activeTripId: String? = null
             private set
+        val activeAcceptedTrip = MutableStateFlow<SupabaseRepository.TripInfo?>(null)
         val activeTripDistanceMeters = MutableStateFlow(0.0)
         private val _tripRoutePoints = mutableListOf<SupabaseRepository.RoutePoint>()
         val activeTripRoutePoints: List<SupabaseRepository.RoutePoint>
@@ -83,9 +84,12 @@ class LocationTrackingService : Service() {
         /**
          * Inicia el registro de ruta y distancia para un viaje recién aceptado.
          */
-        fun startTripTracking(tripId: String, initialLocation: Location? = null) {
-            if (activeTripId == tripId) return // Ya está rastreando este viaje
+        fun startTripTracking(tripId: String, initialLocation: Location? = null, tripInfo: SupabaseRepository.TripInfo? = null) {
+            if (activeTripId == tripId && activeAcceptedTrip.value != null) return // Ya está rastreando este viaje
             activeTripId = tripId
+            if (tripInfo != null) {
+                activeAcceptedTrip.value = tripInfo
+            }
             activeTripDistanceMeters.value = 0.0
             synchronized(_tripRoutePoints) {
                 _tripRoutePoints.clear()
@@ -155,8 +159,9 @@ class LocationTrackingService : Service() {
             val distanceKm = Math.round((totalMeters / 1000.0) * 100.0) / 100.0
             val points = synchronized(_tripRoutePoints) { _tripRoutePoints.toList() }
 
-            // Limpiar estado de rastreo
+            // Limpiar estado de rastreo y viaje activo compartido
             activeTripId = null
+            activeAcceptedTrip.value = null
             activeTripDistanceMeters.value = 0.0
             lastTripRecordedLocation = null
             synchronized(_tripRoutePoints) {

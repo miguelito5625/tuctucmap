@@ -530,8 +530,9 @@ fun DriverMapFullscreenScreen(
                                                         LocationTrackingService.driverStatus.value = "ocupado"
                                                         repository.updateDriverStatus(uid, "ocupado")
 
-                                                        Toast.makeText(context, "¡Viaje aceptado! En camino a recoger al pasajero.", Toast.LENGTH_SHORT).show()
                                                         val acceptedTrip = trip.copy(driverId = uid)
+                                                        LocationTrackingService.startTripTracking(trip.tripId, currentLocation, acceptedTrip)
+                                                        Toast.makeText(context, "¡Viaje aceptado! En camino a recoger al pasajero.", Toast.LENGTH_SHORT).show()
                                                         onNavigateToRoute(acceptedTrip)
                                                     }
                                                     is SupabaseRepository.AcceptTripResult.AlreadyTaken -> {
