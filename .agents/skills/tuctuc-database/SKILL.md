@@ -17,7 +17,7 @@ Esta guía define los estándares, esquemas y procedimientos de ejecución SQL p
   - `trips`: Ciclo de vida y auditoría de viajes (`requested`, `accepted`, `completed`, `cancelled`, `rejected`), con referencias a `passenger_id`, `driver_id`, tarifa cobrada (`fare NUMERIC`), distancia recorrida (`distance_km NUMERIC`) y trayectoria GPS paso a paso (`route_points JSONB`).
   - `driver_subscriptions`: Monetización y control de membresías de conductores. Contiene `plan_type` (`trial`, `semanal`, `quincenal`, `mensual`, `personalizado`), `amount_paid` (NUMERIC), `payment_method` (`efectivo`, `transferencia`, `deposito_bancario`, `gratis_prueba`), `reference_number` (TEXT) y fechas de vigencia.
   - `app_config`: Configuración comercial dinámica (fila única `id = 1`) con teléfono de WhatsApp del administrador, cuentas bancarias (`bank_1_*`, `bank_2_*`), titular, precios de planes y radio de geocerca (`search_radius_km`).
-  - `subscription_payment_requests`: Solicitudes de renovación y números de boleta/referencia bancaria enviados por los conductores desde la app Android para conciliación administrativa.
+  - `subscription_payment_requests`: Solicitudes de renovación y comprobantes bancarios registrados por los conductores. Incluye `driver_id`, `plan_type`, `amount_paid`, `reference_number` (opcional si envían captura), `status` (`pendiente`, `aprobado`, `rechazado`), `rejection_reason`, `reviewed_at` y `reviewed_by`.
   - `driver_locations`: Coordenadas persistentes de respaldo en PostgreSQL (mientras que la telemetría en tiempo real de alta frecuencia se opera en Firebase Realtime Database).
 
 ---
@@ -31,9 +31,12 @@ Toda tabla creada o modificada en Supabase **DEBE** tener habilitado RLS (`ALTER
    - Trigger `trg_protect_profile_sensitive_columns`: Impide que un usuario no administrador modifique `role`, `approval_status`, `subscription_status` o `subscription_end_date`.
 2. **Reloj del Servidor y Auto-Expiración (`sync_server_time_and_expire`):**
    - Función RPC que marca como `'expired'` las suscripciones vencidas según `NOW()` de PostgreSQL y devuelve la hora exacta del servidor (`server_time_ms`) para evitar fraudes por cambio de fecha en el teléfono.
-3. **Configuración y Pagos (`app_config`, `subscription_payment_requests`):**
+3. **Aprobación y Rechazo Atómico de Renovaciones (`approve_subscription_payment_request` y `reject_subscription_payment_request`):**
+   - `approve_subscription_payment_request(p_request_id UUID, p_custom_end_date TIMESTAMPTZ)`: RPC `SECURITY DEFINER` ejecutada por administradores. Valida el comprobante, calcula y actualiza la fecha de vencimiento (`subscription_end_date`) de forma acumulativa justa, inserta el registro histórico en `driver_subscriptions` y marca la solicitud como `'aprobado'`.
+   - `reject_subscription_payment_request(p_request_id UUID, p_rejection_reason TEXT)`: RPC `SECURITY DEFINER` que marca la solicitud como `'rechazado'` con el motivo de rechazo y timestamp para consulta del conductor.
+4. **Configuración y Pagos (`app_config`, `subscription_payment_requests`):**
    - `app_config`: Lectura pública (`SELECT`), escritura exclusiva para administradores (`public.is_admin()`).
-   - `subscription_payment_requests`: Los conductores pueden insertar y leer sus propios comprobantes; solo los administradores pueden aprobarlos o rechazarlos.
+   - `subscription_payment_requests`: RLS estricto. Conductores solo pueden insertar y consultar sus propias solicitudes (`auth.uid() = driver_id`); administradores (`public.is_admin()`) tienen acceso y modificación total.
 
 ---
 

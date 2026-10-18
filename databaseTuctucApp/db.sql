@@ -59,8 +59,11 @@ CREATE TABLE IF NOT EXISTS public.subscription_payment_requests (
     plan_type TEXT CHECK (plan_type IN ('semanal', 'quincenal', 'mensual', 'personalizado')) DEFAULT 'semanal',
     amount NUMERIC(10,2) NOT NULL DEFAULT 25.00,
     payment_method TEXT CHECK (payment_method IN ('efectivo', 'transferencia', 'deposito_bancario')) DEFAULT 'deposito_bancario',
-    reference_number TEXT NOT NULL,
+    reference_number TEXT DEFAULT '',
     status TEXT CHECK (status IN ('pendiente', 'aprobado', 'rechazado')) DEFAULT 'pendiente',
+    rejection_reason TEXT,
+    reviewed_at TIMESTAMPTZ,
+    reviewed_by UUID REFERENCES public.profiles(id),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -215,6 +218,121 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;
+
+-- Función RPC para que el Administrador apruebe una solicitud de renovación y extienda vigencia automáticamente
+CREATE OR REPLACE FUNCTION public.approve_subscription_payment_request(
+  p_request_id UUID,
+  p_custom_end_date TIMESTAMPTZ DEFAULT NULL
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_req RECORD;
+  v_current_end TIMESTAMPTZ;
+  v_base_time TIMESTAMPTZ;
+  v_days_to_add INT;
+  v_new_end TIMESTAMPTZ;
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Acceso denegado: solo administradores pueden aprobar solicitudes de renovación.';
+  END IF;
+
+  SELECT * INTO v_req FROM public.subscription_payment_requests WHERE id = p_request_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Solicitud de renovación no encontrada.';
+  END IF;
+
+  IF v_req.status = 'aprobado' THEN
+    RAISE EXCEPTION 'Esta solicitud ya fue aprobada previamente.';
+  END IF;
+
+  SELECT subscription_end_date INTO v_current_end 
+  FROM public.profiles 
+  WHERE id = v_req.driver_id;
+
+  IF p_custom_end_date IS NOT NULL THEN
+    v_new_end := p_custom_end_date;
+  ELSE
+    IF v_current_end IS NOT NULL AND v_current_end > NOW() THEN
+      v_base_time := v_current_end;
+    ELSE
+      v_base_time := NOW();
+    END IF;
+
+    CASE v_req.plan_type
+      WHEN 'mensual' THEN v_days_to_add := 30;
+      WHEN 'quincenal' THEN v_days_to_add := 15;
+      WHEN 'personalizado' THEN v_days_to_add := 7;
+      ELSE v_days_to_add := 7;
+    END CASE;
+
+    v_new_end := v_base_time + (v_days_to_add || ' days')::INTERVAL;
+  END IF;
+
+  UPDATE public.profiles
+  SET approval_status = 'aprobado',
+      subscription_end_date = v_new_end
+  WHERE id = v_req.driver_id;
+
+  INSERT INTO public.driver_subscriptions (
+    driver_id,
+    start_date,
+    end_date,
+    plan_type,
+    amount_paid,
+    payment_method,
+    reference_number
+  ) VALUES (
+    v_req.driver_id,
+    NOW(),
+    v_new_end,
+    v_req.plan_type,
+    v_req.amount,
+    v_req.payment_method,
+    COALESCE(v_req.reference_number, '')
+  );
+
+  UPDATE public.subscription_payment_requests
+  SET status = 'aprobado',
+      reviewed_at = NOW(),
+      reviewed_by = auth.uid()
+  WHERE id = p_request_id;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'new_end_date', v_new_end,
+    'driver_id', v_req.driver_id
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Función RPC para que el Administrador rechace una solicitud de renovación
+CREATE OR REPLACE FUNCTION public.reject_subscription_payment_request(
+  p_request_id UUID,
+  p_rejection_reason TEXT DEFAULT NULL
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_req RECORD;
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Acceso denegado: solo administradores pueden rechazar solicitudes de renovación.';
+  END IF;
+
+  SELECT * INTO v_req FROM public.subscription_payment_requests WHERE id = p_request_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Solicitud no encontrada.';
+  END IF;
+
+  UPDATE public.subscription_payment_requests
+  SET status = 'rechazado',
+      rejection_reason = p_rejection_reason,
+      reviewed_at = NOW(),
+      reviewed_by = auth.uid()
+  WHERE id = p_request_id;
+
+  RETURN jsonb_build_object('success', true, 'driver_id', v_req.driver_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- ============================================================================
 -- HABILITAR ROW LEVEL SECURITY (RLS) Y POLÍTICAS

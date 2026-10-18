@@ -10,7 +10,8 @@ import {
   PaymentMethod,
   FinancialKPIs,
   PassengerProfile,
-  LiveDriverLocation
+  LiveDriverLocation,
+  SubscriptionPaymentRequest
 } from '../core/models/driver.model';
 
 @Injectable({
@@ -455,4 +456,75 @@ export class SupabaseService {
     if (subError) throw subError;
     await this.fetchDrivers();
   }
+
+  // ── Solicitudes de Renovación (subscription_payment_requests) ───────────
+
+  async getPaymentRequests(): Promise<SubscriptionPaymentRequest[]> {
+    const { data, error } = await this.supabase
+      .from('subscription_payment_requests')
+      .select('*, profiles:driver_id(name, phone, plate_number, unit_number)')
+      .order('created_at', { ascending: false });
+
+    if (error || !data) {
+      console.error('Error al obtener solicitudes de renovación:', error);
+      return [];
+    }
+
+    return data.map((item: any) => ({
+      id: item.id,
+      driver_id: item.driver_id,
+      driverName: item.profiles?.name || 'Conductor',
+      driverPhone: item.profiles?.phone || '',
+      driverPlate: item.profiles?.plate_number || '',
+      driverUnitNumber: item.profiles?.unit_number || '',
+      plan_type: item.plan_type || 'semanal',
+      amount: Number(item.amount) || 0,
+      payment_method: item.payment_method || 'deposito_bancario',
+      reference_number: item.reference_number || '',
+      status: item.status || 'pendiente',
+      rejection_reason: item.rejection_reason || null,
+      reviewed_at: item.reviewed_at ? new Date(item.reviewed_at).getTime() : null,
+      reviewed_by: item.reviewed_by || null,
+      created_at: new Date(item.created_at).getTime()
+    }));
+  }
+
+  async approvePaymentRequest(requestId: string, customEndDate?: Date): Promise<void> {
+    const params: any = { p_request_id: requestId };
+    if (customEndDate) {
+      params.p_custom_end_date = customEndDate.toISOString();
+    }
+    const { data, error } = await this.supabase.rpc('approve_subscription_payment_request', params);
+    if (error) {
+      console.error('Error al aprobar solicitud de renovación:', error);
+      throw error;
+    }
+    await this.fetchDrivers();
+  }
+
+  async rejectPaymentRequest(requestId: string, rejectionReason?: string): Promise<void> {
+    const { data, error } = await this.supabase.rpc('reject_subscription_payment_request', {
+      p_request_id: requestId,
+      p_rejection_reason: rejectionReason || null
+    });
+    if (error) {
+      console.error('Error al rechazar solicitud de renovación:', error);
+      throw error;
+    }
+    await this.fetchDrivers();
+  }
+
+  async getPendingPaymentRequestsCount(): Promise<number> {
+    try {
+      const { count, error } = await this.supabase
+        .from('subscription_payment_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pendiente');
+      if (error) return 0;
+      return count || 0;
+    } catch {
+      return 0;
+    }
+  }
 }
+

@@ -70,6 +70,7 @@ fun DriverHomeScreen(
     onApprovalRevoked: () -> Unit = {},
     onViewMap: () -> Unit = {},
     onViewHistory: () -> Unit = {},
+    onViewSubscription: () -> Unit = {},
     onViewProfile: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -341,6 +342,7 @@ fun DriverHomeScreen(
                         DriverDrawerItem.HOME -> Unit
                         DriverDrawerItem.MAP -> onViewMap()
                         DriverDrawerItem.HISTORY -> onViewHistory()
+                        DriverDrawerItem.SUBSCRIPTIONS -> onViewSubscription()
                         DriverDrawerItem.PROFILE -> onViewProfile()
                     }
                 },
@@ -917,9 +919,9 @@ fun DriverHomeScreen(
                             }
                         }
 
-                        // KPI 3: Vigencia del Plan
+                        // KPI 3: Días restantes de Suscripción
                         Surface(
-                            onClick = { showRenewalDialog = true },
+                            onClick = { onViewSubscription() },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(16.dp),
                             color = Color(0xFF152534),
@@ -930,7 +932,7 @@ fun DriverHomeScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = if (daysRemaining > 0) "$daysRemaining días" else "${hoursRemaining}h",
+                                    text = if (daysRemaining > 0) "$daysRemaining días" else if (hoursRemaining > 0) "${hoursRemaining}h" else "0 días",
                                     color = if (isExpiringSoon) Color(0xFFFFB74D) else Color.White,
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.ExtraBold,
@@ -939,10 +941,11 @@ fun DriverHomeScreen(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Tu plan",
+                                    text = "Días restantes",
                                     color = Color(0xFF94A3B8),
                                     fontSize = 11.sp,
-                                    maxLines = 1
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -1910,8 +1913,21 @@ fun DriverHomeScreen(
                         }
                     },
                     confirmButton = {
-                        TextButton(onClick = { showRenewalDialog = false }) {
-                            Text("Cerrar", color = Color.LightGray)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(onClick = {
+                                showRenewalDialog = false
+                                onViewSubscription()
+                            }) {
+                                Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFF38BDF8))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Ver Solicitudes", color = Color(0xFF38BDF8))
+                            }
+                            TextButton(onClick = { showRenewalDialog = false }) {
+                                Text("Cerrar", color = Color.LightGray)
+                            }
                         }
                     },
                     containerColor = Color(0xFF0F172A),

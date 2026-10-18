@@ -57,6 +57,9 @@
       >
         <mat-icon matListItemIcon>monetization_on</mat-icon>
         <span matListItemTitle>Suscripciones</span>
+        @if (pendingRenewalsCount() > 0) {
+          <span matListItemMeta class="nav-badge-pending">{{ pendingRenewalsCount() }}</span>
+        }
       </a>
 
       <a

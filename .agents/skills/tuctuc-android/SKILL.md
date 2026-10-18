@@ -65,9 +65,13 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
    - El objeto `ServerClock` en `Driver.kt` se sincroniza con `sync_server_time_and_expire()` de Supabase y `.info/serverTimeOffset` de Firebase para que `isSubscriptionExpired` sea inmune a manipulaciones de la fecha del teléfono.
    - Si la suscripción expira, la navegación redirige forzosamente a `DriverSubscriptionExpiredScreen.kt`.
    - El estado de aprobación y fecha de vencimiento se guardan cifrados en `SecurePrefs` (`EncryptedSharedPreferences`) y nunca en texto plano.
-2. **Configuración Comercial Dinámica (`AppConfig`) y Reporte de Boletas:**
-   - `DriverHomeScreen` y `DriverSubscriptionExpiredScreen` cargan desde `SupabaseRepository.getAppConfig()` las cuentas bancarias, precios y el WhatsApp del administrador.
-   - Los conductores pueden registrar el número de boleta/referencia bancaria directamente en la app (`submitPaymentRequest`) además de enviarlo por WhatsApp.
+2. **Configuración Comercial Dinámica (`AppConfig`) y Solicitudes de Renovación (`DriverSubscriptionScreen.kt`):**
+   - `DriverHomeScreen`, `DriverSubscriptionScreen` y `DriverSubscriptionExpiredScreen` cargan desde `SupabaseRepository.getAppConfig()` las cuentas bancarias, precios y el WhatsApp del administrador.
+   - **Pantalla y Flujo de Membresía (`DriverSubscriptionScreen`):**
+     - Muestra estado actual, días restantes, accesos rápidos para copiar números de cuenta bancaria y selector de plan.
+     - Permite ingresar boleta o enviar captura de comprobante por WhatsApp, registrando la solicitud en `subscription_payment_requests` (`submitPaymentRequest`).
+     - **Historial de Solicitudes en Vivo:** Lista cronológica de todas las solicitudes enviadas por el conductor con chips de estado (`Pendiente`, `Aprobado`, `Rechazado`), motivo de rechazo si aplica y botón de seguimiento directo a WhatsApp.
+   - **Acceso Directo y Re-verificación:** Accesible desde el menú lateral (`AppDrawer`), desde la píldora superior de membresía en `DriverHomeScreen`, y directamente desde `DriverSubscriptionExpiredScreen` con botón para verificar activación al instante.
 3. **Número de Unidad (`unit_number`) y Protección de Solicitudes:**
    - Los conductores pueden registrar su Número de Torito/Unidad municipal (`unit_number` / `displayIdentifier`) además de la placa.
    - En `DriverHomeScreen`, el botón `X` sobre una solicitud abierta para todos (`driver_id == ""`) solo la ignora localmente para ese conductor sin cancelarla en Firebase para los demás toritos.

@@ -38,6 +38,7 @@ enum class DriverDrawerItem {
     HOME,
     MAP,
     HISTORY,
+    SUBSCRIPTIONS,
     PROFILE
 }
 
@@ -589,6 +590,13 @@ fun DriverDrawerSheet(
                     icon = Icons.Default.History,
                     isSelected = selectedItem == DriverDrawerItem.HISTORY,
                     onClick = { onSelectItem(DriverDrawerItem.HISTORY) }
+                )
+
+                DrawerNavigationItem(
+                    label = "Mi Suscripción",
+                    icon = Icons.Default.CardMembership,
+                    isSelected = selectedItem == DriverDrawerItem.SUBSCRIPTIONS,
+                    onClick = { onSelectItem(DriverDrawerItem.SUBSCRIPTIONS) }
                 )
 
                 DrawerNavigationItem(

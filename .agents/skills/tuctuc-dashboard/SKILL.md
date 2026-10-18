@@ -39,9 +39,12 @@ Esta guía define la arquitectura, normas de seguridad y procedimientos operativ
    - Panel lateral interactivo con lista de conductores y centrado dinámico de cámara en el mapa.
 2. **Gestión y Cobranza de Suscripciones (`/drivers` y `/subscriptions`):**
    - Al cargar conductores (`fetchDrivers()`), invoca el RPC `sync_server_time_and_expire` para actualizar en base de datos las suscripciones vencidas antes de calcular KPIs.
-   - **Renovación Acumulativa Justa:** Tanto `renewSubscription()` en `SupabaseService` como `calculatePlanExpiry()` en `DriversComponent` suman los nuevos días (7, 15, 30 o personalizados) a la fecha de vencimiento vigente (`subscription_end_date`) si el conductor paga por adelantado antes de vencer, garantizando que nunca pierda días pagados.
+   - **Módulo de Suscripciones con Pestañas (`/subscriptions`):**
+     - **Pestaña 1 (Solicitudes de Renovación):** Monitorea `subscription_payment_requests` con tarjetas KPI (Pendientes, Aprobadas, Rechazadas, Monto), chips de filtro por estado y buscador. Permite validar la boleta o captura abriendo chat directo por WhatsApp con el conductor, aprobar la solicitud mediante modal con cálculo predictivo de fecha acumulativa o rechazarla con motivo visible para el conductor.
+     - **Pestaña 2 (Historial Global de Membresías):** Tabla de auditoría histórica de pagos confirmados (`driver_subscriptions`) con filtros y exportación completa a CSV.
+   - **Badge de Notificaciones en Shell (`shell.component`):** Muestra una insignia animada en el menú lateral con la cantidad de solicitudes pendientes de revisión.
+   - **Renovación Acumulativa Justa:** Tanto `approve_subscription_payment_request` como `renewSubscription()` en `SupabaseService` suman los nuevos días (7, 15, 30 o personalizados) a la fecha de vencimiento vigente (`subscription_end_date`) si el conductor paga por adelantado antes de vencer, garantizando que nunca pierda días pagados.
    - **Configuración Dinámica (`app_config`):** El mensaje de recordatorio de cobro por WhatsApp utiliza las cuentas bancarias y titular configurados en `public.app_config`.
-   - Visualización de KPIs financieros, diálogo de renovación con comprobantes de pago y exportación a CSV.
 3. **Auditoría de Viajes (`/trips`):**
    - Implementado en `TripsComponent` (`trips.component.ts`), tabla de viajes completados con paginación, ordenamiento, tarifas cobradas (`fare`), distancias recorridas (`distance_km`) y exportación completa a CSV.
    - **Identidad del Pasajero (Registrado o Invitado):** `getCompletedTrips()` resuelve el nombre, teléfono y flag `isRegistered` del pasajero (según si `trip.passenger_id` existe o es null). En la tabla y en el modal de ruta se muestran badges visuales (`Registrado` en verde esmeralda con `verified_user` vs `Sin cuenta` en pizarra con `person_outline`), y la exportación CSV incluye la columna `'Tipo Pasajero'`.

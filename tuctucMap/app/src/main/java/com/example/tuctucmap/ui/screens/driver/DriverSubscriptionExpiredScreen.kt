@@ -14,12 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalance
-import androidx.compose.material.icons.filled.Chat
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.tuctucmap.data.model.SubscriptionRenewalRequest
 import com.example.tuctucmap.data.SecurePrefs
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import kotlinx.coroutines.flow.collectLatest
@@ -58,9 +54,21 @@ fun DriverSubscriptionExpiredScreen(
     var boletaRefInput by remember { mutableStateOf("") }
     var selectedPlan by remember { mutableStateOf("semanal") }
     var isSubmittingBoleta by remember { mutableStateOf(false) }
+    var requests by remember { mutableStateOf<List<SubscriptionRenewalRequest>>(emptyList()) }
+    var isLoadingRequests by remember { mutableStateOf(false) }
+
+    fun loadRequests() {
+        coroutineScope.launch {
+            isLoadingRequests = true
+            val res = repository.getDriverRenewalRequests()
+            requests = res.getOrDefault(emptyList())
+            isLoadingRequests = false
+        }
+    }
 
     LaunchedEffect(Unit) {
         appConfig = repository.getAppConfig()
+        loadRequests()
     }
 
     // Escuchar en tiempo real si el admin renueva la suscripción
@@ -365,6 +373,7 @@ fun DriverSubscriptionExpiredScreen(
                                     isSubmittingBoleta = false
                                     res.onSuccess {
                                         Toast.makeText(context, "Boleta registrada. Ahora envía la foto por WhatsApp para activación inmediata.", Toast.LENGTH_LONG).show()
+                                        loadRequests()
                                     }.onFailure { err ->
                                         Toast.makeText(context, "Error: ${err.message}", Toast.LENGTH_SHORT).show()
                                     }
@@ -413,6 +422,144 @@ fun DriverSubscriptionExpiredScreen(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
+
+            // ── Botón: Verificar si el Admin ya Activó ────────────────────────
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        if (uid.isNotBlank()) {
+                            repository.getDriverProfileOnce(uid) { d ->
+                                if (d != null && d.isApprovedAndActive) {
+                                    Toast.makeText(context, "¡Suscripción aprobada y activa!", Toast.LENGTH_SHORT).show()
+                                    onRenewed()
+                                } else {
+                                    Toast.makeText(context, "Tu renovación sigue en revisión. Si enviaste tu captura por WhatsApp, el admin la validará pronto.", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        }
+                        loadRequests()
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF10B981),
+                    contentColor = Color.White
+                )
+            ) {
+                Icon(Icons.Default.Refresh, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Verificar Activación Ahora", fontWeight = FontWeight.Bold)
+            }
+
+            // ── Historial de Solicitudes de Renovación del Conductor ──────────
+            if (requests.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(18.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Historial de Solicitudes",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "${requests.size} enviadas",
+                            fontSize = 12.sp,
+                            color = Color(0xFF94A3B8)
+                        )
+                    }
+
+                    requests.forEach { req ->
+                        val statusText = when (req.status) {
+                            "aprobado" -> "Aprobada"
+                            "rechazado" -> "Rechazada"
+                            else -> "Pendiente de Validación"
+                        }
+                        val statusColor = when (req.status) {
+                            "aprobado" -> Color(0xFF4ADE80)
+                            "rechazado" -> Color(0xFFF87171)
+                            else -> Color(0xFFFBBF24)
+                        }
+                        val statusBg = when (req.status) {
+                            "aprobado" -> Color(0x2210B981)
+                            "rechazado" -> Color(0x22EF4444)
+                            else -> Color(0x22F59E0B)
+                        }
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF162936)),
+                            border = BorderStroke(1.dp, Color(0x22FFFFFF))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Plan ${req.planType.replaceFirstChar { it.uppercase() }} • Q${req.amount.toInt()}",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = Color.White
+                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = statusBg,
+                                        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.5f))
+                                    ) {
+                                        Text(
+                                            text = statusText,
+                                            fontSize = 11.sp,
+                                            color = statusColor,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+
+                                if (req.referenceNumber.isNotBlank()) {
+                                    Text(
+                                        text = "Boleta: ${req.referenceNumber}",
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF94A3B8)
+                                    )
+                                }
+
+                                if (req.status == "rechazado" && !req.rejectionReason.isNullOrBlank()) {
+                                    Text(
+                                        text = "Motivo de rechazo: ${req.rejectionReason}",
+                                        fontSize = 11.sp,
+                                        color = Color(0xFFFF8A80)
+                                    )
+                                } else if (req.status == "pendiente") {
+                                    Text(
+                                        text = "El admin revisará tu comprobante enviado por WhatsApp.",
+                                        fontSize = 11.sp,
+                                        color = Color(0xFFFBBF24)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Botón: Ver mapa de conductores activos (solo lectura)
             Button(

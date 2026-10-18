@@ -40,6 +40,30 @@ data class AppConfig(
 )
 
 @Serializable
+data class SubscriptionRenewalRequest(
+    val id: String = "",
+    @SerialName("driver_id")
+    val driverId: String = "",
+    @SerialName("plan_type")
+    val planType: String = "semanal",
+    val amount: Double = 25.0,
+    @SerialName("payment_method")
+    val paymentMethod: String = "deposito_bancario",
+    @SerialName("reference_number")
+    val referenceNumber: String = "",
+    val status: String = "pendiente",
+    @SerialName("rejection_reason")
+    val rejectionReason: String? = null,
+    @SerialName("created_at")
+    val createdAt: String = "",
+    @SerialName("reviewed_at")
+    val reviewedAt: String? = null
+) {
+    val createdAtEpoch: Long get() = parseIsoTimestamp(createdAt)
+    val reviewedAtEpoch: Long get() = parseIsoTimestamp(reviewedAt)
+}
+
+@Serializable
 data class Driver(
     val id: String = "",
     val email: String = "",

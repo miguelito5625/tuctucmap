@@ -29,6 +29,7 @@ sealed class Screen {
     object DriverTripHistory : Screen()
     object PassengerProfile : Screen()
     object DriverProfile : Screen()
+    object DriverSubscription : Screen()
 }
 
 // Mapea el perfil del conductor a la pantalla correspondiente
@@ -279,6 +280,9 @@ fun AppNavigation(
                 onViewHistory = {
                     navigate(Screen.DriverTripHistory)
                 },
+                onViewSubscription = {
+                    navigate(Screen.DriverSubscription)
+                },
                 onViewProfile = {
                     navigate(Screen.DriverProfile)
                 }
@@ -332,6 +336,14 @@ fun AppNavigation(
         }
         is Screen.DriverProfile -> {
             DriverProfileScreen(
+                repository = repository,
+                onBack = {
+                    backStack.removeAt(backStack.lastIndex)
+                }
+            )
+        }
+        is Screen.DriverSubscription -> {
+            DriverSubscriptionScreen(
                 repository = repository,
                 onBack = {
                     backStack.removeAt(backStack.lastIndex)

@@ -74,3 +74,24 @@ export interface FinancialKPIs {
   expiringAmountExpected: number;
   activeFleetCount: number;
 }
+
+export type RenewalRequestStatus = 'pendiente' | 'aprobado' | 'rechazado';
+
+export interface SubscriptionPaymentRequest {
+  id: string;
+  driver_id: string;
+  driverName?: string;
+  driverPhone?: string;
+  driverPlate?: string;
+  driverUnitNumber?: string;
+  plan_type: SubscriptionPlan;
+  amount: number;
+  payment_method: PaymentMethod;
+  reference_number: string;
+  status: RenewalRequestStatus;
+  rejection_reason?: string | null;
+  reviewed_at?: number | null;
+  reviewed_by?: string | null;
+  created_at: number;
+}
+

@@ -47,6 +47,7 @@ export class ShellComponent implements OnInit, OnDestroy {
   private breakpointSub?: Subscription;
 
   adminName = signal<string>('Cargando...');
+  readonly pendingRenewalsCount = signal<number>(0);
 
   ngOnInit(): void {
     this.breakpointSub = this.breakpointObserver
@@ -58,6 +59,16 @@ export class ShellComponent implements OnInit, OnDestroy {
       });
 
     this.loadProfile();
+    this.loadPendingRenewals();
+  }
+
+  async loadPendingRenewals(): Promise<void> {
+    try {
+      const count = await this.supabaseService.getPendingPaymentRequestsCount();
+      this.pendingRenewalsCount.set(count);
+    } catch {
+      // Ignore
+    }
   }
 
   async loadProfile() {

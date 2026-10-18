@@ -138,31 +138,46 @@ class SupabaseRepository {
     )
 
     /**
-     * Permite al conductor registrar el número de boleta o transferencia en Supabase para agilizar su activación.
+     * Permite al conductor registrar su solicitud de renovación con boleta o aviso por WhatsApp en Supabase.
      */
     suspend fun submitPaymentRequest(
         planType: String,
         amount: Double,
         paymentMethod: String = "deposito_bancario",
-        referenceNumber: String
+        referenceNumber: String = ""
     ): Result<Unit> {
         return try {
             val uid = currentUserUid ?: return Result.failure(Exception("No hay sesión activa"))
             val cleanRef = referenceNumber.trim()
-            if (cleanRef.isBlank()) {
-                return Result.failure(Exception("Ingresa el número de boleta o comprobante"))
-            }
+            val finalRef = if (cleanRef.isBlank()) "Comprobante por WhatsApp" else cleanRef
             supabase.postgrest["subscription_payment_requests"].insert(
                 PaymentRequestInsertDto(
                     driver_id = uid,
                     plan_type = planType,
                     amount = amount,
                     payment_method = paymentMethod,
-                    reference_number = cleanRef
+                    reference_number = finalRef
                 )
             )
             Result.success(Unit)
         } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Obtiene el historial de solicitudes de renovación del conductor actual ordenadas por fecha reciente.
+     */
+    suspend fun getDriverRenewalRequests(): Result<List<com.example.tuctucmap.data.model.SubscriptionRenewalRequest>> {
+        return try {
+            val uid = currentUserUid ?: return Result.failure(Exception("No hay sesión activa"))
+            val list = supabase.postgrest["subscription_payment_requests"].select {
+                filter { eq("driver_id", uid) }
+            }.decodeList<com.example.tuctucmap.data.model.SubscriptionRenewalRequest>()
+            Result.success(list.sortedByDescending { it.createdAtEpoch })
+        } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }

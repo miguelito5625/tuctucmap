@@ -41,11 +41,15 @@ Para optimizar el uso de tokens y mantener procedimientos estandarizados, este p
    - Ejecución segura de sentencias SQL mediante `node run_sql.js "<SQL>"`.
    - Sincronización obligatoria de cambios en `databaseTuctucApp/db.sql`.
 
+4. **[`tuctuc-git-sync`](./skills/tuctuc-git-sync/SKILL.md):**
+   - Protocolo de versionamiento y push automático a GitHub tras agregar o modificar funciones.
+   - Mensajes semánticos, prevención de fuga de credenciales y sincronización remota con `origin/main`.
+
 ---
 
 ## 3. Reglas Obligatorias del Agente (AI Rules)
 
-Las siguientes 6 reglas tienen carácter mandatorio e ineludible en toda tarea:
+Las siguientes 7 reglas tienen carácter mandatorio e ineludible en toda tarea:
 
 1. **Analizar el entorno correcto:**
    - Si la tarea involucra la web administrativa, trabajar en `tuctucMapDashboard/`.
@@ -62,6 +66,9 @@ Las siguientes 6 reglas tienen carácter mandatorio e ineludible en toda tarea:
    - Cada funcionalidad relevante agregada o modificada debe ser documentada oportunamente en las directrices de `.agents/` para mantener el contexto del equipo al día.
 6. **Compilación y Verificación Obligatoria:**
    - Tras editar código en `tuctucMap/` o `tuctucMapDashboard/`, el agente **DEBE** compilar (`.\gradlew.bat assembleDebug` o `npm run build`), verificar la salida y resolver proactivamente cualquier error antes de finalizar la respuesta.
+7. **Sincronización y Push Obligatorio a GitHub:**
+   - Cada vez que el usuario solicite agregar o modificar funciones en cualquiera de los proyectos, tras verificar la compilación exitosa, el agente **DEBE** preparar los cambios (`git add`), crear el commit semántico (`git commit -m "..."`) y hacer push a GitHub (`git push origin <rama>`), siguiendo el runbook [`tuctuc-git-sync`](./skills/tuctuc-git-sync/SKILL.md).
+
 
 ---
 
