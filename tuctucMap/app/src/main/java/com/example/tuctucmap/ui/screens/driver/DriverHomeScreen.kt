@@ -403,7 +403,7 @@ fun DriverHomeScreen(
                     coroutineScope.launch { drawerState.close() }
                     when (item) {
                         DriverDrawerItem.HOME -> Unit
-                        DriverDrawerItem.MAP -> onViewMap()
+                        DriverDrawerItem.MAP -> Unit
                         DriverDrawerItem.HISTORY -> onViewHistory()
                         DriverDrawerItem.SUBSCRIPTIONS -> onViewSubscription()
                         DriverDrawerItem.PROFILE -> onViewProfile()
@@ -1031,52 +1031,7 @@ fun DriverHomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // Acceso 1: Mapa en Vivo
-                        Surface(
-                            onClick = onViewMap,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(16.dp),
-                            color = Color(0xFF152534),
-                            border = BorderStroke(1.dp, Color(0x2638BDF8))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Color(0x2238BDF8)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Default.Map,
-                                        contentDescription = null,
-                                        tint = Color(0xFF38BDF8),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(
-                                        text = "Mapa en Vivo",
-                                        color = Color.White,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = "Ver cobertura",
-                                        color = Color(0xFF94A3B8),
-                                        fontSize = 11.sp,
-                                        maxLines = 1
-                                    )
-                                }
-                            }
-                        }
-
-                        // Acceso 2: Historial de Viajes
+                        // Acceso 1: Historial de Viajes
                         Surface(
                             onClick = onViewHistory,
                             modifier = Modifier.weight(1f),
@@ -1113,6 +1068,51 @@ fun DriverHomeScreen(
                                     )
                                     Text(
                                         text = "Historial y cobros",
+                                        color = Color(0xFF94A3B8),
+                                        fontSize = 11.sp,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
+
+                        // Acceso 2: Mi Suscripción
+                        Surface(
+                            onClick = onViewSubscription,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color(0xFF152534),
+                            border = BorderStroke(1.dp, Color(0x264ADE80))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0x224ADE80)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.CardMembership,
+                                        contentDescription = null,
+                                        tint = Color(0xFF4ADE80),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = "Mi Suscripción",
+                                        color = Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        text = "Planes y pagos",
                                         color = Color(0xFF94A3B8),
                                         fontSize = 11.sp,
                                         maxLines = 1

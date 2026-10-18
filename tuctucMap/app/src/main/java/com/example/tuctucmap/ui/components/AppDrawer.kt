@@ -578,12 +578,6 @@ fun DriverDrawerSheet(
                     onClick = { onSelectItem(DriverDrawerItem.HOME) }
                 )
 
-                DrawerNavigationItem(
-                    label = "Ver Mapa en Vivo",
-                    icon = Icons.Default.Map,
-                    isSelected = selectedItem == DriverDrawerItem.MAP,
-                    onClick = { onSelectItem(DriverDrawerItem.MAP) }
-                )
 
                 DrawerNavigationItem(
                     label = "Historial de Viajes",
