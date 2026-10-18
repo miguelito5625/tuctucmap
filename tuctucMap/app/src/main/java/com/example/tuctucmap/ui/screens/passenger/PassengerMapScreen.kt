@@ -132,10 +132,11 @@ fun PassengerMapScreen(
 
     var tripMessage by remember { mutableStateOf("") }
     var isRequestingTrip by remember { mutableStateOf(false) }
-    var activeTripId by remember { mutableStateOf<String?>(null) }
-    var activeTrip by remember { mutableStateOf<SupabaseRepository.TripInfo?>(null) }
 
     val sharedPrefs = remember(context) { context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE) }
+    var activeTripId by remember { mutableStateOf(sharedPrefs.getString("active_passenger_trip_id", null)) }
+    var activeTrip by remember { mutableStateOf<SupabaseRepository.TripInfo?>(null) }
+
     var guestName by remember { mutableStateOf(sharedPrefs.getString("guest_passenger_name", "") ?: "") }
     var guestPhone by remember { mutableStateOf(sharedPrefs.getString("guest_passenger_phone", "") ?: "") }
 
@@ -177,11 +178,13 @@ fun PassengerMapScreen(
     LaunchedEffect(activeTripId) {
         activeTripId?.let { tid ->
             repository.observeTrip(tid).collect { trip ->
-                if (trip == null) {
+                if (trip == null || trip.status in listOf("completed", "cancelled", "timeout")) {
                     activeTrip = null
                     activeTripId = null
+                    sharedPrefs.edit().remove("active_passenger_trip_id").apply()
                 } else {
                     activeTrip = trip
+                    sharedPrefs.edit().putString("active_passenger_trip_id", tid).apply()
                 }
             }
         }
@@ -1119,6 +1122,7 @@ fun PassengerMapScreen(
                                         isRequestingTrip = false
                                         result.onSuccess { tripId ->
                                             activeTripId = tripId
+                                            sharedPrefs.edit().putString("active_passenger_trip_id", tripId).apply()
                                             tripMessage = ""
                                             showBroadcastDialog = false
                                             coroutineScope.launch {
@@ -1127,6 +1131,7 @@ fun PassengerMapScreen(
                                                     repository.updateTripStatus(tripId, "timeout")
                                                     kotlinx.coroutines.delay(10000)
                                                     repository.deleteTrip(tripId)
+                                                    sharedPrefs.edit().remove("active_passenger_trip_id").apply()
                                                 }
                                             }
                                         }

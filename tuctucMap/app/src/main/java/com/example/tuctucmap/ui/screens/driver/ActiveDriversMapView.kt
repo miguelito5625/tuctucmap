@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Navigation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -62,7 +64,8 @@ import android.view.animation.AccelerateInterpolator
 @Composable
 fun DriverMapFullscreenScreen(
     repository: SupabaseRepository,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToRoute: (SupabaseRepository.TripInfo) -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -122,10 +125,18 @@ fun DriverMapFullscreenScreen(
     }
 
     var pendingTrips by remember { mutableStateOf<List<SupabaseRepository.TripInfo>>(emptyList()) }
+    var activeAcceptedTrip by remember { mutableStateOf<SupabaseRepository.TripInfo?>(null) }
     LaunchedEffect(uid) {
         if (uid.isNotBlank()) {
             repository.observePendingTripsForDriver(uid).collectLatest { trips ->
                 pendingTrips = trips
+            }
+        }
+    }
+    LaunchedEffect(uid) {
+        if (uid.isNotBlank()) {
+            repository.observeAcceptedTripForDriver(uid).collectLatest { active ->
+                activeAcceptedTrip = active
             }
         }
     }
@@ -327,6 +338,56 @@ fun DriverMapFullscreenScreen(
                 }
             }
 
+            // ── Banner Flotante de Viaje Activo (Navegación al Pasajero) ──────
+            if (activeAcceptedTrip != null) {
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xF20F172A)),
+                    border = BorderStroke(1.5.dp, Color(0xFF4ADE80)),
+                    elevation = CardDefaults.cardElevation(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "VIAJE EN CURSO",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color(0xFF4ADE80)
+                            )
+                            Text(
+                                text = "Pasajero: ${activeAcceptedTrip!!.passengerName.ifBlank { "Pasajero" }}",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = { onNavigateToRoute(activeAcceptedTrip!!) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A86B)),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Icon(Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Ver Ruta", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
             // ── Solicitudes Pendientes Flotantes en Vivo sobre el Mapa (Fase 2 - Acción 2 de ANALISIS_UX_MOVIL.md) ──
             if (pendingTrips.isNotEmpty() && driverStatus == "disponible") {
                 LazyColumn(
@@ -470,7 +531,8 @@ fun DriverMapFullscreenScreen(
                                                         repository.updateDriverStatus(uid, "ocupado")
 
                                                         Toast.makeText(context, "¡Viaje aceptado! En camino a recoger al pasajero.", Toast.LENGTH_SHORT).show()
-                                                        onBack()
+                                                        val acceptedTrip = trip.copy(driverId = uid)
+                                                        onNavigateToRoute(acceptedTrip)
                                                     }
                                                     is SupabaseRepository.AcceptTripResult.AlreadyTaken -> {
                                                         Toast.makeText(

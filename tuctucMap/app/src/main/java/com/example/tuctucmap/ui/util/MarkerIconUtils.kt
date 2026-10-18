@@ -104,5 +104,70 @@ object MarkerIconUtils {
             return processed
         }
     }
+
+    @Volatile
+    private var cachedPassengerPickupIcon: Drawable? = null
+
+    /**
+     * Genera un pin de recogida distintivo para el pasajero con el icono del Quetzal
+     * sobre un fondo circular blanco con contorno verde esmeralda y punta inferior.
+     */
+    fun getPassengerPickupIcon(context: Context): Drawable {
+        cachedPassengerPickupIcon?.let { return it }
+
+        synchronized(this) {
+            cachedPassengerPickupIcon?.let { return it }
+
+            val density = context.resources.displayMetrics.density
+            val width = (52 * density).toInt()
+            val height = (64 * density).toInt()
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(bitmap)
+
+            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+            val strokePaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                style = android.graphics.Paint.Style.STROKE
+                strokeWidth = 3f * density
+                color = android.graphics.Color.WHITE
+            }
+
+            val centerX = width / 2f
+            val radius = (width / 2f) - (4 * density)
+            val centerY = radius + (3 * density)
+
+            // Pin: Triángulo inferior
+            val tipPath = android.graphics.Path().apply {
+                moveTo(centerX - (9 * density), centerY + (radius * 0.55f))
+                lineTo(centerX, height.toFloat() - (2 * density))
+                lineTo(centerX + (9 * density), centerY + (radius * 0.55f))
+                close()
+            }
+            paint.color = android.graphics.Color.parseColor("#059669") // Verde esmeralda llamativo
+            canvas.drawPath(tipPath, paint)
+
+            // Círculo exterior (Verde esmeralda)
+            canvas.drawCircle(centerX, centerY, radius, paint)
+            // Borde exterior blanco
+            canvas.drawCircle(centerX, centerY, radius, strokePaint)
+
+            // Círculo interior blanco
+            paint.color = android.graphics.Color.WHITE
+            canvas.drawCircle(centerX, centerY, radius - (3.5f * density), paint)
+
+            // Quetzal o pasajero dentro del círculo
+            val quetzal = ContextCompat.getDrawable(context, R.drawable.ic_quetzal_passenger)
+            if (quetzal != null) {
+                val iconSize = (radius * 1.4f).toInt()
+                val left = (centerX - iconSize / 2f).toInt()
+                val top = (centerY - iconSize / 2f).toInt()
+                quetzal.setBounds(left, top, left + iconSize, top + iconSize)
+                quetzal.draw(canvas)
+            }
+
+            val result = BitmapDrawable(context.resources, bitmap)
+            cachedPassengerPickupIcon = result
+            return result
+        }
+    }
 }
 

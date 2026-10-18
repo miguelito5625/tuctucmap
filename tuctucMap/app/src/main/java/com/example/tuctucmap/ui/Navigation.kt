@@ -25,6 +25,8 @@ sealed class Screen {
     object DriverSubscriptionExpired : Screen()
     /** Mapa en pantalla completa — accesible desde cualquier pantalla de conductor */
     data class DriverMapFullscreen(val returnTo: Screen) : Screen()
+    /** Navegación nivel 1 con trazado de ruta en app hacia el pasajero */
+    data class DriverRouteToPassenger(val trip: com.example.tuctucmap.data.repository.SupabaseRepository.TripInfo) : Screen()
     object PassengerTripHistory : Screen()
     object DriverTripHistory : Screen()
     object PassengerProfile : Screen()
@@ -285,6 +287,21 @@ fun AppNavigation(
                 },
                 onViewProfile = {
                     navigate(Screen.DriverProfile)
+                },
+                onNavigateToRoute = { trip ->
+                    navigate(Screen.DriverRouteToPassenger(trip))
+                }
+            )
+        }
+        is Screen.DriverRouteToPassenger -> {
+            DriverRouteToPassengerScreen(
+                repository = repository,
+                trip = screen.trip,
+                onBack = {
+                    backStack.removeAt(backStack.lastIndex)
+                },
+                onTripCompleted = {
+                    backStack.removeAt(backStack.lastIndex)
                 }
             )
         }
@@ -323,6 +340,9 @@ fun AppNavigation(
                 repository = repository,
                 onBack = {
                     backStack.removeAt(backStack.lastIndex)
+                },
+                onNavigateToRoute = { trip ->
+                    navigate(Screen.DriverRouteToPassenger(trip))
                 }
             )
         }

@@ -71,7 +71,8 @@ fun DriverHomeScreen(
     onViewMap: () -> Unit = {},
     onViewHistory: () -> Unit = {},
     onViewSubscription: () -> Unit = {},
-    onViewProfile: () -> Unit = {}
+    onViewProfile: () -> Unit = {},
+    onNavigateToRoute: (SupabaseRepository.TripInfo) -> Unit = {}
 ) {
     val context = LocalContext.current
     val uid = repository.currentUserUid ?: ""
@@ -80,7 +81,45 @@ fun DriverHomeScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var pendingTrips by remember { mutableStateOf<List<SupabaseRepository.TripInfo>>(emptyList()) }
     var showRenewalDialog by remember { mutableStateOf(false) }
-    var activeAcceptedTrip by remember { mutableStateOf<SupabaseRepository.TripInfo?>(null) }
+
+    // Cache local persistente para no perder el punto de recogida si el pasajero sale de la app o si el sistema recicla la vista
+    val tripSharedPrefs = remember(context) { context.getSharedPreferences("driver_active_trip_prefs", Context.MODE_PRIVATE) }
+    var activeAcceptedTrip by remember {
+        val cachedTripId = tripSharedPrefs.getString("trip_id", null)
+        val initialTrip = if (!cachedTripId.isNullOrBlank()) {
+            SupabaseRepository.TripInfo(
+                tripId = cachedTripId,
+                passengerId = tripSharedPrefs.getString("passenger_id", "") ?: "",
+                passengerName = tripSharedPrefs.getString("passenger_name", "") ?: "",
+                passengerPhone = tripSharedPrefs.getString("passenger_phone", "") ?: "",
+                message = tripSharedPrefs.getString("message", "") ?: "",
+                status = tripSharedPrefs.getString("status", "accepted") ?: "accepted",
+                passengerLat = tripSharedPrefs.getString("passenger_lat", "0.0")?.toDoubleOrNull() ?: 0.0,
+                passengerLon = tripSharedPrefs.getString("passenger_lon", "0.0")?.toDoubleOrNull() ?: 0.0
+            )
+        } else null
+        mutableStateOf(initialTrip)
+    }
+
+    // Persistir o limpiar el caché local automáticamente según el estado del viaje
+    LaunchedEffect(activeAcceptedTrip) {
+        if (activeAcceptedTrip != null) {
+            val t = activeAcceptedTrip!!
+            tripSharedPrefs.edit()
+                .putString("trip_id", t.tripId)
+                .putString("passenger_id", t.passengerId)
+                .putString("passenger_name", t.passengerName)
+                .putString("passenger_phone", t.passengerPhone)
+                .putString("message", t.message)
+                .putString("status", t.status)
+                .putString("passenger_lat", t.passengerLat.toString())
+                .putString("passenger_lon", t.passengerLon.toString())
+                .apply()
+        } else {
+            tripSharedPrefs.edit().clear().apply()
+        }
+    }
+
     var showFinishTripDialog by remember { mutableStateOf(false) }
     var fareInputText by remember { mutableStateOf("") }
     var suggestedFares by remember { mutableStateOf<List<Double>>(emptyList()) }
@@ -106,6 +145,24 @@ fun DriverHomeScreen(
     LaunchedEffect(uid) {
         appConfig = repository.getAppConfig()
         refreshTripStats()
+    }
+
+    // Cálculo continuo de distancia y tiempo estimado OSRM hacia el punto de recogida del pasajero
+    var routeSummaryToPassenger by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(activeAcceptedTrip?.tripId, currentLocation?.latitude, currentLocation?.longitude) {
+        val trip = activeAcceptedTrip
+        val loc = currentLocation
+        if (trip != null && loc != null && trip.passengerLat != 0.0 && trip.passengerLon != 0.0) {
+            val res = com.example.tuctucmap.data.service.OsrmRoutingService.getRoute(
+                startLat = loc.latitude,
+                startLon = loc.longitude,
+                endLat = trip.passengerLat,
+                endLon = trip.passengerLon
+            )
+            routeSummaryToPassenger = "${res.formattedDistance} • ~${res.formattedDuration}"
+        } else {
+            routeSummaryToPassenger = null
+        }
     }
 
     // ── Motor de voz Text-To-Speech para anuncios de solicitudes entrantes ──────────────
@@ -1227,27 +1284,54 @@ fun DriverHomeScreen(
                             }
                         }
 
+                        // Resumen OSRM de ruta hacia el pasajero
+                        if (routeSummaryToPassenger != null) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Surface(
+                                color = Color(0x3300D2FF),
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, Color(0x6600D2FF)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Route,
+                                        contentDescription = null,
+                                        tint = Color(0xFF00D2FF),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Ruta al Pasajero: $routeSummaryToPassenger",
+                                        color = Color(0xFF00D2FF),
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            // BOTÓN PRINCIPAL: NAVEGACIÓN EN APP (NIVEL 1)
                             Button(
                                 onClick = {
-                                    try {
-                                        val uri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${activeAcceptedTrip!!.passengerLat},${activeAcceptedTrip!!.passengerLon}")
-                                        val mapIntent = Intent(Intent.ACTION_VIEW, uri)
-                                        context.startActivity(mapIntent)
-                                    } catch (_: Exception) {}
+                                    onNavigateToRoute(activeAcceptedTrip!!)
                                 },
-                                modifier = Modifier.weight(1f).height(44.dp),
+                                modifier = Modifier.weight(1.3f).height(46.dp),
                                 shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A86B))
                             ) {
-                                Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("Abrir GPS", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                Text("Navegar al Pasajero", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
 
                             if (activeAcceptedTrip!!.passengerPhone.isNotBlank()) {
@@ -1256,14 +1340,37 @@ fun DriverHomeScreen(
                                         val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${activeAcceptedTrip!!.passengerPhone}"))
                                         context.startActivity(dialIntent)
                                     },
-                                    modifier = Modifier.weight(1f).height(44.dp),
+                                    modifier = Modifier.weight(0.9f).height(46.dp),
                                     shape = RoundedCornerShape(10.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E293B))
                                 ) {
                                     Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFFF9D423))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Llamar", fontSize = 13.sp, color = Color(0xFFF9D423))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Llamar", fontSize = 12.sp, color = Color(0xFFF9D423))
                                 }
+                            }
+
+                            // Botón de fallback externo a Google Maps
+                            IconButton(
+                                onClick = {
+                                    try {
+                                        val uri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${activeAcceptedTrip!!.passengerLat},${activeAcceptedTrip!!.passengerLon}")
+                                        val mapIntent = Intent(Intent.ACTION_VIEW, uri)
+                                        context.startActivity(mapIntent)
+                                    } catch (_: Exception) {
+                                        Toast.makeText(context, "No se pudo abrir app externa de mapas", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                modifier = Modifier
+                                    .size(46.dp)
+                                    .background(Color(0xFF1E293B), RoundedCornerShape(10.dp))
+                            ) {
+                                Icon(
+                                    Icons.Default.Map,
+                                    contentDescription = "Abrir Google Maps",
+                                    tint = Color(0xFF94A3B8),
+                                    modifier = Modifier.size(18.dp)
+                                )
                             }
                         }
 
@@ -1725,6 +1832,7 @@ fun DriverHomeScreen(
                                                         activeAcceptedTrip = acceptedTrip
                                                         try { textToSpeech?.stop() } catch (_: Exception) {}
                                                         Toast.makeText(context, "¡Viaje aceptado! En camino a recoger al pasajero.", Toast.LENGTH_SHORT).show()
+                                                        onNavigateToRoute(acceptedTrip)
                                                     }
                                                     is SupabaseRepository.AcceptTripResult.AlreadyTaken -> {
                                                         Toast.makeText(

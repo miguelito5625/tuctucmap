@@ -51,6 +51,12 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
 3. **Gestión de Marcadores y Caché de Iconos (`MarkerIconUtils`):**
    - Implementado en `MarkerIconUtils.kt`.
    - Procesa una única vez el drawable del mototaxi con fondo transparente y lo conserva en memoria (`@Volatile cachedTucTucIcon`) para evitar bucles pesados de píxeles en el hilo principal durante recomposiciones.
+   - Genera dinámicamente el pin de recogida del pasajero (`getPassengerPickupIcon`) con el icono del Quetzal sobre un escudo circular esmeralda y blanco.
+4. **Trazado de Ruta al Pasajero (Nivel 1 con OSRM & OSMDroid):**
+   - Implementado en `OsrmRoutingService.kt` y `DriverRouteToPassengerScreen.kt`.
+   - Permite la navegación visual en tiempo real del conductor hacia el punto de recogida del pasajero a costo $0 sin depender de Google Maps.
+   - Dibuja la polilínea de calles sobre OSMDroid (`AppTileSource`), calculando distancia exacta (km/m) y tiempo estimado de llegada (~min) con fallback automático Haversine si no hay conexión al servidor OSRM.
+   - **Desacoplamiento total del pasajero:** Las coordenadas de recogida se guardan fijas en Firebase (`trips`) y en caché local (`SharedPreferences`), de modo que la ruta funciona con total normalidad aunque el pasajero salga de la aplicación, bloquee el teléfono o se quede sin señal.
 
 ---
 
