@@ -32,6 +32,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ElectricRickshaw
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Navigation
@@ -51,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -184,11 +187,13 @@ fun PassengerMapScreen(
     val driverMarkers = remember { mutableMapOf<String, Marker>() }
     val coroutineScope = rememberCoroutineScope()
 
-    // ── Estado de la ruta OSRM en tiempo real entre el conductor asignado y el pasajero ──
+    // ── Estado de la ruta OSRM y polilíneas de alto contraste en tiempo real ──
     var passengerRouteSummary by remember { mutableStateOf<OsrmRoutingService.RouteResult?>(null) }
     var routePointsToPassenger by remember { mutableStateOf<List<GeoPoint>>(emptyList()) }
-    var routePolylineInstance by remember { mutableStateOf<Polyline?>(null) }
+    var routeCasingPolyline by remember { mutableStateOf<Polyline?>(null) }
+    var routePolyline by remember { mutableStateOf<Polyline?>(null) }
     var hasZoomedToTripRoute by remember { mutableStateOf(false) }
+    var isTrackingCardExpanded by remember { mutableStateOf(false) }
 
     // Observe active trip status
     LaunchedEffect(activeTripId) {
@@ -239,45 +244,69 @@ fun PassengerMapScreen(
         }
     }
 
-    // Dibujar y sincronizar la polilínea en el MapView del pasajero
-    LaunchedEffect(routePointsToPassenger, mapViewInstance) {
-        val mv = mapViewInstance ?: return@LaunchedEffect
-        routePolylineInstance?.let { oldPoly ->
-            mv.overlays.remove(oldPoly)
-            routePolylineInstance = null
+    // Encuadre inteligente de cámara con compensación para que la ruta siempre sea visible en la mitad superior
+    fun zoomToFitPassengerRoute() {
+        val mv = mapViewInstance ?: return
+        val points = mutableListOf<GeoPoint>()
+        if (routePointsToPassenger.isNotEmpty()) {
+            points.addAll(routePointsToPassenger)
+        } else {
+            assignedDriverLocation?.let { points.add(GeoPoint(it.latitud, it.longitud)) }
+            val pLat = activeTrip?.passengerLat ?: 0.0
+            val pLon = activeTrip?.passengerLon ?: 0.0
+            if (pLat != 0.0 && pLon != 0.0) {
+                points.add(GeoPoint(pLat, pLon))
+            } else {
+                myLocationOverlayInstance?.myLocation?.let { points.add(it) }
+            }
         }
 
-        if (routePointsToPassenger.isNotEmpty()) {
-            val polyline = Polyline(mv).apply {
-                outlinePaint.color = android.graphics.Color.parseColor("#00E5FF") // Cian neón de alta visibilidad
-                outlinePaint.strokeWidth = 14f
-                outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
-                outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
-                outlinePaint.isAntiAlias = true
-                setPoints(routePointsToPassenger)
+        if (points.isNotEmpty()) {
+            var north = -90.0
+            var south = 90.0
+            var east = -180.0
+            var west = 180.0
+            for (p in points) {
+                if (p.latitude > north) north = p.latitude
+                if (p.latitude < south) south = p.latitude
+                if (p.longitude > east) east = p.longitude
+                if (p.longitude < west) west = p.longitude
             }
-            mv.overlays.add(0, polyline)
-            routePolylineInstance = polyline
-            mv.invalidate()
+            val latSpan = (north - south).coerceAtLeast(0.002)
+            val lonSpan = (east - west).coerceAtLeast(0.002)
 
-            if (!hasZoomedToTripRoute) {
-                try {
-                    val box = BoundingBox.fromGeoPoints(routePointsToPassenger)
-                    mv.zoomToBoundingBox(box.increaseByScale(1.35f), true)
-                    hasZoomedToTripRoute = true
-                } catch (_: Exception) {}
+            // Desplazar la vista hacia el sur para que la ruta quede en la zona visible superior libre de tarjetas
+            val bottomPaddingFactor = if (isTrackingCardExpanded) 1.2 else 0.65
+            val adjustedBbox = BoundingBox(
+                north + (latSpan * 0.25),
+                east + (lonSpan * 0.25),
+                south - (latSpan * bottomPaddingFactor),
+                west - (lonSpan * 0.25)
+            )
+            try {
+                mv.zoomToBoundingBox(adjustedBbox, true, 80)
+            } catch (_: Exception) {
+                points.firstOrNull()?.let {
+                    mv.controller.animateTo(it)
+                    mv.controller.setZoom(16.0)
+                }
             }
-        } else {
-            mv.invalidate()
+        }
+    }
+
+    // Auto-encuadre inicial cuando la ruta esté disponible
+    LaunchedEffect(routePointsToPassenger) {
+        if (routePointsToPassenger.isNotEmpty() && !hasZoomedToTripRoute && mapViewInstance != null) {
+            hasZoomedToTripRoute = true
+            zoomToFitPassengerRoute()
         }
     }
 
     DisposableEffect(Unit) {
         onDispose {
             mapViewInstance?.let { mv ->
-                routePolylineInstance?.let { poly ->
-                    mv.overlays.remove(poly)
-                }
+                routeCasingPolyline?.let { mv.overlays.remove(it) }
+                routePolyline?.let { mv.overlays.remove(it) }
             }
         }
     }
@@ -474,6 +503,52 @@ fun PassengerMapScreen(
                         }
                     },
                     update = { mapView ->
+                        // Sincronizar trazado de ruta por calles con doble contorno de alto contraste
+                        if (routePointsToPassenger.isNotEmpty()) {
+                            if (routeCasingPolyline == null) {
+                                val casing = Polyline(mapView).apply {
+                                    outlinePaint.apply {
+                                        color = android.graphics.Color.parseColor("#0B192C") // Borde exterior oscuro
+                                        strokeWidth = 18f
+                                        strokeCap = android.graphics.Paint.Cap.ROUND
+                                        strokeJoin = android.graphics.Paint.Join.ROUND
+                                        isAntiAlias = true
+                                    }
+                                }
+                                routeCasingPolyline = casing
+                            }
+                            if (!mapView.overlays.contains(routeCasingPolyline)) {
+                                mapView.overlays.add(routeCasingPolyline)
+                            }
+                            routeCasingPolyline?.setPoints(routePointsToPassenger)
+
+                            if (routePolyline == null) {
+                                val mainLine = Polyline(mapView).apply {
+                                    outlinePaint.apply {
+                                        color = android.graphics.Color.parseColor("#00E5FF") // Cian neón brillante
+                                        strokeWidth = 11f
+                                        strokeCap = android.graphics.Paint.Cap.ROUND
+                                        strokeJoin = android.graphics.Paint.Join.ROUND
+                                        isAntiAlias = true
+                                    }
+                                }
+                                routePolyline = mainLine
+                            }
+                            if (!mapView.overlays.contains(routePolyline)) {
+                                mapView.overlays.add(routePolyline)
+                            }
+                            routePolyline?.setPoints(routePointsToPassenger)
+                        } else {
+                            routeCasingPolyline?.let {
+                                mapView.overlays.remove(it)
+                                routeCasingPolyline = null
+                            }
+                            routePolyline?.let {
+                                mapView.overlays.remove(it)
+                                routePolyline = null
+                            }
+                        }
+
                         val currentUids = rawDriverLocations.map { it.uid }.toSet()
 
                         // Remover marcadores de conductores desconectados
@@ -695,6 +770,24 @@ fun PassengerMapScreen(
                             contentDescription = "Mi ubicación",
                             modifier = Modifier.size(22.dp)
                         )
+                    }
+
+                    // Botón flotante para centrar en la ruta del viaje activo
+                    if (activeTrip?.status == "accepted") {
+                        FloatingActionButton(
+                            onClick = { zoomToFitPassengerRoute() },
+                            containerColor = Color(0xEE00E5FF),
+                            contentColor = Color(0xFF0F2027),
+                            shape = CircleShape,
+                            modifier = Modifier.size(48.dp),
+                            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Route,
+                                contentDescription = "Centrar en la ruta",
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -1413,156 +1506,97 @@ fun PassengerMapScreen(
                                 }
                             }
                             "accepted" -> {
+                                // ── Tarjeta Compacta y Colapsable de Viaje Activo (Deja el 80% del mapa libre) ──
                                 Row(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { isTrackingCardExpanded = !isTrackingCardExpanded },
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "🎉 ¡Tu TucTuc Viene en Camino!",
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = Color(0xFF4ADE80),
-                                            fontSize = 18.sp
-                                        )
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = activeTrip!!.driverName.ifBlank { "Conductor Confirmado" },
-                                            color = Color.White,
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        Text(
-                                            text = "Unidad/Placas: ${activeTrip!!.driverPlate.ifBlank { "..." }}",
-                                            color = Color(0xFFF9D423),
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    }
-                                    Text(text = "🛺", fontSize = 38.sp)
-                                }
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                // Badge de estado del conductor exclusivo para este pasajero
-                                Surface(
-                                    color = Color(0x3300E5FF),
-                                    shape = RoundedCornerShape(8.dp),
-                                    border = BorderStroke(1.dp, Color(0x6600E5FF))
-                                ) {
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                        modifier = Modifier.weight(1f),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Box(
                                             modifier = Modifier
-                                                .size(8.dp)
+                                                .size(40.dp)
                                                 .clip(CircleShape)
-                                                .background(Color(0xFF00E5FF))
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = "ESTADO: EN CAMINO A TU UBICACIÓN",
-                                            color = Color(0xFF00E5FF),
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.ExtraBold
-                                        )
-                                    }
-                                }
-
-                                // Información de ruta OSRM en tiempo real entre el conductor y el pasajero
-                                if (passengerRouteSummary != null) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Surface(
-                                        color = Color(0x2200E5FF),
-                                        shape = RoundedCornerShape(10.dp),
-                                        border = BorderStroke(1.dp, Color(0x6600E5FF)),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                                .background(Color(0x3300E5FF)),
+                                            contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Navigation,
-                                                contentDescription = null,
-                                                tint = Color(0xFF00E5FF),
-                                                modifier = Modifier.size(18.dp)
+                                            Text("🛺", fontSize = 22.sp)
+                                        }
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column {
+                                            Text(
+                                                text = "Tu TucTuc viene en camino",
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = Color(0xFF4ADE80),
+                                                fontSize = 15.sp
                                             )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Column {
-                                                Text(
-                                                    text = "Ruta hacia ti: ${passengerRouteSummary?.formattedDistance}",
-                                                    color = Color.White,
-                                                    fontSize = 13.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                                Text(
-                                                    text = "Tiempo estimado de llegada: ~${passengerRouteSummary?.formattedDuration}",
-                                                    color = Color(0xFF00E5FF),
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.SemiBold
-                                                )
-                                            }
+                                            Text(
+                                                text = "${activeTrip!!.driverName.ifBlank { "Conductor" }} • ${activeTrip!!.driverPlate.ifBlank { "" }}",
+                                                color = Color.White,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
                                         }
                                     }
-                                } else if (assignedDriverLocation != null && myLocGeo != null) {
-                                    val dist = assignedDriverLocation.formattedDistance(myLocGeo.latitude, myLocGeo.longitude)
-                                    val eta = assignedDriverLocation.estimatedArrivalMinutes(myLocGeo.latitude, myLocGeo.longitude)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Surface(
-                                        color = Color(0x334CAF50),
-                                        shape = RoundedCornerShape(8.dp)
-                                    ) {
-                                        Text(
-                                            text = "Distancia aproximada: $dist • Llegada en ~$eta min",
-                                            color = Color(0xFF81C784),
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                        )
+
+                                    // Indicador de ETA y botón colapsar/expandir
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Surface(
+                                            color = Color(0x3300E5FF),
+                                            shape = RoundedCornerShape(8.dp),
+                                            border = BorderStroke(1.dp, Color(0xFF00E5FF))
+                                        ) {
+                                            Text(
+                                                text = if (passengerRouteSummary != null)
+                                                    "${passengerRouteSummary?.formattedDistance} • ~${passengerRouteSummary?.formattedDuration}"
+                                                else
+                                                    "En camino",
+                                                color = Color(0xFF00E5FF),
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        IconButton(
+                                            onClick = { isTrackingCardExpanded = !isTrackingCardExpanded },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isTrackingCardExpanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                                                contentDescription = if (isTrackingCardExpanded) "Colapsar" else "Expandir",
+                                                tint = Color.LightGray
+                                            )
+                                        }
                                     }
                                 }
 
-                                if (routePointsToPassenger.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(10.dp))
-                                    OutlinedButton(
-                                        onClick = {
-                                            mapViewInstance?.let { mv ->
-                                                try {
-                                                    val box = BoundingBox.fromGeoPoints(routePointsToPassenger)
-                                                    mv.zoomToBoundingBox(box.increaseByScale(1.35f), true)
-                                                } catch (_: Exception) {}
-                                            }
-                                        },
-                                        modifier = Modifier.fillMaxWidth().height(44.dp),
-                                        shape = RoundedCornerShape(10.dp),
-                                        border = BorderStroke(1.dp, Color(0xFF00E5FF)),
-                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF00E5FF))
-                                    ) {
-                                        Icon(Icons.Default.Route, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text("Ver Ruta Completa en el Mapa", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(14.dp))
-
+                                // Botonera rápida de acción (Llamar, WhatsApp y Centrar Ruta)
+                                Spacer(modifier = Modifier.height(10.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Button(
                                         onClick = {
                                             val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${activeTrip!!.driverPhone}"))
                                             context.startActivity(dialIntent)
                                         },
-                                        modifier = Modifier.weight(1f),
+                                        modifier = Modifier.weight(1f).height(44.dp),
+                                        shape = RoundedCornerShape(10.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                                     ) {
-                                        Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text("Llamar", fontWeight = FontWeight.Bold)
+                                        Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Llamar", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                     }
 
                                     Button(
@@ -1574,28 +1608,86 @@ fun PassengerMapScreen(
                                             val waUrl = "https://api.whatsapp.com/send?phone=$formattedPhone&text=${Uri.encode(msg)}"
                                             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(waUrl)))
                                         },
-                                        modifier = Modifier.weight(1f),
+                                        modifier = Modifier.weight(1f).height(44.dp),
+                                        shape = RoundedCornerShape(10.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
                                     ) {
-                                        Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text("WhatsApp", fontWeight = FontWeight.Bold)
+                                        Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("WhatsApp", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    }
+
+                                    FilledIconButton(
+                                        onClick = { zoomToFitPassengerRoute() },
+                                        modifier = Modifier.size(44.dp),
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = IconButtonDefaults.filledIconButtonColors(
+                                            containerColor = Color(0xFF00E5FF),
+                                            contentColor = Color(0xFF0F2027)
+                                        )
+                                    ) {
+                                        Icon(Icons.Default.Route, contentDescription = "Ver ruta completa", modifier = Modifier.size(20.dp))
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(10.dp))
+                                // Panel de detalles colapsable
+                                AnimatedVisibility(visible = isTrackingCardExpanded) {
+                                    Column(modifier = Modifier.padding(top = 10.dp)) {
+                                        Surface(
+                                            color = Color(0xFF1E293B),
+                                            shape = RoundedCornerShape(10.dp),
+                                            border = BorderStroke(1.dp, Color(0x3300E5FF)),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Column(modifier = Modifier.padding(10.dp)) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(8.dp)
+                                                            .clip(CircleShape)
+                                                            .background(Color(0xFF00E5FF))
+                                                    )
+                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                    Text(
+                                                        text = "ESTADO: EN CAMINO A TU UBICACIÓN",
+                                                        color = Color(0xFF00E5FF),
+                                                        fontSize = 11.sp,
+                                                        fontWeight = FontWeight.ExtraBold
+                                                    )
+                                                }
+                                                if (passengerRouteSummary != null) {
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    Text(
+                                                        text = "Ruta por calles: ${passengerRouteSummary?.formattedDistance} • Llegada estimada en ~${passengerRouteSummary?.formattedDuration}",
+                                                        color = Color.White,
+                                                        fontSize = 12.sp
+                                                    )
+                                                }
+                                                if (activeTrip!!.message.isNotBlank()) {
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    Text(
+                                                        text = "Nota del viaje: \"${activeTrip!!.message}\"",
+                                                        color = Color(0xFFF9D423),
+                                                        fontSize = 12.sp
+                                                    )
+                                                }
+                                            }
+                                        }
 
-                                // Solo oculta el panel local del pasajero; el conductor es quien guarda el viaje
-                                // completado con tarifa y ruta real en Supabase al llegar al destino.
-                                Button(
-                                    onClick = {
-                                        activeTripId = null
-                                        activeTrip = null
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF334155))
-                                ) {
-                                    Text("Ocultar Tarjeta de Seguimiento")
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        Button(
+                                            onClick = {
+                                                activeTripId = null
+                                                activeTrip = null
+                                            },
+                                            modifier = Modifier.fillMaxWidth().height(40.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF334155)),
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            Text("Ocultar Tarjeta de Seguimiento", fontSize = 12.sp)
+                                        }
+                                    }
                                 }
                             }
                             "completed" -> {
