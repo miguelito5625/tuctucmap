@@ -647,7 +647,7 @@ class SupabaseRepository {
                 val driverMap = drivers.associateBy({ it.id }, { it.nombre })
                 val driverPhoneMap = drivers.associateBy({ it.id }, { it.telefono })
                 trips.forEach { trip ->
-                    trip.driver_name = driverMap[trip.driver_id] ?: "Torito"
+                    trip.driver_name = driverMap[trip.driver_id] ?: "TucTuc"
                     trip.driver_phone = driverPhoneMap[trip.driver_id] ?: ""
                 }
             }

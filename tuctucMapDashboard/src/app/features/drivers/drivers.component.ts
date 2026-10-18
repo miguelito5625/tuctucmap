@@ -625,7 +625,7 @@ export class DriversComponent implements OnInit, OnDestroy {
     if (phone.length === 8) phone = '502' + phone;
 
     const expiryStr = this.formatExpiryDate(driver.fechaVencimientoSuscripcion);
-    const msg = `Hola ${driver.nombre}, te saludamos de TucTucMap. Te recordamos que tu cuota para el Torito placas ${driver.placas} vence el ${expiryStr}. Para mantenerte visible en el mapa y recibiendo viajes, por favor deposita tu cuota de ${this.currencySymbol}${this.weeklyPrice.toFixed(2)} al número de cuenta ${this.bankName} ${this.banruralAccount} a nombre de ${this.accountHolder} y envíanos tu boleta. ¡Muchas gracias!`;
+    const msg = `Hola ${driver.nombre}, te saludamos de TucTucMap. Te recordamos que tu cuota para el TucTuc placas ${driver.placas} vence el ${expiryStr}. Para mantenerte visible en el mapa y recibiendo viajes, por favor deposita tu cuota de ${this.currencySymbol}${this.weeklyPrice.toFixed(2)} al número de cuenta ${this.bankName} ${this.banruralAccount} a nombre de ${this.accountHolder} y envíanos tu boleta. ¡Muchas gracias!`;
 
     const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     subscription_end_date TIMESTAMPTZ,
     approval_status TEXT DEFAULT 'pendiente', -- 'pendiente', 'aprobado', 'rechazado', 'suscripcion_vencida'
     plate_number TEXT,
-    unit_number TEXT DEFAULT NULL, -- Número de Torito / Padrón visible (ej. "Torito #14")
+    unit_number TEXT DEFAULT NULL, -- Número de TucTuc / Padrón visible (ej. "TucTuc #14")
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

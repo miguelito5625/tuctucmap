@@ -253,8 +253,8 @@ fun PassengerMapScreen(
                                 Text("🛺 TucTuc Map", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 18.sp)
                             }
                             val statusSubtitle = when {
-                                rawDriverLocations.isEmpty() -> "Buscando toritos..."
-                                pausedDrivers.isEmpty() -> "${availableDrivers.size} torito${if (availableDrivers.size != 1) "s" else ""} disponible${if (availableDrivers.size != 1) "s" else ""}"
+                                rawDriverLocations.isEmpty() -> "Buscando tuctucs..."
+                                pausedDrivers.isEmpty() -> "${availableDrivers.size} tuctuc${if (availableDrivers.size != 1) "s" else ""} disponible${if (availableDrivers.size != 1) "s" else ""}"
                                 availableDrivers.isEmpty() -> "0 disponibles (${pausedDrivers.size} en pausa)"
                                 else -> "${availableDrivers.size} disponible${if (availableDrivers.size != 1) "s" else ""} • ${pausedDrivers.size} en pausa"
                             }
@@ -336,7 +336,7 @@ fun PassengerMapScreen(
                     },
                     text = {
                         Text(
-                            "PEDIR TORITO CERCANO",
+                            "PEDIR TUCTUC CERCANO",
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 15.sp,
                             letterSpacing = 0.5.sp
@@ -514,7 +514,7 @@ fun PassengerMapScreen(
             }
 
             // ══════════════════════════════════════════════════════════════════
-            // Chip de Estado Vacío: Sin toritos activos en el mapa (Fase 1 - Acción 3)
+            // Chip de Estado Vacío: Sin tuctucs activos en el mapa (Fase 1 - Acción 3)
             // ══════════════════════════════════════════════════════════════════
             if (rawDriverLocations.isEmpty() && hasLocationPermission) {
                 Card(
@@ -538,7 +538,7 @@ fun PassengerMapScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Sin toritos activos en este momento",
+                                text = "Sin tuctucs activos en este momento",
                                 color = Color.White,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
@@ -714,7 +714,7 @@ fun PassengerMapScreen(
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = "Este torito pausó la recepción de solicitudes o está en viaje. Puedes llamarlo directamente o solicitar otro torito disponible.",
+                                            text = "Este tuctuc pausó la recepción de solicitudes o está en viaje. Puedes llamarlo directamente o solicitar otro tuctuc disponible.",
                                             color = Color(0xFFCBD5E1),
                                             fontSize = 11.sp
                                         )
@@ -771,7 +771,7 @@ fun PassengerMapScreen(
                                     } else {
                                         "mi ubicación actual"
                                     }
-                                    val message = "¡Hola! Vi tu Torito en TucTucMap (Placas: ${driver.placas}). ¿Estás disponible? Te espero aquí: $mapsLink"
+                                    val message = "¡Hola! Vi tu TucTuc en TucTucMap (Placas: ${driver.placas}). ¿Estás disponible? Te espero aquí: $mapsLink"
                                     val waUrl = "https://api.whatsapp.com/send?phone=$formattedPhone&text=${Uri.encode(message)}"
                                     val waIntent = Intent(Intent.ACTION_VIEW, Uri.parse(waUrl))
                                     context.startActivity(waIntent)
@@ -810,7 +810,7 @@ fun PassengerMapScreen(
                             Icon(Icons.Default.ElectricRickshaw, contentDescription = null, tint = Color(0xFF0F2027))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (isDriverAvail) "Solicitar Torito Cercano a Todos" else "Buscar otro Torito Disponible",
+                                text = if (isDriverAvail) "Solicitar TucTuc Cercano a Todos" else "Buscar otro TucTuc Disponible",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
                             )
@@ -822,7 +822,7 @@ fun PassengerMapScreen(
             }
 
             // ══════════════════════════════════════════════════════════════════════
-            // Bottom Sheet: Solicitar Torito a Todos los Conductores Cercanos
+            // Bottom Sheet: Solicitar TucTuc a Todos los Conductores Cercanos
             // ══════════════════════════════════════════════════════════════════════
             if (showBroadcastDialog) {
                 val broadcastScrollState = rememberScrollState()
@@ -851,17 +851,17 @@ fun PassengerMapScreen(
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column {
                                     Text(
-                                        text = "Pedir Torito Cercano",
+                                        text = "Pedir TucTuc Cercano",
                                         fontSize = 20.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White
                                     )
                                     Text(
                                         text = if (availableDrivers.isNotEmpty())
-                                            "${availableDrivers.size} torito${if (availableDrivers.size != 1) "s" else ""} disponible${if (availableDrivers.size != 1) "s" else ""} en la zona"
+                                            "${availableDrivers.size} tuctuc${if (availableDrivers.size != 1) "s" else ""} disponible${if (availableDrivers.size != 1) "s" else ""} en la zona"
                                         else if (pausedDrivers.isNotEmpty())
-                                            "Todos los toritos (${pausedDrivers.size}) están en pausa u ocupados"
-                                        else "Sin toritos activos en este momento",
+                                            "Todos los tuctucs (${pausedDrivers.size}) están en pausa u ocupados"
+                                        else "Sin tuctucs activos en este momento",
                                         fontSize = 13.sp,
                                         color = if (availableDrivers.isNotEmpty()) Color(0xFFF9D423) else Color(0xFFFFB74D)
                                     )
@@ -1068,7 +1068,7 @@ fun PassengerMapScreen(
                             !isRequestingTrip && myLocGeo != null && guestName.trim().length >= 2 && isValidGuestPhone && hasAvailableDrivers
                         }
 
-                        // Alerta si todos los toritos están en pausa
+                        // Alerta si todos los tuctucs están en pausa
                         if (availableDrivers.isEmpty() && pausedDrivers.isNotEmpty()) {
                             Surface(
                                 color = Color(0x33EF6C00),
@@ -1112,7 +1112,7 @@ fun PassengerMapScreen(
                                         val result = repository.requestBroadcastTrip(
                                             lat = myLoc.latitude,
                                             lon = myLoc.longitude,
-                                            message = tripMessage.ifBlank { "Pasajero esperando torito" },
+                                            message = tripMessage.ifBlank { "Pasajero esperando tuctuc" },
                                             passengerName = effectivePassengerName.ifBlank { "Pasajero" },
                                             passengerPhone = effectivePassengerPhone
                                         )
@@ -1150,10 +1150,10 @@ fun PassengerMapScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = when {
-                                        !hasAvailableDrivers && pausedDrivers.isNotEmpty() -> "No hay toritos disponibles (en pausa)"
-                                        !hasAvailableDrivers -> "Sin toritos cercanos disponibles"
+                                        !hasAvailableDrivers && pausedDrivers.isNotEmpty() -> "No hay tuctucs disponibles (en pausa)"
+                                        !hasAvailableDrivers -> "Sin tuctucs cercanos disponibles"
                                         !repository.isUserLoggedIn && (guestName.trim().length < 2 || !isValidGuestPhone) -> "Ingresa nombre y teléfono (8 dígitos)"
-                                        else -> "Pedir Torito Cercano"
+                                        else -> "Pedir TucTuc Cercano"
                                     },
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 15.sp
@@ -1199,13 +1199,13 @@ fun PassengerMapScreen(
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "Buscando Toritos Cercanos...",
+                                            text = "Buscando TucTucs Cercanos...",
                                             fontWeight = FontWeight.Bold,
                                             color = Color.White,
                                             fontSize = 16.sp
                                         )
                                         Text(
-                                            text = "Notificando a ${availableDrivers.size} toritos cercanos. El primero en aceptar vendrá hacia ti.",
+                                            text = "Notificando a ${availableDrivers.size} tuctucs cercanos. El primero en aceptar vendrá hacia ti.",
                                             color = Color.LightGray,
                                             fontSize = 12.sp
                                         )
@@ -1243,7 +1243,7 @@ fun PassengerMapScreen(
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "🎉 ¡Torito en Camino!",
+                                            text = "🎉 ¡TucTuc en Camino!",
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFF4CAF50),
                                             fontSize = 18.sp
@@ -1394,7 +1394,7 @@ fun PassengerMapScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "Listo / Pedir Otro Torito",
+                                        text = "Listo / Pedir Otro TucTuc",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp
                                     )
@@ -1402,14 +1402,14 @@ fun PassengerMapScreen(
                             }
                             "cancelled", "timeout" -> {
                                 Text(
-                                    text = if (activeTrip!!.status == "timeout") "Ningún torito disponible respondió a tiempo." else "El viaje no pudo ser completado.",
+                                    text = if (activeTrip!!.status == "timeout") "Ningún tuctuc disponible respondió a tiempo." else "El viaje no pudo ser completado.",
                                     color = Color(0xFFFF5252),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 15.sp
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Puedes intentar pedir nuevamente o llamar directamente a un torito desde el mapa.",
+                                    text = "Puedes intentar pedir nuevamente o llamar directamente a un tuctuc desde el mapa.",
                                     color = Color.LightGray,
                                     fontSize = 12.sp
                                 )

@@ -103,7 +103,7 @@ fun DriverRegisterScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Regístrate para solicitar la activación de tu Torito en la plataforma",
+                text = "Regístrate para solicitar la activación de tu TucTuc en la plataforma",
                 fontSize = 15.sp,
                 color = Color.LightGray,
                 textAlign = TextAlign.Center,
@@ -173,14 +173,14 @@ fun DriverRegisterScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Campo Placas del Torito
+            // Campo Placas del TucTuc
             OutlinedTextField(
                 value = placas,
                 onValueChange = {
                     placas = it
                     errorMessage = null
                 },
-                label = { Text("Número de Placas del Torito", color = Color.LightGray) },
+                label = { Text("Número de Placas del TucTuc", color = Color.LightGray) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.DirectionsCar,
@@ -210,7 +210,7 @@ fun DriverRegisterScreen(
                     numeroUnidad = it
                     errorMessage = null
                 },
-                label = { Text("N° de Torito / Padrón (Ej. Torito #14 - Opcional)", color = Color.LightGray) },
+                label = { Text("N° de TucTuc / Padrón (Ej. TucTuc #14 - Opcional)", color = Color.LightGray) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.DirectionsCar,

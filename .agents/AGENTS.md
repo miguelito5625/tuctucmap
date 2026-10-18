@@ -11,7 +11,7 @@ Este monorepo se compone de tres proyectos interconectados. **Nunca modifiques a
 | Directorio | Propósito | Stack Tecnológico | Skill Especializado |
 | :--- | :--- | :--- | :--- |
 | [`/databaseTuctucApp`](../databaseTuctucApp) | Backend, esquema relacional, scripts administrativos y RLS | PostgreSQL en Supabase, Node.js (`pg`) | [`tuctuc-database`](./skills/tuctuc-database/SKILL.md) |
-| [`/tuctucMap`](../tuctucMap) | Aplicación móvil nativa para pasajeros y conductores de toritos | Kotlin, Jetpack Compose (M3), OSMDroid, Firebase RTDB, Supabase | [`tuctuc-android`](./skills/tuctuc-android/SKILL.md) |
+| [`/tuctucMap`](../tuctucMap) | Aplicación móvil nativa para pasajeros y conductores de tuctucs | Kotlin, Jetpack Compose (M3), OSMDroid, Firebase RTDB, Supabase | [`tuctuc-android`](./skills/tuctuc-android/SKILL.md) |
 | [`/tuctucMapDashboard`](../tuctucMapDashboard) | Panel administrativo web para gestión de flota, aprobaciones y finanzas | Angular (v22), Angular Material, Leaflet, Supabase JS, Firebase RTDB | [`tuctuc-dashboard`](./skills/tuctuc-dashboard/SKILL.md) |
 
 ---
@@ -53,7 +53,7 @@ Las siguientes 7 reglas tienen carácter mandatorio e ineludible en toda tarea:
 
 1. **Analizar el entorno correcto:**
    - Si la tarea involucra la web administrativa, trabajar en `tuctucMapDashboard/`.
-   - Si involucra la app de toritos o pasajeros, trabajar en `tuctucMap/`.
+   - Si involucra la app de tuctucs o pasajeros, trabajar en `tuctucMap/`.
    - Si involucra estados de viaje o entidades de persistencia, iniciar en `databaseTuctucApp/db.sql`.
 2. **Convenciones UI Móvil:**
    - Mantener soporte Edge-to-Edge.

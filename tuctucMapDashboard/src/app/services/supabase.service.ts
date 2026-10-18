@@ -408,7 +408,7 @@ export class SupabaseService {
         passengerName,
         passengerPhone: trip.passenger_phone || '',
         isRegistered,
-        driverName: profileMap.get(trip.driver_id) || 'Torito',
+        driverName: profileMap.get(trip.driver_id) || 'TucTuc',
         status: trip.status,
         message: trip.message || 'Sin mensaje',
         fare: trip.fare != null ? Number(trip.fare) : null,

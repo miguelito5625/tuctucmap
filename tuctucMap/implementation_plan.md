@@ -1,6 +1,6 @@
 # Plan de Implementación: Tuc Tuc Map App
 
-Desarrollar la estructura, el código fuente y la arquitectura de una aplicación de transporte local de Tuc Tucs ("Toritos") usando Kotlin, Jetpack Compose, OSMDroid y Firebase. La aplicación manejará dos roles ("Usuario" y "Conductor") en la misma base de código.
+Desarrollar la estructura, el código fuente y la arquitectura de una aplicación de transporte local de TucTucs usando Kotlin, Jetpack Compose, OSMDroid y Firebase. La aplicación manejará dos roles ("Usuario" y "Conductor") en la misma base de código.
 
 ## User Review Required
 

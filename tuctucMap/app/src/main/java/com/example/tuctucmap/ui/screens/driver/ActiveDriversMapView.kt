@@ -475,7 +475,7 @@ fun DriverMapFullscreenScreen(
                                                     is SupabaseRepository.AcceptTripResult.AlreadyTaken -> {
                                                         Toast.makeText(
                                                             context,
-                                                            "¡Este viaje ya fue tomado por otro torito!",
+                                                            "¡Este viaje ya fue tomado por otro tuctuc!",
                                                             Toast.LENGTH_LONG
                                                         ).show()
                                                     }
@@ -545,7 +545,7 @@ fun DriverMapFullscreenScreen(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Placas del Torito: ${driver.placas}",
+                                    text = "Placas del TucTuc: ${driver.placas}",
                                     fontSize = 16.sp,
                                     color = Color(0xFFF9D423),
                                     fontWeight = FontWeight.Medium

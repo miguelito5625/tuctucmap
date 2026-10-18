@@ -35,7 +35,7 @@ Esta guía define la arquitectura, normas de seguridad y procedimientos operativ
 1. **Monitoreo de Flota (`/fleet-map`):**
    - Implementado con Leaflet.
    - Escucha en tiempo real la colección `driver_locations` en Firebase Realtime Database y descarta automáticamente coordenadas fantasma con más de **3 minutos de antigüedad** (`TTL_MS = 3 * 60 * 1000`).
-   - Pines diferenciados por estado del torito: verde para `Disponible`, naranja para `Ocupado`.
+   - Pines diferenciados por estado del tuctuc: verde para `Disponible`, naranja para `Ocupado`.
    - Panel lateral interactivo con lista de conductores y centrado dinámico de cámara en el mapa.
 2. **Gestión y Cobranza de Suscripciones (`/drivers` y `/subscriptions`):**
    - Al cargar conductores (`fetchDrivers()`), invoca el RPC `sync_server_time_and_expire` para actualizar en base de datos las suscripciones vencidas antes de calcular KPIs.

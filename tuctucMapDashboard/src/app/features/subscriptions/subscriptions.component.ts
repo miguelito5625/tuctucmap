@@ -493,7 +493,7 @@ export class RejectRenewalDialogComponent {
                       <div class="sub-tags">
                         <span class="plate-mini">{{ req.driverPlate }}</span>
                         @if (req.driverUnitNumber) {
-                          <span class="unit-mini">Torito #{{ req.driverUnitNumber }}</span>
+                          <span class="unit-mini">TucTuc #{{ req.driverUnitNumber }}</span>
                         }
                       </div>
                     </div>

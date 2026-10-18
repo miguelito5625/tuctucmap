@@ -273,7 +273,7 @@ fun PassengerLoginScreen(
                 // ── Conductor ─────────────────────────────────────────────────────
                 TextButton(onClick = onSelectDriver) {
                     Text(
-                        text = "🛺 ¿Eres Conductor? Entrar o Registrar Torito",
+                        text = "🛺 ¿Eres Conductor? Entrar o Registrar TucTuc",
                         color = Color(0xFFF9D423),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold

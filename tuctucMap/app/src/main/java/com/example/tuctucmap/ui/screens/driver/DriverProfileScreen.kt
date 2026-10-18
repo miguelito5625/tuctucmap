@@ -372,7 +372,7 @@ fun DriverProfileScreen(
                                 value = numeroUnidad,
                                 onValueChange = { numeroUnidad = it },
                                 label = { Text("N° de Unidad / Padrón (Opcional)") },
-                                placeholder = { Text("Ej. Torito #14") },
+                                placeholder = { Text("Ej. TucTuc #14") },
                                 leadingIcon = {
                                     Icon(Icons.Default.Tag, contentDescription = null)
                                 },

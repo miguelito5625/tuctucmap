@@ -15,7 +15,7 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
 - **UI Toolkit:** Jetpack Compose (Material 3)
 - **Backend Híbrido:**
   - **Supabase (PostgreSQL & Auth):** Autenticación de usuarios, perfiles (`profiles`), roles, estado de aprobación de conductores, historial persistente de viajes y suscripciones.
-  - **Firebase Realtime Database:** Estado efímero de alta frecuencia: transmisión en vivo de coordenadas de toritos (`driver_locations`) y ciclo de vida de viaje activo (`requestTrip`).
+  - **Firebase Realtime Database:** Estado efímero de alta frecuencia: transmisión en vivo de coordenadas de tuctucs (`driver_locations`) y ciclo de vida de viaje activo (`requestTrip`).
 - **Mapas y Ubicación:**
   - **OSMDroid:** Renderizado de mapas sin cuotas de facturación.
   - **Google Play Services Location:** Rastreo GPS del dispositivo.
@@ -33,7 +33,7 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
    - El estado del drawer se controla mediante `rememberDrawerState()` y `CoroutineScope`.
 3. **Orientación Fija Vertical (Anti-Reinicio):**
    - Para evitar reinicios de ciclo de vida y pérdida de estado al girar el dispositivo físico o si el usuario tiene activado el giro automático, `MainActivity` está bloqueada permanentemente en vertical mediante `android:screenOrientation="portrait"` y `requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT`, además de gestionar `android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize"`.
-4. **Formulario de Solicitud de Torito y Sugerencias de Destino (`PassengerDestinationPreferences`):**
+4. **Formulario de Solicitud de TucTuc y Sugerencias de Destino (`PassengerDestinationPreferences`):**
    - En `PassengerMapScreen`, el campo de destino está unificado en el mismo formulario/tarjeta de datos de contacto (nombre y teléfono) con label `"Destino"`.
    - `PassengerDestinationPreferences` persiste en `SharedPreferences` (`tuctuc_prefs`) los últimos 5 destinos ingresados por el pasajero, mostrándolos como chips interactivos. Si es la primera vez que se usa la app, no se muestran datos de ejemplo.
 
@@ -58,7 +58,7 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
 1. **Modelo `DriverLocation` y Geocerca Rural (`search_radius_km`):**
    - Cálculo esférico Haversine (`distanceMetersTo`, `estimatedArrivalMinutes`, `formattedDistance`).
    - TTL de descarte automático: un conductor se considera inactivo si su última actualización supera los 3 minutos (`isRecentlyActive`).
-   - **Filtro de Radio Geográfico:** Tanto `PassengerMapScreen` como `SupabaseRepository.observePendingTripsForDriver` filtran toritos y solicitudes de viaje utilizando el radio configurado en `AppConfig.search_radius_km` (por defecto 15 km), evitando que conductores o pasajeros de otros municipios lejanos se mezclen.
+   - **Filtro de Radio Geográfico:** Tanto `PassengerMapScreen` como `SupabaseRepository.observePendingTripsForDriver` filtran tuctucs y solicitudes de viaje utilizando el radio configurado en `AppConfig.search_radius_km` (por defecto 15 km), evitando que conductores o pasajeros de otros municipios lejanos se mezclen.
 2. **Servicio en Segundo Plano (`LocationTrackingService`):**
    - Ubicación: `tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt`.
    - Emisión adaptativa hacia Firebase Realtime Database (`>= 8 metros` o heartbeat cada `45 segundos`).
@@ -79,8 +79,8 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
      - **Historial de Solicitudes en Vivo:** Lista cronológica de todas las solicitudes enviadas por el conductor con chips de estado (`Pendiente`, `Aprobado`, `Rechazado`), motivo de rechazo si aplica y botón de seguimiento directo a WhatsApp.
    - **Acceso Directo y Re-verificación:** Accesible desde el menú lateral (`AppDrawer`), desde la píldora superior de membresía en `DriverHomeScreen`, y directamente desde `DriverSubscriptionExpiredScreen` con botón para verificar activación al instante.
 3. **Número de Unidad (`unit_number`) y Protección de Solicitudes:**
-   - Los conductores pueden registrar su Número de Torito/Unidad municipal (`unit_number` / `displayIdentifier`) además de la placa.
-   - En `DriverHomeScreen`, el botón `X` sobre una solicitud abierta para todos (`driver_id == ""`) solo la ignora localmente para ese conductor sin cancelarla en Firebase para los demás toritos.
+   - Los conductores pueden registrar su Número de TucTuc/Unidad municipal (`unit_number` / `displayIdentifier`) además de la placa.
+   - En `DriverHomeScreen`, el botón `X` sobre una solicitud abierta para todos (`driver_id == ""`) solo la ignora localmente para ese conductor sin cancelarla en Firebase para los demás tuctucs.
 4. **Historial de Viajes, Pasajero y Cobro:**
    - Al aceptar o rechazar solicitudes directas, se actualiza el registro en Supabase con `'accepted'` o `'rejected'`.
    - **Identidad del Pasajero (Registrado o Invitado):** `saveTripRecord` almacena directamente `passenger_name` y `passenger_phone` en la tabla `trips` (validando 8 dígitos locales para invitados).

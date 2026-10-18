@@ -57,7 +57,7 @@ object MarkerIconUtils {
     private var cachedPausedTucTucIcon: Drawable? = null
 
     /**
-     * Devuelve una versión tintada en ámbar y atenuada del icono del torito
+     * Devuelve una versión tintada en ámbar y atenuada del icono del tuctuc
      * para representar visualmente en el mapa a conductores en pausa u ocupados.
      */
     fun getPausedTucTucIcon(context: Context): Drawable {

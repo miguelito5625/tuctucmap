@@ -139,13 +139,13 @@ export class TripsComponent implements OnInit, OnDestroy {
         opacity: 0.9,
       }).addTo(this.routeMapInstance);
 
-      // Marcador de inicio (Torito al aceptar)
+      // Marcador de inicio (TucTuc al aceptar)
       L.marker(points[0], { icon: startIcon })
         .addTo(this.routeMapInstance)
-        .bindPopup('<b>Punto de inicio del Torito</b><br>Aceptación del viaje')
+        .bindPopup('<b>Punto de inicio del TucTuc</b><br>Aceptación del viaje')
         .openPopup();
 
-      // Marcador de fin (Torito al finalizar)
+      // Marcador de fin (TucTuc al finalizar)
       if (points.length > 1) {
         L.marker(points[points.length - 1], { icon: endIcon })
           .addTo(this.routeMapInstance)

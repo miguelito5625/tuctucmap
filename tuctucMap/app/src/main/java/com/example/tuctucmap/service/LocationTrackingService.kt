@@ -281,7 +281,7 @@ class LocationTrackingService : Service() {
             )
 
             val alertNotification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
-                .setContentTitle("¡Pasajero solicita un Torito!")
+                .setContentTitle("¡Pasajero solicita un TucTuc!")
                 .setContentText(trip.message.ifBlank { "Toca aquí para ver la ubicación y aceptar el viaje" })
                 .setSmallIcon(R.drawable.ic_tuc_tuc)
                 .setContentIntent(pendingIntent)

@@ -80,7 +80,7 @@ fun OnboardingScreen(
 
             // Subtítulo
             Text(
-                text = "Tu conexión rápida y económica con el transporte local de Toritos.",
+                text = "Tu conexión rápida y económica con el transporte local de TucTucs.",
                 fontSize = 16.sp,
                 color = Color.LightGray,
                 textAlign = TextAlign.Center,

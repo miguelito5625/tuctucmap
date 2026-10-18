@@ -742,7 +742,7 @@ fun DriverHomeScreen(
                                         )
                                         Text(
                                             text = if (isAvailable)
-                                                "Tu torito es visible en el mapa y las alertas por voz están activas."
+                                                "Tu tuctuc es visible en el mapa y las alertas por voz están activas."
                                             else
                                                 "No recibirás nuevos viajes hasta que reanudes tu turno.",
                                             fontSize = 12.sp,
@@ -1729,7 +1729,7 @@ fun DriverHomeScreen(
                                                     is SupabaseRepository.AcceptTripResult.AlreadyTaken -> {
                                                         Toast.makeText(
                                                             context,
-                                                            "¡Este viaje ya fue tomado por otro torito!",
+                                                            "¡Este viaje ya fue tomado por otro tuctuc!",
                                                             Toast.LENGTH_LONG
                                                         ).show()
                                                     }

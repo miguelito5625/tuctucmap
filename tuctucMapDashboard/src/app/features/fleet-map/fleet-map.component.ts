@@ -38,7 +38,7 @@ import * as L from 'leaflet';
           </div>
           <div>
             <h1 class="page-title">Mapa en Vivo de la Flota</h1>
-            <p class="page-subtitle">Monitoreo geográfico de toritos conectados en tiempo real vía Firebase</p>
+            <p class="page-subtitle">Monitoreo geográfico de tuctucs conectados en tiempo real vía Firebase</p>
           </div>
         </div>
         <div class="fleet-actions">
@@ -59,10 +59,10 @@ import * as L from 'leaflet';
           <div #mapContainer class="map-viewport"></div>
         </mat-card>
 
-        <!-- Panel Lateral de Toritos Activos -->
+        <!-- Panel Lateral de TucTucs Activos -->
         <div class="fleet-sidebar">
           <div class="sidebar-header">
-            <h3>Toritos Circulando</h3>
+            <h3>TucTucs Circulando</h3>
             <span class="active-badge">{{ activeDrivers().length }} en línea</span>
           </div>
 
