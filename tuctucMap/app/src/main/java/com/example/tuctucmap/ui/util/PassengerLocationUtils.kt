@@ -151,33 +151,20 @@ object QuetzalCharacterRenderer {
 
         // Rebote y respiración alegre rítmica
         val bounceY = sinVal * 1.8f * density
-        // Inclinación corporal sutil alrededor de las patitas (-3° a +3°)
-        val tiltDeg = sinVal * 3.0f
-        // Oscilación del ala saludando: ondea alegremente entre -2° y +26°
-        val waveAngle = 12.0f + (sinVal * 14.0f)
+        // Inclinación rítmica del personaje al saludar (-4° a +4°) alrededor de las patitas
+        val tiltDeg = sinVal * 4.0f
 
-        // Anclaje de las patitas centrado al 88% de la altura
+        // Punto de anclaje de las patitas en el fotograma (coincide con el radar de GPS a 88% de altura)
         val anchorX = sizePx * 0.50f
         val anchorY = sizePx * 0.88f
 
-        // Sombra suave bajo las patitas en el suelo
-        val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.FILL
-            color = 0x44000000
-        }
-        canvas.drawOval(
-            anchorX - (16f * density), anchorY - (3.5f * density),
-            anchorX + (16f * density), anchorY + (4.5f * density),
-            shadowPaint
-        )
+        // En la ilustración 1024x1024, el centro de las patitas está en x=563, y=950
+        val charW = sizePx * 0.78f
+        val charH = charW // Formato cuadrado 1024x1024
+        val charLeft = anchorX - (charW * (563f / 1024f))
+        val charTop = anchorY - (charH * (950f / 1024f))
 
-        // Escala y posicionamiento del cuerpo del Quetzal
-        val charW = sizePx * 0.76f
-        val charH = charW * (507f / 460f)
-        val charLeft = anchorX - (charW * 0.64f)
-        val charTop = anchorY - (charH * 0.957f)
-
-        // 1. Dibujar cuerpo del Quetzal con inclinación y rebote
+        // 1. Dibujar el Quetzal saludando con balanceo rítmico alrededor de sus patitas
         canvas.save()
         canvas.translate(anchorX, anchorY)
         canvas.rotate(tiltDeg)
@@ -187,65 +174,10 @@ object QuetzalCharacterRenderer {
         val quetzalPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
         canvas.drawBitmap(baseBitmap, null, destRect, quetzalPaint)
 
-        // Punto de articulación del ala derecha en el hombro/pecho
-        val shoulderX = charLeft + (charW * (360f / 460f))
-        val shoulderY = charTop + (charH * (340f / 507f))
-        val scale = charW / 460f
-
-        // 2. Dibujar ala saludando
-        canvas.save()
-        canvas.translate(shoulderX, shoulderY)
-        canvas.rotate(waveAngle)
-
-        // Plumaje estilizado de 3 festones que armoniza exactamente con el arte del Quetzal
-        val wingPath = Path().apply {
-            moveTo(0f, 0f)
-            cubicTo(10f * scale, -15f * scale, 35f * scale, -45f * scale, 55f * scale, -65f * scale)
-            cubicTo(68f * scale, -68f * scale, 75f * scale, -62f * scale, 72f * scale, -52f * scale)
-            cubicTo(68f * scale, -44f * scale, 60f * scale, -38f * scale, 58f * scale, -34f * scale)
-            cubicTo(72f * scale, -32f * scale, 80f * scale, -24f * scale, 75f * scale, -14f * scale)
-            cubicTo(70f * scale, -6f * scale, 62f * scale, -2f * scale, 58f * scale, 2f * scale)
-            cubicTo(68f * scale, 6f * scale, 70f * scale, 14f * scale, 62f * scale, 20f * scale)
-            cubicTo(50f * scale, 24f * scale, 35f * scale, 18f * scale, 0f, 0f)
-            close()
-        }
-
-        // Color verde esmeralda y contorno oscuro idénticos al arte original
-        val wingFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.FILL
-            color = 0xFF00BFA5.toInt()
-        }
-        val wingOutlinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            strokeWidth = 7f * scale
-            color = 0xFF0E3830.toInt()
-            strokeJoin = Paint.Join.ROUND
-            strokeCap = Paint.Cap.ROUND
-        }
-        val wingHighlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.FILL
-            color = 0xFF3DF2C2.toInt()
-        }
-
-        canvas.drawPath(wingPath, wingFillPaint)
-        canvas.drawPath(wingPath, wingOutlinePaint)
-
-        // Brillo de pluma superior
-        val highlightPath = Path().apply {
-            moveTo(8f * scale, -8f * scale)
-            cubicTo(20f * scale, -25f * scale, 35f * scale, -40f * scale, 48f * scale, -45f * scale)
-            cubicTo(36f * scale, -28f * scale, 22f * scale, -15f * scale, 8f * scale, -8f * scale)
-            close()
-        }
-        canvas.drawPath(highlightPath, wingHighlightPaint)
-
-        canvas.restore() // Fin de ala
-        canvas.restore() // Fin de cuerpo
-
-        // 3. Ondas de saludo 👋 en cian neón al lado del ala
-        val waveAngleRad = Math.toRadians((tiltDeg + waveAngle).toDouble()).toFloat()
-        val wingTipX = shoulderX + (50f * scale * cos(waveAngleRad - 0.75f))
-        val wingTipY = shoulderY + (50f * scale * sin(waveAngleRad - 0.75f))
+        // 2. Ondas de saludo 👋 en cian neón (#00E5FF) al lado de la punta del ala que saluda
+        // La punta del ala en la ilustración se ubica en x=930, y=380
+        val wingTipX = charLeft + (charW * (930f / 1024f))
+        val wingTipY = charTop + (charH * (380f / 1024f))
 
         val waveArcPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
@@ -255,16 +187,18 @@ object QuetzalCharacterRenderer {
         }
 
         val arc1Rect = RectF(
-            wingTipX + (4f * density), wingTipY - (10f * density),
-            wingTipX + (18f * density), wingTipY + (4f * density)
+            wingTipX + (3f * density), wingTipY - (14f * density),
+            wingTipX + (17f * density), wingTipY + (0f * density)
         )
-        canvas.drawArc(arc1Rect, 290f, 100f, false, waveArcPaint)
+        canvas.drawArc(arc1Rect, 295f, 100f, false, waveArcPaint)
 
         val arc2Rect = RectF(
-            wingTipX + (10f * density), wingTipY - (16f * density),
-            wingTipX + (28f * density), wingTipY + (2f * density)
+            wingTipX + (9f * density), wingTipY - (20f * density),
+            wingTipX + (27f * density), wingTipY - (2f * density)
         )
-        canvas.drawArc(arc2Rect, 295f, 90f, false, waveArcPaint)
+        canvas.drawArc(arc2Rect, 300f, 90f, false, waveArcPaint)
+
+        canvas.restore() // Fin de transformación corporal
 
         return bitmap
     }
