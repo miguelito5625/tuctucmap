@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -272,7 +273,7 @@ fun DriverTripHistoryScreen(
                                     ExternalNavigationUtils.openWaze(context, trip.passenger_lat, trip.passenger_lon)
                                 },
                                 onWhatsApp = {
-                                    openWhatsApp(context, trip.passenger_phone ?: "")
+                                    openWhatsApp(context, trip.passenger_phone ?: "", trip.passenger_name ?: "")
                                 },
                                 onClick = {
                                     selectedTrip = trip
@@ -421,21 +422,32 @@ fun DriverTripHistoryScreen(
                             }
 
                             // Botón WhatsApp
-                            if (!trip.passenger_phone.isNullOrBlank()) {
-                                Spacer(modifier = Modifier.height(10.dp))
-                                Button(
-                                    onClick = {
-                                        openWhatsApp(context, trip.passenger_phone ?: "")
-                                        selectedTrip = null
-                                    },
-                                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Icon(imageVector = Icons.Default.Phone, contentDescription = null, tint = Color.White)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Contactar por WhatsApp", color = Color.White, fontWeight = FontWeight.Bold)
-                                }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            val hasPhone = !trip.passenger_phone.isNullOrBlank()
+                            Button(
+                                onClick = {
+                                    openWhatsApp(context, trip.passenger_phone ?: "", trip.passenger_name ?: "")
+                                    selectedTrip = null
+                                },
+                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (hasPhone) Color(0xFF25D366) else Color(0xFF334155),
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.Chat,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (hasPhone) "Abrir Chat de WhatsApp" else "Chat no disponible (Sin teléfono)",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     },
@@ -698,7 +710,7 @@ private fun DriverTripCard(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // ── Botones de acción directos (Google Maps, Waze y WhatsApp) ──
+            // ── Botones de acción directos: Navegación externa y WhatsApp ──
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -759,68 +771,71 @@ private fun DriverTripCard(
                         maxLines = 1
                     )
                 }
+            }
 
-                // Botón secundario: WhatsApp si hay teléfono
-                if (!trip.passenger_phone.isNullOrBlank()) {
-                    IconButton(
-                        onClick = onWhatsApp,
-                        modifier = Modifier
-                            .size(42.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFF25D366))
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Phone,
-                            contentDescription = "WhatsApp",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
+            // Fila 2: Botón directo para abrir chat de WhatsApp con el pasajero
+            Spacer(modifier = Modifier.height(8.dp))
+            val hasPhone = !trip.passenger_phone.isNullOrBlank()
+            Button(
+                onClick = onWhatsApp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(42.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (hasPhone) Color(0xFF25D366) else Color(0xFF334155),
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Chat,
+                    contentDescription = null,
+                    modifier = Modifier.size(17.dp),
+                    tint = Color.White
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (hasPhone) "Chat de WhatsApp con Pasajero" else "Chat no disponible (Sin número registrado)",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
 }
 
-// ── Funciones utilitarias para navegación y WhatsApp ─────────────────────────
+// ── Funciones utilitarias para WhatsApp ───────────────────────────────────────
 
-private fun openGoogleMaps(context: Context, lat: Double, lon: Double) {
-    if (lat == 0.0 && lon == 0.0) {
-        Toast.makeText(context, "No hay coordenadas disponibles para este viaje", Toast.LENGTH_SHORT).show()
-        return
-    }
-    try {
-        val uri = Uri.parse("google.navigation:q=$lat,$lon")
-        val mapIntent = Intent(Intent.ACTION_VIEW, uri).apply {
-            setPackage("com.google.android.apps.maps")
-        }
-        if (mapIntent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(mapIntent)
-        } else {
-            val fallbackUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$lat,$lon")
-            context.startActivity(Intent(Intent.ACTION_VIEW, fallbackUri))
-        }
-    } catch (e: Exception) {
-        try {
-            val fallbackUri = Uri.parse("geo:$lat,$lon?q=$lat,$lon")
-            context.startActivity(Intent(Intent.ACTION_VIEW, fallbackUri))
-        } catch (e2: Exception) {
-            Toast.makeText(context, "No se pudo abrir Google Maps ni el navegador", Toast.LENGTH_SHORT).show()
-        }
-    }
-}
-
-private fun openWhatsApp(context: Context, phone: String) {
-    if (phone.isBlank()) {
+private fun openWhatsApp(context: Context, phone: String, passengerName: String = "") {
+    val digits = phone.replace(Regex("[^0-9]"), "")
+    if (digits.isBlank()) {
         Toast.makeText(context, "El pasajero no cuenta con número telefónico registrado", Toast.LENGTH_SHORT).show()
         return
     }
+    // Si tiene 8 dígitos (formato estándar de Guatemala), anteponer el código de país 502
+    val formattedPhone = if (digits.length == 8) "502$digits" else digits
+    val greetingName = if (passengerName.isNotBlank() && passengerName != "Pasajero") " $passengerName" else ""
+    val defaultMsg = "¡Hola$greetingName! Te saludo desde TucTuc Map sobre tu viaje."
+
     try {
-        val cleanPhone = phone.replace("+", "").replace(" ", "").replace("-", "")
-        val url = "https://api.whatsapp.com/send?phone=$cleanPhone"
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        val url = "https://api.whatsapp.com/send?phone=$formattedPhone&text=${Uri.encode(defaultMsg)}"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+            setPackage("com.whatsapp")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
         context.startActivity(intent)
-    } catch (e: Exception) {
-        Toast.makeText(context, "No se pudo abrir WhatsApp", Toast.LENGTH_SHORT).show()
+    } catch (_: Exception) {
+        try {
+            val fallbackUrl = "https://wa.me/$formattedPhone?text=${Uri.encode(defaultMsg)}"
+            val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse(fallbackUrl)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(fallbackIntent)
+        } catch (_: Exception) {
+            Toast.makeText(context, "No se pudo abrir WhatsApp en este dispositivo", Toast.LENGTH_SHORT).show()
+        }
     }
 }
