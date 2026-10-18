@@ -33,6 +33,9 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
    - El estado del drawer se controla mediante `rememberDrawerState()` y `CoroutineScope`.
 3. **Orientación Fija Vertical (Anti-Reinicio):**
    - Para evitar reinicios de ciclo de vida y pérdida de estado al girar el dispositivo físico o si el usuario tiene activado el giro automático, `MainActivity` está bloqueada permanentemente en vertical mediante `android:screenOrientation="portrait"` y `requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT`, además de gestionar `android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize"`.
+4. **Formulario de Solicitud de Torito y Sugerencias de Destino (`PassengerDestinationPreferences`):**
+   - En `PassengerMapScreen`, el campo de destino está unificado en el mismo formulario/tarjeta de datos de contacto (nombre y teléfono) con label `"Destino"`.
+   - `PassengerDestinationPreferences` persiste en `SharedPreferences` (`tuctuc_prefs`) los últimos 5 destinos ingresados por el pasajero, mostrándolos como chips interactivos. Si es la primera vez que se usa la app, no se muestran datos de ejemplo.
 
 ---
 

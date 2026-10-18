@@ -15,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,11 +30,13 @@ import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ElectricRickshaw
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
 import com.example.tuctucmap.ui.components.PassengerDrawerItem
 import com.example.tuctucmap.ui.components.PassengerDrawerSheet
@@ -50,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.example.tuctucmap.data.PassengerDestinationPreferences
 import com.example.tuctucmap.data.model.DriverLocation
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.ui.util.AppTileSource
@@ -134,6 +138,16 @@ fun PassengerMapScreen(
     val sharedPrefs = remember(context) { context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE) }
     var guestName by remember { mutableStateOf(sharedPrefs.getString("guest_passenger_name", "") ?: "") }
     var guestPhone by remember { mutableStateOf(sharedPrefs.getString("guest_passenger_phone", "") ?: "") }
+
+    var recentDestinations by remember {
+        mutableStateOf(PassengerDestinationPreferences.getRecentDestinations(context))
+    }
+
+    LaunchedEffect(showBroadcastDialog) {
+        if (showBroadcastDialog) {
+            recentDestinations = PassengerDestinationPreferences.getRecentDestinations(context)
+        }
+    }
 
     val sessionStatus by repository.sessionStatus.collectAsState(
         initial = repository.currentSessionStatus
@@ -860,15 +874,15 @@ fun PassengerMapScreen(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // Guest Checkout: Campos de Nombre y Teléfono si no ha iniciado sesión
-                        if (!repository.isUserLoggedIn) {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-                                shape = RoundedCornerShape(14.dp),
-                                border = BorderStroke(1.dp, Color(0x33F9D423))
-                            ) {
-                                Column(modifier = Modifier.padding(14.dp)) {
+                        // Formulario Unificado: Datos de Pasajero y Destino
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                            shape = RoundedCornerShape(14.dp),
+                            border = BorderStroke(1.dp, Color(0x33F9D423))
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                if (!repository.isUserLoggedIn) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text("👤", fontSize = 16.sp)
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -920,8 +934,97 @@ fun PassengerMapScreen(
                                         singleLine = true
                                     )
 
-                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                } else {
+                                    // Usuario autenticado: Resumen rápido de quién pide
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Person,
+                                            contentDescription = null,
+                                            tint = Color(0xFFF9D423),
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Pasajero: ${passengerProfile?.nombre ?: "Mi Cuenta"} • Tel: ${passengerProfile?.telefono ?: "Sin número"}",
+                                            color = Color(0xFFE2E8F0),
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                }
 
+                                // Campo de Destino dentro del mismo formulario
+                                OutlinedTextField(
+                                    value = tripMessage,
+                                    onValueChange = { tripMessage = it },
+                                    label = { Text("Destino", color = Color.LightGray) },
+                                    placeholder = { Text("¿Hacia dónde vas? (Ej: Parque Central)", color = Color.Gray) },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Place,
+                                            contentDescription = null,
+                                            tint = Color(0xFFF9D423),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = Color(0xFFF9D423),
+                                        unfocusedBorderColor = Color.Gray,
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White
+                                    ),
+                                    singleLine = true
+                                )
+
+                                // Sugerencias de los últimos 5 destinos guardados localmente (sin datos de ejemplo si es primera vez)
+                                if (recentDestinations.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(
+                                            Icons.Default.History,
+                                            contentDescription = null,
+                                            tint = Color(0xFF94A3B8),
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Destinos recientes:",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color(0xFF94A3B8)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        recentDestinations.forEach { dest ->
+                                            SuggestionChip(
+                                                onClick = { tripMessage = dest },
+                                                label = { Text(dest, fontSize = 11.sp, color = Color.White) },
+                                                colors = SuggestionChipDefaults.suggestionChipColors(
+                                                    containerColor = Color(0xFF334155)
+                                                ),
+                                                border = BorderStroke(1.dp, Color(0x33F9D423))
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (!repository.isUserLoggedIn) {
+                                    Spacer(modifier = Modifier.height(6.dp))
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.End
@@ -942,111 +1045,9 @@ fun PassengerMapScreen(
                                     }
                                 }
                             }
-                            Spacer(modifier = Modifier.height(14.dp))
-                        } else {
-                            // Usuario autenticado: Resumen rápido de quién pide
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = Color(0xFF1E293B),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(Icons.Default.Person, contentDescription = null, tint = Color(0xFFF9D423), modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "Pasajero: ${passengerProfile?.nombre ?: "Mi Cuenta"} • Tel: ${passengerProfile?.telefono ?: "Sin número"}",
-                                        color = Color(0xFFE2E8F0),
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(14.dp))
                         }
 
-                        // Rumbo y Referencia (Unificación Recogida + Rumbo para el Conductor)
-                        Text(
-                            text = "¿Hacia dónde vas o referencia de recogida?",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFFF9D423)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "El conductor escuchará esto por voz para ubicarte de inmediato.",
-                            fontSize = 12.sp,
-                            color = Color(0xFF94A3B8)
-                        )
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        val quickChips = listOf(
-                            "📍 Al Mercado Municipal",
-                            "📍 Al Parque Central",
-                            "📍 A la Terminal",
-                            "📍 Al Hospital / Salud",
-                            "📍 Al Cementerio"
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            quickChips.take(2).forEach { chip ->
-                                SuggestionChip(
-                                    onClick = {
-                                        val cleanChip = chip.replace("📍 ", "").trim()
-                                        tripMessage = if (tripMessage.isBlank() || tripMessage.startsWith("Esperando aquí, voy rumbo")) {
-                                            "Esperando aquí, voy rumbo a $cleanChip"
-                                        } else {
-                                            "${tripMessage.trim()}, voy rumbo a $cleanChip"
-                                        }
-                                    },
-                                    label = { Text(chip, fontSize = 11.sp, color = Color.White) },
-                                    colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color(0xFF334155))
-                                )
-                            }
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            quickChips.drop(2).forEach { chip ->
-                                SuggestionChip(
-                                    onClick = {
-                                        val cleanChip = chip.replace("📍 ", "").trim()
-                                        tripMessage = if (tripMessage.isBlank() || tripMessage.startsWith("Esperando aquí, voy rumbo")) {
-                                            "Esperando aquí, voy rumbo a $cleanChip"
-                                        } else {
-                                            "${tripMessage.trim()}, voy rumbo a $cleanChip"
-                                        }
-                                    },
-                                    label = { Text(chip, fontSize = 11.sp, color = Color.White) },
-                                    colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color(0xFF334155))
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        OutlinedTextField(
-                            value = tripMessage,
-                            onValueChange = { tripMessage = it },
-                            label = { Text("Nota de recogida y rumbo", color = Color.LightGray) },
-                            placeholder = { Text("Ej: En Farmacia Galeno, voy al Cementerio", color = Color.Gray) },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFF9D423),
-                                unfocusedBorderColor = Color.Gray,
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White
-                            ),
-                            singleLine = true
-                        )
-
-                        Spacer(modifier = Modifier.height(18.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         val effectivePassengerName = if (repository.isUserLoggedIn) {
                             passengerProfile?.nombre ?: "Pasajero"
@@ -1102,6 +1103,10 @@ fun PassengerMapScreen(
                                             .putString("guest_passenger_name", guestName.trim())
                                             .putString("guest_passenger_phone", guestPhone.trim())
                                             .apply()
+                                    }
+                                    if (tripMessage.isNotBlank()) {
+                                        PassengerDestinationPreferences.saveDestination(context, tripMessage)
+                                        recentDestinations = PassengerDestinationPreferences.getRecentDestinations(context)
                                     }
                                     coroutineScope.launch {
                                         val result = repository.requestBroadcastTrip(
