@@ -31,6 +31,8 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
 2. **Navegación y Menú Lateral (Drawer):**
    - Utilizar componentes de `tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/AppDrawer.kt` (`PassengerDrawerSheet` y `DriverDrawerSheet`).
    - El estado del drawer se controla mediante `rememberDrawerState()` y `CoroutineScope`.
+3. **Orientación Fija Vertical (Anti-Reinicio):**
+   - Para evitar reinicios de ciclo de vida y pérdida de estado al girar el dispositivo físico o si el usuario tiene activado el giro automático, `MainActivity` está bloqueada permanentemente en vertical mediante `android:screenOrientation="portrait"` y `requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT`, además de gestionar `android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize"`.
 
 ---
 

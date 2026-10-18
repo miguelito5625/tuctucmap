@@ -1,6 +1,7 @@
 package com.example.tuctucmap
 
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -31,6 +32,7 @@ class MainActivity : ComponentActivity() {
     private val repository = SupabaseRepository()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
