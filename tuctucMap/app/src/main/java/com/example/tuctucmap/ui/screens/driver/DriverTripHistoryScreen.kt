@@ -48,20 +48,21 @@ fun DriverTripHistoryScreen(
     var trips by remember { mutableStateOf<List<SupabaseRepository.CompletedTripResponseDto>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var selectedFilter by remember { mutableStateOf("all") } // "all", "accepted", "rejected"
+    var selectedDays by remember { mutableIntStateOf(7) } // 1 a 7 días
     var selectedTrip by remember { mutableStateOf<SupabaseRepository.CompletedTripResponseDto?>(null) }
 
-    fun loadTrips() {
+    fun loadTrips(days: Int = selectedDays) {
         coroutineScope.launch {
             isLoading = true
-            repository.getDriverTripHistory().onSuccess {
+            repository.getDriverTripHistory(days = days).onSuccess {
                 trips = it.sortedByDescending { trip -> trip.created_at }
             }
             isLoading = false
         }
     }
 
-    LaunchedEffect(Unit) {
-        loadTrips()
+    LaunchedEffect(selectedDays) {
+        loadTrips(selectedDays)
     }
 
     val dateFormat = remember {
@@ -109,8 +110,8 @@ fun DriverTripHistoryScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Tus viajes aceptados y rechazados",
-                            color = Color.LightGray,
+                            text = "Últimos $selectedDays días (máx. 7 días)",
+                            color = Color(0xFF94A3B8),
                             fontSize = 12.sp
                         )
                     }
@@ -152,11 +153,84 @@ fun DriverTripHistoryScreen(
                 .padding(innerPadding)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // ── Filtros Rápidos ──────────────────────────────────────────
+                // ── Filtro de Rango en Días (1 a 7 días hacia Supabase) ──────────
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = null,
+                                tint = Color(0xFFF9D423),
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = "Periodo (1 a 7 días):",
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(0x33F9D423)
+                        ) {
+                            Text(
+                                text = if (selectedDays == 1) "Solo Hoy" else "$selectedDays días",
+                                color = Color(0xFFF9D423),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        (1..7).forEach { days ->
+                            item {
+                                FilterChip(
+                                    selected = selectedDays == days,
+                                    onClick = {
+                                        if (selectedDays != days) {
+                                            selectedDays = days
+                                        }
+                                    },
+                                    label = {
+                                        Text(if (days == 1) "1 día (Hoy)" else "$days días")
+                                    },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = Color(0xFFF9D423),
+                                        selectedLabelColor = Color(0xFF0F2027),
+                                        containerColor = Color(0x22FFFFFF),
+                                        labelColor = Color.White
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = Color(0x1AFFFFFF), thickness = 1.dp)
+
+                // ── Filtros de Estado ──────────────────────────────────────────
                 LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     item {

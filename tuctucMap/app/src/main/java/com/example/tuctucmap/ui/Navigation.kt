@@ -29,6 +29,7 @@ sealed class Screen {
     data class DriverRouteToPassenger(val trip: com.example.tuctucmap.data.repository.SupabaseRepository.TripInfo) : Screen()
     object PassengerTripHistory : Screen()
     object DriverTripHistory : Screen()
+    object DriverReports : Screen()
     object PassengerProfile : Screen()
     object DriverProfile : Screen()
     object DriverSubscription : Screen()
@@ -282,6 +283,9 @@ fun AppNavigation(
                 onViewHistory = {
                     navigate(Screen.DriverTripHistory)
                 },
+                onViewReports = {
+                    navigate(Screen.DriverReports)
+                },
                 onViewSubscription = {
                     navigate(Screen.DriverSubscription)
                 },
@@ -307,6 +311,14 @@ fun AppNavigation(
         }
         is Screen.DriverTripHistory -> {
             com.example.tuctucmap.ui.screens.driver.DriverTripHistoryScreen(
+                repository = repository,
+                onBack = {
+                    backStack.removeAt(backStack.lastIndex)
+                }
+            )
+        }
+        is Screen.DriverReports -> {
+            DriverReportsScreen(
                 repository = repository,
                 onBack = {
                     backStack.removeAt(backStack.lastIndex)

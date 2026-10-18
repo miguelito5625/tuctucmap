@@ -481,7 +481,7 @@ fun DriverSubscriptionScreen(
                         }
                         if (requests.isNotEmpty()) {
                             Text(
-                                text = "${requests.size} registradas",
+                                text = "Últimas ${requests.size} solicitudes",
                                 fontSize = 12.sp,
                                 color = Color(0xFF94A3B8)
                             )

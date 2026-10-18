@@ -38,6 +38,7 @@ enum class DriverDrawerItem {
     HOME,
     MAP,
     HISTORY,
+    REPORTS,
     SUBSCRIPTIONS,
     PROFILE
 }
@@ -584,6 +585,13 @@ fun DriverDrawerSheet(
                     icon = Icons.Default.History,
                     isSelected = selectedItem == DriverDrawerItem.HISTORY,
                     onClick = { onSelectItem(DriverDrawerItem.HISTORY) }
+                )
+
+                DrawerNavigationItem(
+                    label = "Reportes y Ganancias",
+                    icon = Icons.Default.Assessment,
+                    isSelected = selectedItem == DriverDrawerItem.REPORTS,
+                    onClick = { onSelectItem(DriverDrawerItem.REPORTS) }
                 )
 
                 DrawerNavigationItem(

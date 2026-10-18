@@ -473,7 +473,7 @@ fun DriverSubscriptionExpiredScreen(
                             color = Color.White
                         )
                         Text(
-                            text = "${requests.size} enviadas",
+                            text = "Últimas ${requests.size} solicitudes",
                             fontSize = 12.sp,
                             color = Color(0xFF94A3B8)
                         )

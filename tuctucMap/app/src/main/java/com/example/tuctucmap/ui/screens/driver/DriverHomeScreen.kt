@@ -71,6 +71,7 @@ fun DriverHomeScreen(
     onApprovalRevoked: () -> Unit = {},
     onViewMap: () -> Unit = {},
     onViewHistory: () -> Unit = {},
+    onViewReports: () -> Unit = {},
     onViewSubscription: () -> Unit = {},
     onViewProfile: () -> Unit = {},
     onNavigateToRoute: (SupabaseRepository.TripInfo) -> Unit = {}
@@ -137,12 +138,14 @@ fun DriverHomeScreen(
     var driverProfile by remember { mutableStateOf<Driver?>(null) }
     var appConfig by remember { mutableStateOf(SupabaseRepository.cachedAppConfig) }
 
-    // Contador ligero de viajes completados hoy (filtrado en servidor)
+    // Contador ligero de viajes completados hoy y ganancias acumuladas (filtrado en servidor)
     var completedTripsToday by remember { mutableIntStateOf(0) }
+    var todayEarnings by remember { mutableDoubleStateOf(0.0) }
     fun refreshTripStats() {
         coroutineScope.launch {
-            repository.getDriverTodayTripsCount().onSuccess { count ->
-                completedTripsToday = count
+            repository.getDriverTodaySummary().onSuccess { summary ->
+                completedTripsToday = summary.count
+                todayEarnings = summary.totalEarnings
             }
         }
     }
@@ -405,6 +408,7 @@ fun DriverHomeScreen(
                         DriverDrawerItem.HOME -> Unit
                         DriverDrawerItem.MAP -> Unit
                         DriverDrawerItem.HISTORY -> onViewHistory()
+                        DriverDrawerItem.REPORTS -> onViewReports()
                         DriverDrawerItem.SUBSCRIPTIONS -> onViewSubscription()
                         DriverDrawerItem.PROFILE -> onViewProfile()
                     }
@@ -952,7 +956,45 @@ fun DriverHomeScreen(
                             }
                         }
 
-                        // KPI 2: Señal GPS
+                        // KPI 2: Ganancias Hoy (al lado de viajes de hoy)
+                        Surface(
+                            onClick = onViewReports,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color(0xFF152534),
+                            border = BorderStroke(1.dp, Color(0x334ADE80))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(vertical = 12.dp, horizontal = 8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Q${"%.2f".format(Locale.US, todayEarnings)}",
+                                    color = Color(0xFF4ADE80),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "Ganancias hoy",
+                                    color = Color(0xFF94A3B8),
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // KPI 3: Señal GPS
                         val gpsReady = currentLocation != null
                         Surface(
                             modifier = Modifier.weight(1f),
@@ -982,7 +1024,7 @@ fun DriverHomeScreen(
                             }
                         }
 
-                        // KPI 3: Días restantes de Suscripción
+                        // KPI 4: Días restantes de Suscripción
                         Surface(
                             onClick = { onViewSubscription() },
                             modifier = Modifier.weight(1f),
@@ -1076,9 +1118,9 @@ fun DriverHomeScreen(
                             }
                         }
 
-                        // Acceso 2: Mi Suscripción
+                        // Acceso 2: Reportes y Ganancias
                         Surface(
-                            onClick = onViewSubscription,
+                            onClick = onViewReports,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(16.dp),
                             color = Color(0xFF152534),
@@ -1096,9 +1138,61 @@ fun DriverHomeScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
-                                        Icons.Default.CardMembership,
+                                        Icons.Default.Assessment,
                                         contentDescription = null,
                                         tint = Color(0xFF4ADE80),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = "Reportes",
+                                        color = Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        text = "Resumen de cobros",
+                                        color = Color(0xFF94A3B8),
+                                        fontSize = 11.sp,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Acceso 3: Mi Suscripción
+                        Surface(
+                            onClick = onViewSubscription,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color(0xFF152534),
+                            border = BorderStroke(1.dp, Color(0x2638BDF8))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0x2238BDF8)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.CardMembership,
+                                        contentDescription = null,
+                                        tint = Color(0xFF38BDF8),
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
@@ -1113,6 +1207,51 @@ fun DriverHomeScreen(
                                     )
                                     Text(
                                         text = "Planes y pagos",
+                                        color = Color(0xFF94A3B8),
+                                        fontSize = 11.sp,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
+
+                        // Acceso 4: Ver Mapa
+                        Surface(
+                            onClick = onViewMap,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color(0xFF152534),
+                            border = BorderStroke(1.dp, Color(0x26A78BFA))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0x22A78BFA)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.Map,
+                                        contentDescription = null,
+                                        tint = Color(0xFFA78BFA),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = "Ver Mapa",
+                                        color = Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        text = "Mapa completo",
                                         color = Color(0xFF94A3B8),
                                         fontSize = 11.sp,
                                         maxLines = 1

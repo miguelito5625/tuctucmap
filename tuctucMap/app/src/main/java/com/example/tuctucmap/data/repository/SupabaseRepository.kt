@@ -11,6 +11,7 @@ import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
+import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.realtime.realtime
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
@@ -168,14 +169,17 @@ class SupabaseRepository {
 
     /**
      * Obtiene el historial de solicitudes de renovación del conductor actual ordenadas por fecha reciente.
+     * Limitado a un máximo de 25 solicitudes para optimizar ancho de banda y rendimiento.
      */
-    suspend fun getDriverRenewalRequests(): Result<List<com.example.tuctucmap.data.model.SubscriptionRenewalRequest>> {
+    suspend fun getDriverRenewalRequests(limit: Long = 25): Result<List<com.example.tuctucmap.data.model.SubscriptionRenewalRequest>> {
         return try {
             val uid = currentUserUid ?: return Result.failure(Exception("No hay sesión activa"))
             val list = supabase.postgrest["subscription_payment_requests"].select {
                 filter { eq("driver_id", uid) }
+                order("created_at", Order.DESCENDING)
+                limit(limit)
             }.decodeList<com.example.tuctucmap.data.model.SubscriptionRenewalRequest>()
-            Result.success(list.sortedByDescending { it.createdAtEpoch })
+            Result.success(list.sortedByDescending { it.createdAtEpoch }.take(limit.toInt()))
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
@@ -525,14 +529,22 @@ class SupabaseRepository {
             get() = !passenger_id.isNullOrBlank()
     }
 
+    data class DriverTodaySummary(
+        val count: Int = 0,
+        val totalEarnings: Double = 0.0
+    )
+
     @kotlinx.serialization.Serializable
-    private data class TripIdOnlyDto(val id: String = "")
+    private data class TripSummaryDto(
+        val id: String = "",
+        val fare: Double? = null
+    )
 
     /**
-     * Consulta ligera para contar únicamente los viajes completados hoy por el conductor,
-     * evitando descargar todo el historial histórico en cada apertura de pantalla.
+     * Consulta ligera para obtener el resumen de la jornada de hoy (viajes completados y ganancias acumuladas),
+     * filtrada exclusivamente para el conductor autenticado.
      */
-    suspend fun getDriverTodayTripsCount(): Result<Int> {
+    suspend fun getDriverTodaySummary(): Result<DriverTodaySummary> {
         return try {
             val uid = currentUserUid ?: return Result.failure(Exception("No user"))
             val cal = java.util.Calendar.getInstance().apply {
@@ -552,11 +564,22 @@ class SupabaseRepository {
                     eq("status", "completed")
                     gte("created_at", startOfTodayUtc)
                 }
-            }.decodeList<TripIdOnlyDto>()
-            Result.success(todayTrips.size)
+            }.decodeList<TripSummaryDto>()
+
+            val count = todayTrips.size
+            val earnings = todayTrips.sumOf { it.fare ?: 0.0 }
+            Result.success(DriverTodaySummary(count = count, totalEarnings = earnings))
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    /**
+     * Consulta ligera para contar únicamente los viajes completados hoy por el conductor,
+     * evitando descargar todo el historial histórico en cada apertura de pantalla.
+     */
+    suspend fun getDriverTodayTripsCount(): Result<Int> {
+        return getDriverTodaySummary().map { it.count }
     }
 
     // History Trips (Supabase)
@@ -659,11 +682,100 @@ class SupabaseRepository {
         }
     }
 
-    suspend fun getDriverTripHistory(): Result<List<CompletedTripResponseDto>> {
+    /**
+     * Obtiene el historial de viajes del conductor autenticado limitado entre 1 y 7 días (por defecto 7),
+     * reduciendo drásticamente la transferencia de datos entre la base de datos y la app móvil.
+     */
+    suspend fun getDriverTripHistory(days: Int = 7): Result<List<CompletedTripResponseDto>> {
         return try {
             val uid = currentUserUid ?: return Result.failure(Exception("No user"))
+            val clampedDays = days.coerceIn(1, 7)
+            val cal = java.util.Calendar.getInstance().apply {
+                add(java.util.Calendar.DAY_OF_YEAR, -clampedDays)
+                set(java.util.Calendar.HOUR_OF_DAY, 0)
+                set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }
+            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US).apply {
+                timeZone = java.util.TimeZone.getTimeZone("UTC")
+            }
+            val startUtc = sdf.format(cal.time)
+
             val trips = supabase.postgrest["trips"].select {
-                filter { eq("driver_id", uid) }
+                filter {
+                    eq("driver_id", uid)
+                    gte("created_at", startUtc)
+                }
+                order("created_at", Order.DESCENDING)
+            }.decodeList<CompletedTripResponseDto>()
+
+            val passengerIds = trips.mapNotNull { it.passenger_id }.filter { it.isNotBlank() }.distinct()
+            val passengersList = if (passengerIds.isNotEmpty()) {
+                try {
+                    supabase.postgrest["profiles"].select {
+                        filter { isIn("id", passengerIds) }
+                    }.decodeList<Passenger>()
+                } catch (_: Exception) {
+                    emptyList()
+                }
+            } else {
+                emptyList()
+            }
+            val passengerMap = passengersList.associateBy({ it.id }, { it.nombre })
+            val passengerPhoneMap = passengersList.associateBy({ it.id }, { it.telefono })
+
+            trips.forEach { trip ->
+                val directName = trip.passenger_name?.trim()
+                val fallbackName = trip.passenger_id?.let { passengerMap[it] }
+                trip.passenger_name = when {
+                    !directName.isNullOrBlank() && directName != "Desconocido" -> directName
+                    !fallbackName.isNullOrBlank() -> fallbackName
+                    else -> "Pasajero"
+                }
+
+                val directPhone = trip.passenger_phone?.trim()
+                val fallbackPhone = trip.passenger_id?.let { passengerPhoneMap[it] }
+                trip.passenger_phone = when {
+                    !directPhone.isNullOrBlank() -> directPhone
+                    !fallbackPhone.isNullOrBlank() -> fallbackPhone
+                    else -> ""
+                }
+            }
+
+            Result.success(trips)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Descarga exclusivamente 1 semana de datos de viajes completados para el conductor autenticado.
+     * Los filtros posteriores (por día, rango, etc.) se realizan en memoria localmente.
+     */
+    suspend fun getDriverWeeklyReportData(): Result<List<CompletedTripResponseDto>> {
+        return try {
+            val uid = currentUserUid ?: return Result.failure(Exception("No user"))
+            val cal = java.util.Calendar.getInstance().apply {
+                add(java.util.Calendar.DAY_OF_YEAR, -7)
+                set(java.util.Calendar.HOUR_OF_DAY, 0)
+                set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }
+            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US).apply {
+                timeZone = java.util.TimeZone.getTimeZone("UTC")
+            }
+            val sevenDaysAgoUtc = sdf.format(cal.time)
+
+            val trips = supabase.postgrest["trips"].select {
+                filter {
+                    eq("driver_id", uid)
+                    eq("status", "completed")
+                    gte("created_at", sevenDaysAgoUtc)
+                }
+                order("created_at", Order.DESCENDING)
             }.decodeList<CompletedTripResponseDto>()
 
             val passengerIds = trips.mapNotNull { it.passenger_id }.filter { it.isNotBlank() }.distinct()
