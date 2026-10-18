@@ -102,6 +102,8 @@ Estructura obligatoria de entrega:
 *(O simplemente la versión `1.0.X`)*
 
 #### B. Notas de la versión (Formato Play Store)
+> **Límite Estricto de Google Play:** Máximo 500 caracteres totales por idioma (incluyendo etiquetas `<es-419>`). Redactar siempre notas concisas entre 300 y 450 caracteres.
+
 ```text
 <es-419>
 • [Novedad principal 1: ej. nuevo icono, animación o pantalla]
