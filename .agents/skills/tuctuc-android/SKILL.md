@@ -36,6 +36,10 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
 4. **Formulario de Solicitud de TucTuc y Sugerencias de Destino (`PassengerDestinationPreferences`):**
    - En `PassengerMapScreen`, el campo de destino está unificado en el mismo formulario/tarjeta de datos de contacto (nombre y teléfono) con label `"Destino"`.
    - `PassengerDestinationPreferences` persiste en `SharedPreferences` (`tuctuc_prefs`) los últimos 5 destinos ingresados por el pasajero, mostrándolos como chips interactivos. Si es la primera vez que se usa la app, no se muestran datos de ejemplo.
+5. **Exclusividad para Smartphones (Restricción de Tablets en Google Play):**
+   - `AndroidManifest.xml` restringe la compatibilidad a teléfonos inteligentes mediante:
+     - `<uses-feature android:name="android.hardware.telephony" android:required="true" />` para filtrar dispositivos sin módem celular (tablets Wi-Fi, Chromebooks).
+     - `<supports-screens>` con `largeScreens="false"`, `xlargeScreens="false"` y `largestWidthLimitDp="600"` para filtrar tablets celulares de pantallas grandes.
 
 ---
 

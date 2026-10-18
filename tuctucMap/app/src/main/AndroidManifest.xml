@@ -32,6 +32,22 @@
         </intent>
     </queries>
 
+    <!-- Restricción exclusiva para smartphones: requiere módulo de telefonía celular -->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="true" />
+
+    <!-- Compatibilidad de pantallas: restringe tablets y pantallas de gran formato -->
+    <supports-screens
+        android:smallScreens="true"
+        android:normalScreens="true"
+        android:largeScreens="false"
+        android:xlargeScreens="false"
+        android:requiresSmallestWidthDp="320"
+        android:compatibleWidthLimitDp="480"
+        android:largestWidthLimitDp="600"
+        tools:replace="android:largeScreens" />
+
     <application
         android:name=".TucTucApplication"
         android:allowBackup="false"
