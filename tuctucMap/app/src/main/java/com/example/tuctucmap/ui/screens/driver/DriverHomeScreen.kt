@@ -50,6 +50,7 @@ import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.service.LocationTrackingService
 import com.example.tuctucmap.ui.components.DriverDrawerItem
 import com.example.tuctucmap.ui.components.DriverDrawerSheet
+import com.example.tuctucmap.ui.util.ExternalNavigationUtils
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -1321,6 +1322,7 @@ fun DriverHomeScreen(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
+                        // Fila 1: Navegación en App y Llamada directa
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1336,7 +1338,7 @@ fun DriverHomeScreen(
                             ) {
                                 Icon(Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("Navegar al Pasajero", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("Navegar en App", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
 
                             if (activeAcceptedTrip!!.passengerPhone.isNotBlank()) {
@@ -1354,28 +1356,70 @@ fun DriverHomeScreen(
                                     Text("Llamar", fontSize = 12.sp, color = Color(0xFFF9D423))
                                 }
                             }
+                        }
 
-                            // Botón de fallback externo a Google Maps
-                            IconButton(
+                        // Fila 2: Navegación Externa en Google Maps y Waze
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Google Maps
+                            Button(
                                 onClick = {
-                                    try {
-                                        val uri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${activeAcceptedTrip!!.passengerLat},${activeAcceptedTrip!!.passengerLon}")
-                                        val mapIntent = Intent(Intent.ACTION_VIEW, uri)
-                                        context.startActivity(mapIntent)
-                                    } catch (_: Exception) {
-                                        Toast.makeText(context, "No se pudo abrir app externa de mapas", Toast.LENGTH_SHORT).show()
-                                    }
+                                    ExternalNavigationUtils.openGoogleMaps(
+                                        context = context,
+                                        lat = activeAcceptedTrip!!.passengerLat,
+                                        lon = activeAcceptedTrip!!.passengerLon
+                                    )
                                 },
                                 modifier = Modifier
-                                    .size(46.dp)
-                                    .background(Color(0xFF1E293B), RoundedCornerShape(10.dp))
+                                    .weight(1f)
+                                    .height(42.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF1A73E8),
+                                    contentColor = Color.White
+                                ),
+                                contentPadding = PaddingValues(horizontal = 6.dp)
                             ) {
                                 Icon(
-                                    Icons.Default.Map,
-                                    contentDescription = "Abrir Google Maps",
-                                    tint = Color(0xFF94A3B8),
-                                    modifier = Modifier.size(18.dp)
+                                    imageVector = Icons.Default.Navigation,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(15.dp),
+                                    tint = Color.White
                                 )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Google Maps", fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                            }
+
+                            // Waze
+                            Button(
+                                onClick = {
+                                    ExternalNavigationUtils.openWaze(
+                                        context = context,
+                                        lat = activeAcceptedTrip!!.passengerLat,
+                                        lon = activeAcceptedTrip!!.passengerLon
+                                    )
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(42.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF00D2FF),
+                                    contentColor = Color(0xFF0F172A)
+                                ),
+                                contentPadding = PaddingValues(horizontal = 6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.NearMe,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(15.dp),
+                                    tint = Color(0xFF0F172A)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Waze", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
                             }
                         }
 

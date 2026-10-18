@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tuctucmap.data.repository.SupabaseRepository
+import com.example.tuctucmap.ui.util.ExternalNavigationUtils
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -265,7 +266,10 @@ fun DriverTripHistoryScreen(
                                 trip = trip,
                                 formattedDate = parseDate(trip.created_at),
                                 onOpenMaps = {
-                                    openGoogleMaps(context, trip.passenger_lat, trip.passenger_lon)
+                                    ExternalNavigationUtils.openGoogleMaps(context, trip.passenger_lat, trip.passenger_lon)
+                                },
+                                onOpenWaze = {
+                                    ExternalNavigationUtils.openWaze(context, trip.passenger_lat, trip.passenger_lon)
                                 },
                                 onWhatsApp = {
                                     openWhatsApp(context, trip.passenger_phone ?: "")
@@ -388,16 +392,32 @@ fun DriverTripHistoryScreen(
                             // Botón Google Maps
                             Button(
                                 onClick = {
-                                    openGoogleMaps(context, trip.passenger_lat, trip.passenger_lon)
+                                    ExternalNavigationUtils.openGoogleMaps(context, trip.passenger_lat, trip.passenger_lon)
                                     selectedTrip = null
                                 },
-                                modifier = Modifier.fillMaxWidth().height(48.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                                modifier = Modifier.fillMaxWidth().height(46.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A73E8)),
                                 shape = RoundedCornerShape(10.dp)
                             ) {
                                 Icon(imageVector = Icons.Default.Navigation, contentDescription = null, tint = Color.White)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Trazar Ruta (Google Maps)", color = Color.White, fontWeight = FontWeight.Bold)
+                                Text("Trazar Ruta con Google Maps", color = Color.White, fontWeight = FontWeight.Bold)
+                            }
+
+                            // Botón Waze
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Button(
+                                onClick = {
+                                    ExternalNavigationUtils.openWaze(context, trip.passenger_lat, trip.passenger_lon)
+                                    selectedTrip = null
+                                },
+                                modifier = Modifier.fillMaxWidth().height(46.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00D2FF), contentColor = Color(0xFF0F172A)),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Icon(imageVector = Icons.Default.NearMe, contentDescription = null, tint = Color(0xFF0F172A))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Trazar Ruta con Waze", color = Color(0xFF0F172A), fontWeight = FontWeight.ExtraBold)
                             }
 
                             // Botón WhatsApp
@@ -435,6 +455,7 @@ private fun DriverTripCard(
     trip: SupabaseRepository.CompletedTripResponseDto,
     formattedDate: String,
     onOpenMaps: () -> Unit,
+    onOpenWaze: () -> Unit,
     onWhatsApp: () -> Unit,
     onClick: () -> Unit
 ) {
@@ -677,36 +698,65 @@ private fun DriverTripCard(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // ── Botones de acción directos ─────────────────────────────────
+            // ── Botones de acción directos (Google Maps, Waze y WhatsApp) ──
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Botón principal: Abrir Ruta en Google Maps
+                // Botón Google Maps
                 Button(
                     onClick = onOpenMaps,
                     modifier = Modifier
                         .weight(1f)
                         .height(42.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isAccepted) Color(0xFF1976D2) else Color(0xFF334155),
+                        containerColor = if (isAccepted) Color(0xFF1A73E8) else Color(0xFF334155),
                         contentColor = Color.White
                     ),
                     shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 8.dp)
+                    contentPadding = PaddingValues(horizontal = 6.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Navigation,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(15.dp),
                         tint = Color.White
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Abrir en Maps",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
+                        text = "Maps",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1
+                    )
+                }
+
+                // Botón Waze
+                Button(
+                    onClick = onOpenWaze,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(42.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF00D2FF),
+                        contentColor = Color(0xFF0F172A)
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.NearMe,
+                        contentDescription = null,
+                        modifier = Modifier.size(15.dp),
+                        tint = Color(0xFF0F172A)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Waze",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        maxLines = 1
                     )
                 }
 

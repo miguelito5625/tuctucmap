@@ -36,6 +36,7 @@ import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.data.service.OsrmRoutingService
 import com.example.tuctucmap.service.LocationTrackingService
 import com.example.tuctucmap.ui.util.AppTileSource
+import com.example.tuctucmap.ui.util.ExternalNavigationUtils
 import com.example.tuctucmap.ui.util.MarkerIconUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -496,28 +497,78 @@ fun DriverRouteToPassengerScreen(
                         )
                     }
 
-                    // Opción alternativa discreta: Abrir en Google Maps por si el conductor lo desea
-                    Spacer(modifier = Modifier.height(4.dp))
+                    // ── BOTONES DE NAVEGACIÓN EXTERNA (GOOGLE MAPS Y WAZE) ───────────
+                    Spacer(modifier = Modifier.height(10.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(
+                        // Botón Google Maps
+                        Button(
                             onClick = {
-                                try {
-                                    val uri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${trip.passengerLat},${trip.passengerLon}")
-                                    val mapIntent = Intent(Intent.ACTION_VIEW, uri)
-                                    context.startActivity(mapIntent)
-                                } catch (_: Exception) {
-                                    Toast.makeText(context, "No se pudo abrir app externa de mapas", Toast.LENGTH_SHORT).show()
-                                }
+                                ExternalNavigationUtils.openGoogleMaps(
+                                    context = context,
+                                    lat = trip.passengerLat,
+                                    lon = trip.passengerLon
+                                )
                             },
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF1A73E8),
+                                contentColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(horizontal = 6.dp)
                         ) {
+                            Icon(
+                                imageVector = Icons.Default.Navigation,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "¿Abrir en Google Maps externo?",
-                                color = Color(0xFF94A3B8),
-                                fontSize = 11.sp
+                                text = "Google Maps",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                maxLines = 1
+                            )
+                        }
+
+                        // Botón Waze
+                        Button(
+                            onClick = {
+                                ExternalNavigationUtils.openWaze(
+                                    context = context,
+                                    lat = trip.passengerLat,
+                                    lon = trip.passengerLon
+                                )
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF00D2FF),
+                                contentColor = Color(0xFF0F172A)
+                            ),
+                            contentPadding = PaddingValues(horizontal = 6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.NearMe,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = Color(0xFF0F172A)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Waze",
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 13.sp,
+                                maxLines = 1
                             )
                         }
                     }
