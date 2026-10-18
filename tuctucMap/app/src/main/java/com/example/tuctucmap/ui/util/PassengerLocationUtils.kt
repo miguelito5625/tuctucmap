@@ -95,52 +95,58 @@ class PassengerLocationOverlay(
         val frameIndex = ((now / 100L) % frames.size).toInt()
         val frameBitmap = frames[frameIndex]
 
-        // Anclar el personaje de modo que sus pies/patitas coincidan con la coordenada GPS (py)
-        val drawLeft = px - (frameBitmap.width / 2f)
-        val drawTop = py - (frameBitmap.height * 0.88f)
+        if (!frameBitmap.isRecycled) {
+            // Anclar el personaje de modo que sus pies/patitas coincidan con la coordenada GPS (py)
+            val drawLeft = px - (frameBitmap.width / 2f)
+            val drawTop = py - (frameBitmap.height * 0.88f)
 
-        canvas.drawBitmap(frameBitmap, drawLeft, drawTop, framePaint)
+            canvas.drawBitmap(frameBitmap, drawLeft, drawTop, framePaint)
+        }
 
-        // 4. Programar el siguiente fotograma para mantener la animación continua (~22 FPS)
-        mapView.postInvalidateDelayed(45L)
+        // 4. Programar el siguiente fotograma con cadencia eficiente y suave (~12.5 FPS)
+        mapView.postInvalidateDelayed(80L)
     }
 
     override fun onDetach(mapView: MapView) {
         super.onDetach(mapView)
-        // Limpieza segura de memoria
-        frames.forEach {
-            if (!it.isRecycled) {
-                it.recycle()
-            }
-        }
+        // Nota: Los fotogramas se mantienen en la caché en memoria del objeto Renderer
+        // para evitar bloqueos del RenderThread o excepciones por uso de bitmaps reciclados.
     }
 }
 
 /**
  * Generador de fotogramas para el nuevo Quetzal animado saludando continuamente.
+ * Incluye caché estática en memoria para cero impacto en la UI durante recomposiciones.
  */
 object QuetzalCharacterRenderer {
 
+    @Volatile
+    private var cachedFrames: List<Bitmap>? = null
+
     fun generateWavingFrames(context: Context, frameCount: Int = 8, sizeDp: Int = 72): List<Bitmap> {
-        val density = context.resources.displayMetrics.density
-        val sizePx = (sizeDp * density).toInt()
+        cachedFrames?.let { return it }
 
-        // Decodificación del recurso PNG transparente en alta definición
-        val options = BitmapFactory.Options().apply { inScaled = false }
-        val baseBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.ic_quetzal_passenger, options)
-            ?: return PassengerCharacterRenderer.generateWavingFrames(context, frameCount, sizeDp)
+        synchronized(this) {
+            cachedFrames?.let { return it }
 
-        val frames = (0 until frameCount).map { i ->
-            val phase = i.toFloat() / frameCount.toFloat()
-            createQuetzalFrame(baseBitmap, phase, sizePx, density)
+            val density = context.resources.displayMetrics.density
+            val sizePx = (sizeDp * density).toInt()
+
+            val baseBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.ic_quetzal_passenger)
+                ?: return PassengerCharacterRenderer.generateWavingFrames(context, frameCount, sizeDp)
+
+            val frames = (0 until frameCount).map { i ->
+                val phase = i.toFloat() / frameCount.toFloat()
+                createQuetzalFrame(baseBitmap, phase, sizePx, density)
+            }
+
+            if (!baseBitmap.isRecycled) {
+                baseBitmap.recycle()
+            }
+
+            cachedFrames = frames
+            return frames
         }
-
-        // Liberar el mapa de bits base una vez renderizados los fotogramas en caché
-        if (!baseBitmap.isRecycled) {
-            baseBitmap.recycle()
-        }
-
-        return frames
     }
 
     private fun createQuetzalFrame(baseBitmap: Bitmap, phase: Float, sizePx: Int, density: Float): Bitmap {
@@ -213,13 +219,25 @@ object QuetzalCharacterRenderer {
  */
 object PassengerCharacterRenderer {
 
-    fun generateWavingFrames(context: Context, frameCount: Int = 8, sizeDp: Int = 66): List<Bitmap> {
-        val density = context.resources.displayMetrics.density
-        val sizePx = (sizeDp * density).toInt()
+    @Volatile
+    private var cachedFrames: List<Bitmap>? = null
 
-        return (0 until frameCount).map { i ->
-            val phase = i.toFloat() / frameCount.toFloat()
-            createPersonFrame(phase, sizePx, density)
+    fun generateWavingFrames(context: Context, frameCount: Int = 8, sizeDp: Int = 66): List<Bitmap> {
+        cachedFrames?.let { return it }
+
+        synchronized(this) {
+            cachedFrames?.let { return it }
+
+            val density = context.resources.displayMetrics.density
+            val sizePx = (sizeDp * density).toInt()
+
+            val frames = (0 until frameCount).map { i ->
+                val phase = i.toFloat() / frameCount.toFloat()
+                createPersonFrame(phase, sizePx, density)
+            }
+
+            cachedFrames = frames
+            return frames
         }
     }
 
