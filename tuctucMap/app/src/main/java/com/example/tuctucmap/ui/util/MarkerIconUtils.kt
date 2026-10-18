@@ -169,5 +169,56 @@ object MarkerIconUtils {
             return result
         }
     }
+
+    @Volatile
+    private var cachedAssignedTucTucIcon: Drawable? = null
+
+    /**
+     * Devuelve una versión destacada del TucTuc con halo verde esmeralda / cian brillante
+     * para identificar inequívocamente al conductor que aceptó el viaje del pasajero.
+     */
+    fun getAssignedDriverTucTucIcon(context: Context): Drawable {
+        cachedAssignedTucTucIcon?.let { return it }
+
+        synchronized(this) {
+            cachedAssignedTucTucIcon?.let { return it }
+
+            val baseDrawable = getTucTucIcon(context)
+            val processed = if (baseDrawable is BitmapDrawable) {
+                val src = baseDrawable.bitmap
+                val density = context.resources.displayMetrics.density
+                val haloPadding = (8 * density).toInt()
+                val w = src.width + haloPadding * 2
+                val h = src.height + haloPadding * 2
+                val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+                val canvas = android.graphics.Canvas(bitmap)
+
+                // Halo circular cian neón translúcido
+                val haloPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                    color = android.graphics.Color.parseColor("#4D00E5FF")
+                    style = android.graphics.Paint.Style.FILL
+                }
+                canvas.drawCircle(w / 2f, h / 2f, (w / 2f) - (2 * density), haloPaint)
+
+                // Anillo exterior brillante cian
+                val ringPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                    color = android.graphics.Color.parseColor("#00E5FF")
+                    style = android.graphics.Paint.Style.STROKE
+                    strokeWidth = 3f * density
+                }
+                canvas.drawCircle(w / 2f, h / 2f, (w / 2f) - (3 * density), ringPaint)
+
+                // Dibujar el icono del TucTuc centrado
+                canvas.drawBitmap(src, haloPadding.toFloat(), haloPadding.toFloat(), null)
+                BitmapDrawable(context.resources, bitmap)
+            } else {
+                baseDrawable
+            }
+
+            cachedAssignedTucTucIcon = processed
+            return processed
+        }
+    }
 }
+
 

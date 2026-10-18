@@ -34,9 +34,11 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Route
 import androidx.compose.material3.*
 import com.example.tuctucmap.ui.components.PassengerDrawerItem
 import com.example.tuctucmap.ui.components.PassengerDrawerSheet
@@ -56,15 +58,20 @@ import androidx.core.content.ContextCompat
 import com.example.tuctucmap.data.PassengerDestinationPreferences
 import com.example.tuctucmap.data.model.DriverLocation
 import com.example.tuctucmap.data.repository.SupabaseRepository
+import com.example.tuctucmap.data.service.OsrmRoutingService
 import com.example.tuctucmap.ui.util.AppTileSource
 import com.example.tuctucmap.ui.util.PassengerLocationOverlay
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import android.animation.ValueAnimator
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
@@ -88,12 +95,15 @@ fun PassengerMapScreen(
     val context = LocalContext.current
     val rawDriverLocations by repository.observeActiveLocations().collectAsState(initial = emptyList())
 
-    // Obtener los iconos de Tuc Tuc (activo y en pausa) con caché optimizada en memoria
+    // Obtener los iconos de Tuc Tuc (activo, en pausa y asignado a mi viaje) con caché optimizada en memoria
     val tucTucIcon = remember(context) {
         com.example.tuctucmap.ui.util.MarkerIconUtils.getTucTucIcon(context)
     }
     val pausedTucTucIcon = remember(context) {
         com.example.tuctucmap.ui.util.MarkerIconUtils.getPausedTucTucIcon(context)
+    }
+    val assignedTucTucIcon = remember(context) {
+        com.example.tuctucmap.ui.util.MarkerIconUtils.getAssignedDriverTucTucIcon(context)
     }
 
     var hasLocationPermission by remember {
@@ -174,6 +184,12 @@ fun PassengerMapScreen(
     val driverMarkers = remember { mutableMapOf<String, Marker>() }
     val coroutineScope = rememberCoroutineScope()
 
+    // ── Estado de la ruta OSRM en tiempo real entre el conductor asignado y el pasajero ──
+    var passengerRouteSummary by remember { mutableStateOf<OsrmRoutingService.RouteResult?>(null) }
+    var routePointsToPassenger by remember { mutableStateOf<List<GeoPoint>>(emptyList()) }
+    var routePolylineInstance by remember { mutableStateOf<Polyline?>(null) }
+    var hasZoomedToTripRoute by remember { mutableStateOf(false) }
+
     // Observe active trip status
     LaunchedEffect(activeTripId) {
         activeTripId?.let { tid ->
@@ -185,6 +201,82 @@ fun PassengerMapScreen(
                 } else {
                     activeTrip = trip
                     sharedPrefs.edit().putString("active_passenger_trip_id", tid).apply()
+                }
+            }
+        }
+    }
+
+    // Cálculo reactivo de la ruta OSRM desde el conductor asignado hacia el pasajero
+    val assignedDriverLocation = remember(rawDriverLocations, activeTrip?.driverId) {
+        if (activeTrip != null && activeTrip?.status == "accepted" && activeTrip?.driverId?.isNotBlank() == true) {
+            rawDriverLocations.find { it.uid == activeTrip?.driverId }
+        } else null
+    }
+
+    LaunchedEffect(activeTrip?.driverId, activeTrip?.status, assignedDriverLocation?.latitud, assignedDriverLocation?.longitud) {
+        val trip = activeTrip
+        val driverLoc = assignedDriverLocation
+        if (trip != null && trip.status == "accepted" && driverLoc != null) {
+            val passengerLat = if (trip.passengerLat != 0.0) trip.passengerLat else (myLocationOverlayInstance?.myLocation?.latitude ?: 0.0)
+            val passengerLon = if (trip.passengerLon != 0.0) trip.passengerLon else (myLocationOverlayInstance?.myLocation?.longitude ?: 0.0)
+
+            if (passengerLat != 0.0 && passengerLon != 0.0 && driverLoc.latitud != 0.0 && driverLoc.longitud != 0.0) {
+                val routeResult = withContext(Dispatchers.IO) {
+                    OsrmRoutingService.getRoute(
+                        startLat = driverLoc.latitud,
+                        startLon = driverLoc.longitud,
+                        endLat = passengerLat,
+                        endLon = passengerLon
+                    )
+                }
+                passengerRouteSummary = routeResult
+                routePointsToPassenger = routeResult.points
+            }
+        } else {
+            passengerRouteSummary = null
+            routePointsToPassenger = emptyList()
+            hasZoomedToTripRoute = false
+        }
+    }
+
+    // Dibujar y sincronizar la polilínea en el MapView del pasajero
+    LaunchedEffect(routePointsToPassenger, mapViewInstance) {
+        val mv = mapViewInstance ?: return@LaunchedEffect
+        routePolylineInstance?.let { oldPoly ->
+            mv.overlays.remove(oldPoly)
+            routePolylineInstance = null
+        }
+
+        if (routePointsToPassenger.isNotEmpty()) {
+            val polyline = Polyline(mv).apply {
+                outlinePaint.color = android.graphics.Color.parseColor("#00E5FF") // Cian neón de alta visibilidad
+                outlinePaint.strokeWidth = 14f
+                outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
+                outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
+                outlinePaint.isAntiAlias = true
+                setPoints(routePointsToPassenger)
+            }
+            mv.overlays.add(0, polyline)
+            routePolylineInstance = polyline
+            mv.invalidate()
+
+            if (!hasZoomedToTripRoute) {
+                try {
+                    val box = BoundingBox.fromGeoPoints(routePointsToPassenger)
+                    mv.zoomToBoundingBox(box.increaseByScale(1.35f), true)
+                    hasZoomedToTripRoute = true
+                } catch (_: Exception) {}
+            }
+        } else {
+            mv.invalidate()
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            mapViewInstance?.let { mv ->
+                routePolylineInstance?.let { poly ->
+                    mv.overlays.remove(poly)
                 }
             }
         }
@@ -415,17 +507,29 @@ fun PassengerMapScreen(
                         rawDriverLocations.forEach { driverLoc ->
                             val newGeoPoint = GeoPoint(driverLoc.latitud, driverLoc.longitud)
                             var marker = driverMarkers[driverLoc.uid]
+                            val isAssignedToMyTrip = activeTrip != null && activeTrip?.status == "accepted" && activeTrip?.driverId == driverLoc.uid
                             val isAvail = driverLoc.isAvailable
-                            val targetIcon = if (isAvail) tucTucIcon else pausedTucTucIcon
-                            val targetAlpha = if (isAvail) 1.0f else 0.65f
-                            val statusTag = if (isAvail) "🟢 DISPONIBLE" else "🟠 EN PAUSA"
+
+                            // Para el pasajero que solicitó el viaje se destaca a su conductor; para otros pasajeros se mantiene el estado ocupado/en pausa
+                            val targetIcon = when {
+                                isAssignedToMyTrip -> assignedTucTucIcon
+                                isAvail -> tucTucIcon
+                                else -> pausedTucTucIcon
+                            }
+                            val targetAlpha = if (isAssignedToMyTrip || isAvail) 1.0f else 0.65f
+                            val statusTag = when {
+                                isAssignedToMyTrip -> "🛺 EN CAMINO A RECOGERTE"
+                                isAvail -> "🟢 DISPONIBLE"
+                                else -> "🟠 OCUPADO / EN PAUSA"
+                            }
+                            val markerTitle = if (isAssignedToMyTrip) "${driverLoc.nombre} (Tu TucTuc)" else driverLoc.nombre
 
                             if (marker == null) {
                                 val startLat = newGeoPoint.latitude + 0.002
                                 marker = Marker(mapView).apply {
                                     position = GeoPoint(startLat, newGeoPoint.longitude)
                                     setAlpha(0f)
-                                    title = driverLoc.nombre
+                                    title = markerTitle
                                     snippet = "Placas: ${driverLoc.placas} • $statusTag"
                                     icon = targetIcon
                                     setOnMarkerClickListener { _, _ ->
@@ -464,7 +568,7 @@ fun PassengerMapScreen(
                                     }
                                     animator.start()
                                 }
-                                marker.title = driverLoc.nombre
+                                marker.title = markerTitle
                                 marker.snippet = "Placas: ${driverLoc.placas} • $statusTag"
                                 marker.icon = targetIcon
                                 marker.setAlpha(targetAlpha)
@@ -601,6 +705,7 @@ fun PassengerMapScreen(
             if (showBottomSheet && selectedDriver != null) {
                 // Sincronizar reactivamente con el estado en tiempo real de Firebase
                 val driver = rawDriverLocations.find { it.uid == selectedDriver?.uid } ?: selectedDriver!!
+                val isMyAssignedDriver = activeTrip != null && activeTrip?.status == "accepted" && activeTrip?.driverId == driver.uid
                 val isDriverAvail = driver.isAvailable
 
                 ModalBottomSheet(
@@ -625,7 +730,7 @@ fun PassengerMapScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = driver.nombre,
+                                    text = if (isMyAssignedDriver) "${driver.nombre} (Tu Conductor)" else driver.nombre,
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -662,11 +767,32 @@ fun PassengerMapScreen(
 
                                 Spacer(modifier = Modifier.height(6.dp))
 
-                                // Badge distintivo de Disponibilidad vs Pausa
+                                // Badge distintivo: Tu conductor asignado vs Disponibilidad vs Ocupado/Pausa
+                                val badgeColor = when {
+                                    isMyAssignedDriver -> Color(0x3300E5FF)
+                                    isDriverAvail -> Color(0x334CAF50)
+                                    else -> Color(0x33EF6C00)
+                                }
+                                val badgeBorderColor = when {
+                                    isMyAssignedDriver -> Color(0xFF00E5FF)
+                                    isDriverAvail -> Color(0xFF4CAF50)
+                                    else -> Color(0xFFEF6C00)
+                                }
+                                val dotColor = when {
+                                    isMyAssignedDriver -> Color(0xFF00E5FF)
+                                    isDriverAvail -> Color(0xFF4ADE80)
+                                    else -> Color(0xFFFFB74D)
+                                }
+                                val badgeText = when {
+                                    isMyAssignedDriver -> "🛺 TU TUCTUC • EN CAMINO A RECOGERTE"
+                                    isDriverAvail -> "🟢 DISPONIBLE"
+                                    else -> "🟠 OCUPADO / EN SERVICIO"
+                                }
+
                                 Surface(
-                                    color = if (isDriverAvail) Color(0x334CAF50) else Color(0x33EF6C00),
+                                    color = badgeColor,
                                     shape = RoundedCornerShape(8.dp),
-                                    border = BorderStroke(1.dp, if (isDriverAvail) Color(0xFF4CAF50) else Color(0xFFEF6C00))
+                                    border = BorderStroke(1.dp, badgeBorderColor)
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -676,12 +802,12 @@ fun PassengerMapScreen(
                                             modifier = Modifier
                                                 .size(8.dp)
                                                 .clip(CircleShape)
-                                                .background(if (isDriverAvail) Color(0xFF4ADE80) else Color(0xFFFFB74D))
+                                                .background(dotColor)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            text = if (isDriverAvail) "🟢 DISPONIBLE" else "🟠 EN PAUSA / OCUPADO",
-                                            color = if (isDriverAvail) Color(0xFF81C784) else Color(0xFFFFB74D),
+                                            text = badgeText,
+                                            color = if (isMyAssignedDriver) Color(0xFF00E5FF) else if (isDriverAvail) Color(0xFF81C784) else Color(0xFFFFB74D),
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.ExtraBold
                                         )
@@ -694,8 +820,37 @@ fun PassengerMapScreen(
                             )
                         }
 
-                        // Banner de alerta informativa si el conductor está pausado
-                        if (!isDriverAvail) {
+                        // Banner de alerta informativa según el estado
+                        if (isMyAssignedDriver) {
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = Color(0x2200E5FF)),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, Color(0x6600E5FF))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("🛺", fontSize = 20.sp)
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = "¡Tu conductor viene en camino!",
+                                            color = Color(0xFF00E5FF),
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = "Aceptó tu solicitud y está en ruta hacia ti. Puedes seguir su avance en el mapa o contactarlo directamente.",
+                                            color = Color(0xFFE2E8F0),
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                }
+                            }
+                        } else if (!isDriverAvail) {
                             Spacer(modifier = Modifier.height(14.dp))
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
@@ -711,13 +866,13 @@ fun PassengerMapScreen(
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Column {
                                         Text(
-                                            text = "Conductor en pausa temporal",
+                                            text = "Conductor ocupado / en servicio",
                                             color = Color(0xFFFFB74D),
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = "Este tuctuc pausó la recepción de solicitudes o está en viaje. Puedes llamarlo directamente o solicitar otro tuctuc disponible.",
+                                            text = "Este tuctuc está realizando otro viaje o pausó temporalmente la recepción de solicitudes. Puedes contactarlo directamente si lo deseas.",
                                             color = Color(0xFFCBD5E1),
                                             fontSize = 11.sp
                                         )
@@ -799,21 +954,38 @@ fun PassengerMapScreen(
                         Button(
                             onClick = {
                                 showBottomSheet = false
-                                showBroadcastDialog = true
+                                if (isMyAssignedDriver) {
+                                    if (routePointsToPassenger.isNotEmpty()) {
+                                        try {
+                                            val box = BoundingBox.fromGeoPoints(routePointsToPassenger)
+                                            mapViewInstance?.zoomToBoundingBox(box.increaseByScale(1.35f), true)
+                                        } catch (_: Exception) {}
+                                    }
+                                } else {
+                                    showBroadcastDialog = true
+                                }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(50.dp),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isDriverAvail) Color(0xFFF9D423) else Color(0xFF38BDF8),
+                                containerColor = if (isMyAssignedDriver) Color(0xFF00E5FF) else if (isDriverAvail) Color(0xFFF9D423) else Color(0xFF38BDF8),
                                 contentColor = Color(0xFF0F2027)
                             )
                         ) {
-                            Icon(Icons.Default.ElectricRickshaw, contentDescription = null, tint = Color(0xFF0F2027))
+                            Icon(
+                                if (isMyAssignedDriver) Icons.Default.Route else Icons.Default.ElectricRickshaw,
+                                contentDescription = null,
+                                tint = Color(0xFF0F2027)
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (isDriverAvail) "Solicitar TucTuc Cercano a Todos" else "Buscar otro TucTuc Disponible",
+                                text = when {
+                                    isMyAssignedDriver -> "Centrar en la Ruta de tu TucTuc"
+                                    isDriverAvail -> "Solicitar TucTuc Cercano a Todos"
+                                    else -> "Buscar otro TucTuc Disponible"
+                                },
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
                             )
@@ -1248,11 +1420,12 @@ fun PassengerMapScreen(
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "🎉 ¡TucTuc en Camino!",
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color(0xFF4CAF50),
+                                            text = "🎉 ¡Tu TucTuc Viene en Camino!",
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = Color(0xFF4ADE80),
                                             fontSize = 18.sp
                                         )
+                                        Spacer(modifier = Modifier.height(2.dp))
                                         Text(
                                             text = activeTrip!!.driverName.ifBlank { "Conductor Confirmado" },
                                             color = Color.White,
@@ -1269,22 +1442,107 @@ fun PassengerMapScreen(
                                     Text(text = "🛺", fontSize = 38.sp)
                                 }
 
-                                val assignedDriverLoc = rawDriverLocations.find { it.uid == activeTrip!!.driverId }
-                                if (assignedDriverLoc != null && myLocGeo != null) {
-                                    val dist = assignedDriverLoc.formattedDistance(myLocGeo.latitude, myLocGeo.longitude)
-                                    val eta = assignedDriverLoc.estimatedArrivalMinutes(myLocGeo.latitude, myLocGeo.longitude)
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Badge de estado del conductor exclusivo para este pasajero
+                                Surface(
+                                    color = Color(0x3300E5FF),
+                                    shape = RoundedCornerShape(8.dp),
+                                    border = BorderStroke(1.dp, Color(0x6600E5FF))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFF00E5FF))
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "ESTADO: EN CAMINO A TU UBICACIÓN",
+                                            color = Color(0xFF00E5FF),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.ExtraBold
+                                        )
+                                    }
+                                }
+
+                                // Información de ruta OSRM en tiempo real entre el conductor y el pasajero
+                                if (passengerRouteSummary != null) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Surface(
+                                        color = Color(0x2200E5FF),
+                                        shape = RoundedCornerShape(10.dp),
+                                        border = BorderStroke(1.dp, Color(0x6600E5FF)),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Navigation,
+                                                contentDescription = null,
+                                                tint = Color(0xFF00E5FF),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Column {
+                                                Text(
+                                                    text = "Ruta hacia ti: ${passengerRouteSummary?.formattedDistance}",
+                                                    color = Color.White,
+                                                    fontSize = 13.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Text(
+                                                    text = "Tiempo estimado de llegada: ~${passengerRouteSummary?.formattedDuration}",
+                                                    color = Color(0xFF00E5FF),
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                            }
+                                        }
+                                    }
+                                } else if (assignedDriverLocation != null && myLocGeo != null) {
+                                    val dist = assignedDriverLocation.formattedDistance(myLocGeo.latitude, myLocGeo.longitude)
+                                    val eta = assignedDriverLocation.estimatedArrivalMinutes(myLocGeo.latitude, myLocGeo.longitude)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Surface(
                                         color = Color(0x334CAF50),
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
                                         Text(
-                                            text = "Distancia: $dist • Llegada en ~$eta min",
+                                            text = "Distancia aproximada: $dist • Llegada en ~$eta min",
                                             color = Color(0xFF81C784),
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
                                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                         )
+                                    }
+                                }
+
+                                if (routePointsToPassenger.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    OutlinedButton(
+                                        onClick = {
+                                            mapViewInstance?.let { mv ->
+                                                try {
+                                                    val box = BoundingBox.fromGeoPoints(routePointsToPassenger)
+                                                    mv.zoomToBoundingBox(box.increaseByScale(1.35f), true)
+                                                } catch (_: Exception) {}
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth().height(44.dp),
+                                        shape = RoundedCornerShape(10.dp),
+                                        border = BorderStroke(1.dp, Color(0xFF00E5FF)),
+                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF00E5FF))
+                                    ) {
+                                        Icon(Icons.Default.Route, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Ver Ruta Completa en el Mapa", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                     }
                                 }
 
