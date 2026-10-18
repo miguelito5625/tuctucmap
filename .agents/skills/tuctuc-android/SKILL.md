@@ -41,7 +41,8 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
    - En `MapTileUtils.kt`, utilizar `AppTileSource` (`XYTileSource`) con el nombre único `"TucTucOsmLive"` para aislar la caché local y prevenir mosaicos corruptos o bloqueados.
 2. **Indicador de Ubicación del Pasajero (`PassengerLocationOverlay`):**
    - Implementado en `PassengerLocationUtils.kt`.
-   - Figura animada de persona saludando (sin contenedor circular, chaqueta azul `#0066FF`, gorra amarilla `#F9D423`, contorno blanco grueso, brazo en saludo a ~22 FPS) y pulso de radar en la base.
+   - **Avatar Activo por Defecto:** Quetzal guatemalteco animado (`ic_quetzal_passenger.png`, ~72dp) saludando continuamente al usuario con alita ondeando rítmicamente, ondas de saludo cian (`👋`), rebote de respiración y pulso de radar GPS en las patitas (~22 FPS).
+   - **Reversión y Conmutación Fácil:** Enum `PassengerAvatarType` (`QUETZAL` y `CLASSIC_HUMAN`). La figura anterior (persona con chaqueta azul `#0066FF` y gorra amarilla) se conserva 100% intacta y funcional en `PassengerCharacterRenderer`, conmutable al instante mediante la variable `ACTIVE_PASSENGER_AVATAR`.
 3. **Gestión de Marcadores y Caché de Iconos (`MarkerIconUtils`):**
    - Implementado en `MarkerIconUtils.kt`.
    - Procesa una única vez el drawable del mototaxi con fondo transparente y lo conserva en memoria (`@Volatile cachedTucTucIcon`) para evitar bucles pesados de píxeles en el hilo principal durante recomposiciones.

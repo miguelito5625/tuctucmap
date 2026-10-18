@@ -273,8 +273,10 @@ fun DriverProfileScreen(
                                         modifier = Modifier.size(14.dp)
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
+                                    val remainingDays = driverProfile?.remainingDays ?: 0
+                                    val remainingSuffix = if (remainingDays > 1) " • $remainingDays días restantes" else if (remainingDays == 1) " • 1 día restante" else ""
                                     Text(
-                                        text = "Vence el: $expiryFormatted",
+                                        text = "Vence el: $expiryFormatted$remainingSuffix",
                                         fontSize = 12.sp,
                                         color = Color(0xFFCFD8DC)
                                     )

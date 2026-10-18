@@ -382,7 +382,7 @@ fun DriverHomeScreen(
                         ?.takeIf { it.isNotBlank() }
                         ?: "Conductor"
                 }
-                val daysRemaining = if (expiryMs > now) ((expiryMs - now) / (1000L * 3600L * 24L)).toInt() else 0
+                val daysRemaining = com.example.tuctucmap.data.model.calculateRemainingDays(expiryMs, now)
 
                 Surface(
                     modifier = Modifier
@@ -932,7 +932,7 @@ fun DriverHomeScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = if (daysRemaining > 0) "$daysRemaining días" else if (hoursRemaining > 0) "${hoursRemaining}h" else "0 días",
+                                    text = if (daysRemaining > 1) "$daysRemaining días" else if (daysRemaining == 1) "1 día" else if (hoursRemaining > 0) "${hoursRemaining}h" else "0 días",
                                     color = if (isExpiringSoon) Color(0xFFFFB74D) else Color.White,
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.ExtraBold,

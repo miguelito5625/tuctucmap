@@ -194,10 +194,8 @@ fun DriverSubscriptionScreen(
                 val sdf = SimpleDateFormat("dd 'de' MMMM, yyyy • HH:mm", Locale("es", "GT"))
                 val expiryFormatted = if (expiryMs > 0L) sdf.format(Date(expiryMs)) else "Sin fecha asignada"
 
-                val nowMs = System.currentTimeMillis()
-                val diffDays = if (expiryMs > nowMs) {
-                    ((expiryMs - nowMs) / (1000 * 60 * 60 * 24)).toInt()
-                } else 0
+                val nowMs = com.example.tuctucmap.data.model.ServerClock.nowMillis()
+                val diffDays = com.example.tuctucmap.data.model.calculateRemainingDays(expiryMs, nowMs)
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -249,11 +247,11 @@ fun DriverSubscriptionScreen(
                             }
                         }
 
-                        if (!isExpired && diffDays in 0..7) {
+                        if (!isExpired && expiryMs > nowMs) {
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = Color(0x33F59E0B),
-                                border = BorderStroke(1.dp, Color(0x66F59E0B))
+                                color = if (diffDays <= 3) Color(0x33F59E0B) else Color(0x2210B981),
+                                border = BorderStroke(1.dp, if (diffDays <= 3) Color(0x66F59E0B) else Color(0x4410B981))
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -263,13 +261,14 @@ fun DriverSubscriptionScreen(
                                     Icon(
                                         Icons.Default.HourglassTop,
                                         contentDescription = null,
-                                        tint = Color(0xFFFBBF24),
+                                        tint = if (diffDays <= 3) Color(0xFFFBBF24) else Color(0xFF34D399),
                                         modifier = Modifier.size(16.dp)
                                     )
+                                    val daysText = if (diffDays == 1) "1 día" else "$diffDays días"
                                     Text(
-                                        text = if (diffDays == 0) "¡Tu suscripción vence hoy! Renueva con tiempo." else "Te quedan $diffDays días de vigencia. Puedes renovar por adelantado.",
+                                        text = if (diffDays == 0) "¡Tu suscripción vence hoy! Renueva con tiempo." else "Te quedan $daysText de vigencia. Puedes renovar por adelantado.",
                                         fontSize = 12.sp,
-                                        color = Color(0xFFFBBF24),
+                                        color = if (diffDays <= 3) Color(0xFFFBBF24) else Color(0xFFA7F3D0),
                                         fontWeight = FontWeight.Medium
                                     )
                                 }

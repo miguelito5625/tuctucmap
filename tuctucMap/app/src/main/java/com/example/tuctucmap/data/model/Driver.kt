@@ -139,6 +139,25 @@ data class Driver(
      */
     val isApprovedAndActive: Boolean
         get() = estadoAprobacion == "aprobado" && !isSubscriptionExpired
+
+    /**
+     * Días restantes de vigencia de la suscripción con redondeo hacia arriba (ceil)
+     * para que coincida de forma natural con los días calendario restantes.
+     */
+    val remainingDays: Int
+        get() = calculateRemainingDays(expiryTimestampMillis, ServerClock.nowMillis())
+}
+
+/**
+ * Calcula los días restantes de vigencia entre la fecha de expiración y la fecha actual.
+ * Utiliza ceil (redondeo hacia arriba) para que la cantidad de días coincida con la diferencia
+ * calendario visual (p. ej. si vence el 25 y hoy es 17, faltan 8 días en lugar de truncar a 7).
+ */
+fun calculateRemainingDays(expiryMs: Long, nowMs: Long = ServerClock.nowMillis()): Int {
+    if (expiryMs <= 0L || expiryMs <= nowMs) return 0
+    val diffMs = expiryMs - nowMs
+    val daysDouble = diffMs.toDouble() / (1000.0 * 60.0 * 60.0 * 24.0)
+    return kotlin.math.ceil(daysDouble).toInt()
 }
 
 /**
