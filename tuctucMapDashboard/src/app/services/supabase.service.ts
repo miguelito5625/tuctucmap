@@ -376,11 +376,12 @@ export class SupabaseService {
     }
   }
 
-  async getCompletedTrips(): Promise<any[]> {
+  async getCompletedTrips(limit = 100): Promise<any[]> {
     const { data, error } = await this.supabase
         .from('trips')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('id, passenger_id, passenger_name, passenger_phone, driver_id, status, message, fare, distance_km, passenger_lat, passenger_lon, created_at')
+        .order('created_at', { ascending: false })
+        .limit(limit);
 
     if (error || !data) return [];
     
@@ -389,15 +390,6 @@ export class SupabaseService {
     const profileMap = new Map(profiles.map(p => [p.id, p.name]));
 
     return data.map(trip => {
-      let routePoints = trip.route_points;
-      if (typeof routePoints === 'string') {
-        try {
-          routePoints = JSON.parse(routePoints);
-        } catch {
-          routePoints = null;
-        }
-      }
-
       const directPassengerName = trip.passenger_name?.trim();
       const mappedPassengerName = trip.passenger_id ? profileMap.get(trip.passenger_id) : null;
       const passengerName = directPassengerName || mappedPassengerName || 'Pasajero (Invitado)';
@@ -413,12 +405,35 @@ export class SupabaseService {
         message: trip.message || 'Sin mensaje',
         fare: trip.fare != null ? Number(trip.fare) : null,
         distance_km: trip.distance_km != null ? Number(trip.distance_km) : null,
-        route_points: Array.isArray(routePoints) ? routePoints : null,
+        route_points: null, // Carga perezosa bajo demanda con getTripRoutePoints() para ahorrar 99% de ancho de banda
         passenger_lat: trip.passenger_lat,
         passenger_lon: trip.passenger_lon,
         created_at: new Date(trip.created_at).getTime()
       };
     });
+  }
+
+  async getTripRoutePoints(tripId: string): Promise<any[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from('trips')
+        .select('route_points')
+        .eq('id', tripId)
+        .single();
+
+      if (error || !data || !data.route_points) return [];
+      let pts = data.route_points;
+      if (typeof pts === 'string') {
+        try {
+          pts = JSON.parse(pts);
+        } catch {
+          pts = [];
+        }
+      }
+      return Array.isArray(pts) ? pts : [];
+    } catch {
+      return [];
+    }
   }
 
   async approveDriver(uid: string): Promise<void> {

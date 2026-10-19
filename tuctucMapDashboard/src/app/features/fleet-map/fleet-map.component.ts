@@ -440,6 +440,29 @@ export class FleetMapComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private static readonly AVAILABLE_ICON = L.divIcon({
+    html: '<div style="background:#16a34a;color:white;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.5);">🛺</div>',
+    className: 'custom-tuctuc-marker',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+  });
+
+  private static readonly BUSY_ICON = L.divIcon({
+    html: '<div style="background:#ea580c;color:white;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.5);">🛺</div>',
+    className: 'custom-tuctuc-marker',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+  });
+
+  private static readonly PAUSED_ICON = L.divIcon({
+    html: '<div style="background:#64748b;color:white;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.5);">🛺</div>',
+    className: 'custom-tuctuc-marker',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+  });
+
+  private driverMeta = new Map<string, { status: string; lat: number; lon: number }>();
+
   private renderMarkers(): void {
     const mapInstance = this.map;
     if (!mapInstance) return;
@@ -451,67 +474,63 @@ export class FleetMapComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!currentUids.has(uid)) {
         marker.remove();
         this.markers.delete(uid);
+        this.driverMeta.delete(uid);
       }
     }
 
-    // Agregar o actualizar marcadores
+    // Agregar o actualizar marcadores diferencialmente (cero regeneración de DOM si no hubo cambios)
     this.activeDrivers().forEach((driver) => {
       const lat = driver.lat;
       const lon = driver.lon;
       if (!lat || !lon) return;
 
-      const isBusy = driver.status === 'ocupado';
-      const iconHtml = `
-        <div style="
-          background: ${isBusy ? '#ea580c' : '#16a34a'};
-          color: white;
-          border-radius: 50%;
-          width: 36px;
-          height: 36px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          border: 2px solid white;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        ">
-          🛺
-        </div>
-      `;
+      const rawStatus = (driver.status || 'disponible').toLowerCase();
+      const targetIcon = rawStatus === 'ocupado'
+        ? FleetMapComponent.BUSY_ICON
+        : rawStatus === 'en_pausa'
+        ? FleetMapComponent.PAUSED_ICON
+        : FleetMapComponent.AVAILABLE_ICON;
 
-      const customIcon = L.divIcon({
-        html: iconHtml,
-        className: 'custom-tuctuc-marker',
-        iconSize: [36, 36],
-        iconAnchor: [18, 18],
-      });
-
-      const safeName = this.escapeHtml(driver.nombre || 'Conductor');
-      const safePlate = this.escapeHtml(driver.placas || '');
-      const safePhone = this.escapeHtml(driver.telefono || '');
-      const safeStatus = this.escapeHtml(driver.status || 'Disponible');
-
-      const popupContent = `
-        <div style="font-family: sans-serif; color: #1e293b; padding: 4px;">
-          <h4 style="margin: 0 0 4px; font-size: 14px; font-weight: bold;">${safeName}</h4>
-          <p style="margin: 0 0 2px; font-size: 12px; color: #475569;"><b>Placas:</b> ${safePlate}</p>
-          <p style="margin: 0 0 2px; font-size: 12px; color: #475569;"><b>Teléfono:</b> ${safePhone}</p>
-          <p style="margin: 0; font-size: 12px; color: ${isBusy ? '#ea580c' : '#16a34a'}; font-weight: bold;">
-            Estado: ${safeStatus}
-          </p>
-        </div>
-      `;
+      const prevMeta = this.driverMeta.get(driver.driver_id);
 
       if (this.markers.has(driver.driver_id)) {
         const marker = this.markers.get(driver.driver_id)!;
-        marker.setLatLng([lat, lon]);
-        marker.setIcon(customIcon);
-        marker.setPopupContent(popupContent);
+
+        // Solo actualizar coordenadas si cambiaron
+        if (!prevMeta || prevMeta.lat !== lat || prevMeta.lon !== lon) {
+          marker.setLatLng([lat, lon]);
+        }
+
+        // Solo actualizar icono si el estado cambió
+        if (!prevMeta || prevMeta.status !== rawStatus) {
+          marker.setIcon(targetIcon);
+        }
+
+        this.driverMeta.set(driver.driver_id, { status: rawStatus, lat, lon });
       } else {
-        const marker = L.marker([lat, lon], { icon: customIcon })
+        const safeName = this.escapeHtml(driver.nombre || 'Conductor');
+        const safePlate = this.escapeHtml(driver.placas || '');
+        const safePhone = this.escapeHtml(driver.telefono || '');
+        const safeStatus = this.escapeHtml(driver.status || 'Disponible');
+        const isBusy = rawStatus === 'ocupado';
+
+        const popupContent = `
+          <div style="font-family: sans-serif; color: #1e293b; padding: 4px;">
+            <h4 style="margin: 0 0 4px; font-size: 14px; font-weight: bold;">${safeName}</h4>
+            <p style="margin: 0 0 2px; font-size: 12px; color: #475569;"><b>Placas:</b> ${safePlate}</p>
+            <p style="margin: 0 0 2px; font-size: 12px; color: #475569;"><b>Teléfono:</b> ${safePhone}</p>
+            <p style="margin: 0; font-size: 12px; color: ${isBusy ? '#ea580c' : '#16a34a'}; font-weight: bold;">
+              Estado: ${safeStatus}
+            </p>
+          </div>
+        `;
+
+        const marker = L.marker([lat, lon], { icon: targetIcon })
           .addTo(mapInstance)
           .bindPopup(popupContent);
+
         this.markers.set(driver.driver_id, marker);
+        this.driverMeta.set(driver.driver_id, { status: rawStatus, lat, lon });
       }
     });
   }

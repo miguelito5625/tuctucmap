@@ -103,8 +103,15 @@ class PassengerLocationOverlay(
             canvas.drawBitmap(frameBitmap, drawLeft, drawTop, framePaint)
         }
 
-        // 4. Programar el siguiente fotograma con cadencia eficiente y suave (~12.5 FPS)
-        mapView.postInvalidateDelayed(80L)
+        // 4. Optimización de batería y GPU para gama media y baja:
+        // Solo programar el siguiente fotograma si el avatar está dentro de la pantalla visible
+        val isVisibleOnScreen = (px >= -150f && px <= (mapView.width + 150f) && py >= -150f && py <= (mapView.height + 150f))
+        if (isVisibleOnScreen) {
+            mapView.postInvalidateDelayed(125L)
+        } else {
+            // Fuera de vista, comprobar con muy baja frecuencia (1200ms) para cero consumo de CPU
+            mapView.postInvalidateDelayed(1200L)
+        }
     }
 
     override fun onDetach(mapView: MapView) {

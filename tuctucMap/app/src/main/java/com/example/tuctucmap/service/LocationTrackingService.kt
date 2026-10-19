@@ -41,6 +41,9 @@ class LocationTrackingService : Service() {
     private val repository = SupabaseRepository()
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var pendingTripsJob: Job? = null
+    private var statusObserverJob: Job? = null
+    private var currentGpsPriority = Priority.PRIORITY_HIGH_ACCURACY
+    private var currentGpsIntervalMs = 5000L
 
     private var tts: TextToSpeech? = null
     private var isTtsReady = false
@@ -217,6 +220,8 @@ class LocationTrackingService : Service() {
         }
 
         isRunning = true
+        // Registrar limpieza por desconexión en Firebase una sola vez al inicio de turno
+        repository.registerOnDisconnectCleanup(driverUid)
         createNotificationChannel()
         val notification = createNotification()
 
@@ -301,13 +306,19 @@ class LocationTrackingService : Service() {
         } catch (_: Exception) {}
     }
 
-    private fun startLocationUpdates() {
-        // Intervalo de 5 segundos con precisión alta
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
-            .setMinUpdateIntervalMillis(4000L)
+    private fun applyLocationRequest(priority: Int, intervalMs: Long) {
+        if (currentGpsPriority == priority && currentGpsIntervalMs == intervalMs && isRunning) {
+            return
+        }
+        currentGpsPriority = priority
+        currentGpsIntervalMs = intervalMs
+
+        val locationRequest = LocationRequest.Builder(priority, intervalMs)
+            .setMinUpdateIntervalMillis((intervalMs * 0.8).toLong())
             .build()
 
         try {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
             fusedLocationClient.requestLocationUpdates(
                 locationRequest,
                 locationCallback,
@@ -316,6 +327,25 @@ class LocationTrackingService : Service() {
         } catch (unlikely: SecurityException) {
             isRunning = false
             stopSelf()
+        }
+    }
+
+    private fun startLocationUpdates() {
+        // Inicializar con alta precisión para inicio de turno
+        applyLocationRequest(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
+
+        // Monitoreo adaptativo de energía: relajar GPS en pausa para no agotar la batería del teléfono
+        statusObserverJob?.cancel()
+        statusObserverJob = serviceScope.launch {
+            driverStatus.collect { status ->
+                if (status == "en_pausa") {
+                    // Modo reposo/estación: precisión balanceada y ciclo de 15 segundos
+                    applyLocationRequest(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 15000L)
+                } else {
+                    // Modo activo/disponible u ocupado en viaje: alta precisión a 5 segundos
+                    applyLocationRequest(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
+                }
+            }
         }
     }
 
@@ -406,6 +436,7 @@ class LocationTrackingService : Service() {
         super.onDestroy()
         isRunning = false
         pendingTripsJob?.cancel()
+        statusObserverJob?.cancel()
         fusedLocationClient.removeLocationUpdates(locationCallback)
         tts?.stop()
         tts?.shutdown()

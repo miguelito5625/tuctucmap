@@ -68,8 +68,13 @@ export class TripsComponent implements OnInit, OnDestroy {
     this.dataSource.sort = this.sort;
   }
 
-  openRouteMap(trip: any): void {
+  async openRouteMap(trip: any): Promise<void> {
     this.selectedTripForMap = trip;
+
+    // Carga perezosa bajo demanda: sólo descarga los puntos de coordenadas al abrir el mapa
+    if (!trip.route_points || trip.route_points.length === 0) {
+      trip.route_points = await this.supabaseService.getTripRoutePoints(trip.id);
+    }
 
     setTimeout(() => {
       this.renderRouteMap(trip);

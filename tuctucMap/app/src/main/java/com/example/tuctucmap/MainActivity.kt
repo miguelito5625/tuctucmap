@@ -46,6 +46,9 @@ class MainActivity : ComponentActivity() {
 
         osmConfig.load(applicationContext, osmdroidPrefs)
         osmConfig.userAgentValue = currentUserAgent
+        // Optimización de caché en disco de OpenStreetMap (150 MB máx) para gama baja y reducción de datos móviles
+        osmConfig.tileFileSystemCacheMaxBytes = 150L * 1024L * 1024L
+        osmConfig.tileFileSystemCacheTrimBytes = 120L * 1024L * 1024L
         osmConfig.save(applicationContext, osmdroidPrefs)
 
         // Limpiar caché de tiles si venía con versión anterior o bloqueada

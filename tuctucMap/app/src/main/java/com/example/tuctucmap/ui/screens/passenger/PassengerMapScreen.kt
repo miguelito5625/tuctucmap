@@ -185,7 +185,16 @@ fun PassengerMapScreen(
     var mapViewInstance by remember { mutableStateOf<MapView?>(null) }
     var myLocationOverlayInstance by remember { mutableStateOf<MyLocationNewOverlay?>(null) }
     val driverMarkers = remember { mutableMapOf<String, Marker>() }
+    val driverAnimators = remember { mutableMapOf<String, ValueAnimator>() }
     val coroutineScope = rememberCoroutineScope()
+
+    DisposableEffect(Unit) {
+        onDispose {
+            driverAnimators.values.forEach { it.cancel() }
+            driverAnimators.clear()
+            driverMarkers.clear()
+        }
+    }
 
     // ── Estado de la ruta OSRM y polilíneas de alto contraste en tiempo real ──
     var passengerRouteSummary by remember { mutableStateOf<OsrmRoutingService.RouteResult?>(null) }
@@ -211,12 +220,16 @@ fun PassengerMapScreen(
         }
     }
 
-    // Cálculo reactivo de la ruta OSRM desde el conductor asignado hacia el pasajero
+    // Cálculo reactivo optimizado de ruta hacia el pasajero:
+    // Throttle inteligente (30s) y fallback de proyección matemática local para no saturar OSRM
     val assignedDriverLocation = remember(rawDriverLocations, activeTrip?.driverId) {
         if (activeTrip != null && activeTrip?.status == "accepted" && activeTrip?.driverId?.isNotBlank() == true) {
             rawDriverLocations.find { it.uid == activeTrip?.driverId }
         } else null
     }
+
+    var lastPassengerOsrmCalcTime by remember { mutableLongStateOf(0L) }
+    var lastObservedDriverTripId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(activeTrip?.driverId, activeTrip?.status, assignedDriverLocation?.latitud, assignedDriverLocation?.longitud) {
         val trip = activeTrip
@@ -226,21 +239,69 @@ fun PassengerMapScreen(
             val passengerLon = if (trip.passengerLon != 0.0) trip.passengerLon else (myLocationOverlayInstance?.myLocation?.longitude ?: 0.0)
 
             if (passengerLat != 0.0 && passengerLon != 0.0 && driverLoc.latitud != 0.0 && driverLoc.longitud != 0.0) {
-                val routeResult = withContext(Dispatchers.IO) {
-                    OsrmRoutingService.getRoute(
-                        startLat = driverLoc.latitud,
-                        startLon = driverLoc.longitud,
-                        endLat = passengerLat,
-                        endLon = passengerLon
+                val now = System.currentTimeMillis()
+                val isNewTrip = trip.tripId != lastObservedDriverTripId
+                val shouldQueryOsrm = isNewTrip || (now - lastPassengerOsrmCalcTime >= 30_000L) || routePointsToPassenger.isEmpty()
+
+                if (shouldQueryOsrm) {
+                    lastObservedDriverTripId = trip.tripId
+                    lastPassengerOsrmCalcTime = now
+                    val routeResult = withContext(Dispatchers.IO) {
+                        OsrmRoutingService.getRoute(
+                            startLat = driverLoc.latitud,
+                            startLon = driverLoc.longitud,
+                            endLat = passengerLat,
+                            endLon = passengerLon
+                        )
+                    }
+                    if (routeResult.isSuccess) {
+                        passengerRouteSummary = routeResult
+                        routePointsToPassenger = routeResult.points
+                    } else {
+                        // Proyección matemática local Haversine con factor vial a costo $0
+                        val targetLoc = android.location.Location("").apply {
+                            latitude = passengerLat
+                            longitude = passengerLon
+                        }
+                        val dLoc = android.location.Location("").apply {
+                            latitude = driverLoc.latitud
+                            longitude = driverLoc.longitud
+                        }
+                        val roadMeters = (dLoc.distanceTo(targetLoc) * 1.28).toDouble()
+                        val estSeconds = roadMeters / 5.55
+                        passengerRouteSummary = OsrmRoutingService.RouteResult(
+                            points = routePointsToPassenger,
+                            distanceMeters = roadMeters,
+                            durationSeconds = estSeconds,
+                            isSuccess = true
+                        )
+                    }
+                } else {
+                    // Actualización local continua entre ciclos de OSRM (0 llamadas HTTP)
+                    val targetLoc = android.location.Location("").apply {
+                        latitude = passengerLat
+                        longitude = passengerLon
+                    }
+                    val dLoc = android.location.Location("").apply {
+                        latitude = driverLoc.latitud
+                        longitude = driverLoc.longitud
+                    }
+                    val roadMeters = (dLoc.distanceTo(targetLoc) * 1.28).toDouble()
+                    val estSeconds = roadMeters / 5.55
+                    passengerRouteSummary = OsrmRoutingService.RouteResult(
+                        points = routePointsToPassenger,
+                        distanceMeters = roadMeters,
+                        durationSeconds = estSeconds,
+                        isSuccess = true
                     )
                 }
-                passengerRouteSummary = routeResult
-                routePointsToPassenger = routeResult.points
             }
         } else {
             passengerRouteSummary = null
             routePointsToPassenger = emptyList()
             hasZoomedToTripRoute = false
+            lastObservedDriverTripId = null
+            lastPassengerOsrmCalcTime = 0L
         }
     }
 
@@ -554,11 +615,12 @@ fun PassengerMapScreen(
                         // Remover marcadores de conductores desconectados
                         val removedUids = driverMarkers.keys.filter { it !in currentUids }
                         for (uid in removedUids) {
+                            driverAnimators.remove(uid)?.cancel()
                             val marker = driverMarkers.remove(uid)
                             if (marker != null) {
                                 val startLat = marker.position.latitude
                                 val exitAnimator = ValueAnimator.ofFloat(1f, 0f).apply {
-                                    duration = 500L
+                                    duration = 400L
                                     interpolator = AccelerateInterpolator()
                                     addUpdateListener { animation ->
                                         val fraction = animation.animatedValue as Float
@@ -617,7 +679,7 @@ fun PassengerMapScreen(
                                 mapView.overlays.add(marker)
 
                                 val entranceAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-                                    duration = 1000L
+                                    duration = 800L
                                     interpolator = OvershootInterpolator()
                                     addUpdateListener { animation ->
                                         val fraction = animation.animatedValue as Float
@@ -630,18 +692,34 @@ fun PassengerMapScreen(
                                 entranceAnimator.start()
                             } else {
                                 val oldGeoPoint = marker.position
-                                if (oldGeoPoint.latitude != newGeoPoint.latitude || oldGeoPoint.longitude != newGeoPoint.longitude) {
-                                    val animator = ValueAnimator.ofFloat(0f, 1f)
-                                    animator.duration = 4000L
-                                    animator.interpolator = LinearInterpolator()
-                                    animator.addUpdateListener { animation ->
-                                        val fraction = animation.animatedFraction
-                                        val lat = oldGeoPoint.latitude + (newGeoPoint.latitude - oldGeoPoint.latitude) * fraction
-                                        val lon = oldGeoPoint.longitude + (newGeoPoint.longitude - oldGeoPoint.longitude) * fraction
-                                        marker?.position = GeoPoint(lat, lon)
-                                        mapView.invalidate()
+                                val latDiff = kotlin.math.abs(oldGeoPoint.latitude - newGeoPoint.latitude)
+                                val lonDiff = kotlin.math.abs(oldGeoPoint.longitude - newGeoPoint.longitude)
+
+                                // Optimización de renderizado para gama baja:
+                                // Solo interpolar si el desplazamiento supera 2.5 metros (filtro de ruido GPS).
+                                // Cancelar proactivamente cualquier animación previa para evitar saturar el hilo de dibujo.
+                                if (latDiff > 0.000025 || lonDiff > 0.000025) {
+                                    driverAnimators[driverLoc.uid]?.cancel()
+                                    val animator = ValueAnimator.ofFloat(0f, 1f).apply {
+                                        duration = 3500L
+                                        interpolator = LinearInterpolator()
+                                        addUpdateListener { animation ->
+                                            val fraction = animation.animatedFraction
+                                            val lat = oldGeoPoint.latitude + (newGeoPoint.latitude - oldGeoPoint.latitude) * fraction
+                                            val lon = oldGeoPoint.longitude + (newGeoPoint.longitude - oldGeoPoint.longitude) * fraction
+                                            marker.position = GeoPoint(lat, lon)
+                                            mapView.invalidate()
+                                        }
+                                        addListener(object : AnimatorListenerAdapter() {
+                                            override fun onAnimationEnd(animation: Animator) {
+                                                driverAnimators.remove(driverLoc.uid)
+                                            }
+                                        })
                                     }
+                                    driverAnimators[driverLoc.uid] = animator
                                     animator.start()
+                                } else if (oldGeoPoint != newGeoPoint) {
+                                    marker.position = newGeoPoint
                                 }
                                 marker.title = markerTitle
                                 marker.snippet = "Placas: ${driverLoc.placas} • $statusTag"

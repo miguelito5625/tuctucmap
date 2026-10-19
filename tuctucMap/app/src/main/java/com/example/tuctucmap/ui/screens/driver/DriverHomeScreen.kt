@@ -155,21 +155,57 @@ fun DriverHomeScreen(
         refreshTripStats()
     }
 
-    // Cálculo continuo de distancia y tiempo estimado OSRM hacia el punto de recogida del pasajero
+    // Cálculo optimizado de distancia y tiempo estimado hacia el punto de recogida del pasajero
+    // Throttle inteligente (25s) para no saturar el servidor OSRM ni incurrir en costes de API en producción
     var routeSummaryToPassenger by remember { mutableStateOf<String?>(null) }
+    var lastOsrmCalcTime by remember { mutableLongStateOf(0L) }
+    var lastTripIdForRoute by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(activeAcceptedTrip?.tripId, currentLocation?.latitude, currentLocation?.longitude) {
         val trip = activeAcceptedTrip
         val loc = currentLocation
         if (trip != null && loc != null && trip.passengerLat != 0.0 && trip.passengerLon != 0.0) {
-            val res = com.example.tuctucmap.data.service.OsrmRoutingService.getRoute(
-                startLat = loc.latitude,
-                startLon = loc.longitude,
-                endLat = trip.passengerLat,
-                endLon = trip.passengerLon
-            )
-            routeSummaryToPassenger = "${res.formattedDistance} • ~${res.formattedDuration}"
+            val now = System.currentTimeMillis()
+            val isNewTrip = trip.tripId != lastTripIdForRoute
+            val shouldFetchOsrm = isNewTrip || (now - lastOsrmCalcTime >= 25_000L)
+
+            if (shouldFetchOsrm) {
+                lastTripIdForRoute = trip.tripId
+                lastOsrmCalcTime = now
+                val res = com.example.tuctucmap.data.service.OsrmRoutingService.getRoute(
+                    startLat = loc.latitude,
+                    startLon = loc.longitude,
+                    endLat = trip.passengerLat,
+                    endLon = trip.passengerLon
+                )
+                if (res.isSuccess) {
+                    routeSummaryToPassenger = "${res.formattedDistance} • ~${res.formattedDuration}"
+                } else {
+                    // Fallback local instantáneo a costo $0
+                    val targetLoc = android.location.Location("").apply {
+                        latitude = trip.passengerLat
+                        longitude = trip.passengerLon
+                    }
+                    val roadMeters = (loc.distanceTo(targetLoc) * 1.28).toInt()
+                    val mins = kotlin.math.ceil((roadMeters / 1000.0) / 20.0 * 60.0).toInt().coerceAtLeast(1)
+                    val distStr = if (roadMeters >= 1000) String.format(java.util.Locale.US, "%.1f km", roadMeters / 1000.0) else "$roadMeters m"
+                    routeSummaryToPassenger = "$distStr • ~$mins min"
+                }
+            } else {
+                // Actualización continua por proyección local entre intervalos OSRM (0 llamadas HTTP)
+                val targetLoc = android.location.Location("").apply {
+                    latitude = trip.passengerLat
+                    longitude = trip.passengerLon
+                }
+                val roadMeters = (loc.distanceTo(targetLoc) * 1.28).toInt()
+                val mins = kotlin.math.ceil((roadMeters / 1000.0) / 20.0 * 60.0).toInt().coerceAtLeast(1)
+                val distStr = if (roadMeters >= 1000) String.format(java.util.Locale.US, "%.1f km", roadMeters / 1000.0) else "$roadMeters m"
+                routeSummaryToPassenger = "$distStr • ~$mins min"
+            }
         } else {
             routeSummaryToPassenger = null
+            lastTripIdForRoute = null
+            lastOsrmCalcTime = 0L
         }
     }
 
