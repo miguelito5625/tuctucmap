@@ -689,29 +689,48 @@ class SupabaseRepository {
     }
 
     /**
-     * Obtiene el historial de viajes del conductor autenticado limitado entre 1 y 7 días (por defecto 7),
+     * Obtiene el historial de viajes del conductor autenticado en un rango de fechas UTC o días relativos,
      * reduciendo drásticamente la transferencia de datos entre la base de datos y la app móvil.
      */
-    suspend fun getDriverTripHistory(days: Int = 7): Result<List<CompletedTripResponseDto>> {
+    suspend fun getDriverTripHistory(
+        startDateUtc: String? = null,
+        endDateUtc: String? = null,
+        days: Int? = null
+    ): Result<List<CompletedTripResponseDto>> {
         return try {
             val uid = currentUserUid ?: return Result.failure(Exception("No user"))
-            val clampedDays = days.coerceIn(1, 7)
-            val cal = java.util.Calendar.getInstance().apply {
-                add(java.util.Calendar.DAY_OF_YEAR, -clampedDays)
-                set(java.util.Calendar.HOUR_OF_DAY, 0)
-                set(java.util.Calendar.MINUTE, 0)
-                set(java.util.Calendar.SECOND, 0)
-                set(java.util.Calendar.MILLISECOND, 0)
+
+            val startUtc: String
+            val endUtc: String?
+
+            if (!startDateUtc.isNullOrBlank()) {
+                startUtc = startDateUtc
+                endUtc = endDateUtc?.takeIf { it.isNotBlank() }
+            } else {
+                val clampedDays = (days ?: 7).coerceIn(1, 7)
+                val cal = java.util.Calendar.getInstance().apply {
+                    if (clampedDays > 1) {
+                        add(java.util.Calendar.DAY_OF_YEAR, -(clampedDays - 1))
+                    }
+                    set(java.util.Calendar.HOUR_OF_DAY, 0)
+                    set(java.util.Calendar.MINUTE, 0)
+                    set(java.util.Calendar.SECOND, 0)
+                    set(java.util.Calendar.MILLISECOND, 0)
+                }
+                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US).apply {
+                    timeZone = java.util.TimeZone.getTimeZone("UTC")
+                }
+                startUtc = sdf.format(cal.time)
+                endUtc = null
             }
-            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US).apply {
-                timeZone = java.util.TimeZone.getTimeZone("UTC")
-            }
-            val startUtc = sdf.format(cal.time)
 
             val trips = supabase.postgrest["trips"].select {
                 filter {
                     eq("driver_id", uid)
                     gte("created_at", startUtc)
+                    if (endUtc != null) {
+                        lte("created_at", endUtc)
+                    }
                 }
                 order("created_at", Order.DESCENDING)
             }.decodeList<CompletedTripResponseDto>()

@@ -32,10 +32,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.ui.util.ExternalNavigationUtils
+import com.example.tuctucmap.data.model.parseIsoTimestamp
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
+
+enum class DriverHistoryPeriodFilter {
+    TODAY,
+    YESTERDAY,
+    CUSTOM_RANGE
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,21 +56,154 @@ fun DriverTripHistoryScreen(
     var trips by remember { mutableStateOf<List<SupabaseRepository.CompletedTripResponseDto>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var selectedFilter by remember { mutableStateOf("all") } // "all", "accepted", "rejected"
-    var selectedDays by remember { mutableIntStateOf(7) } // 1 a 7 días
+    var currentPeriodFilter by remember { mutableStateOf(DriverHistoryPeriodFilter.TODAY) }
+    var customRangeStartUtcMillis by remember { mutableStateOf<Long?>(null) }
+    var customRangeEndUtcMillis by remember { mutableStateOf<Long?>(null) }
+    var showDatePickerDialog by remember { mutableStateOf(false) }
     var selectedTrip by remember { mutableStateOf<SupabaseRepository.CompletedTripResponseDto?>(null) }
 
-    fun loadTrips(days: Int = selectedDays) {
+    // Fechas en zona horaria local del dispositivo
+    val localBounds = remember(currentPeriodFilter, customRangeStartUtcMillis, customRangeEndUtcMillis) {
+        val startCal = Calendar.getInstance()
+        val endCal = Calendar.getInstance()
+
+        when (currentPeriodFilter) {
+            DriverHistoryPeriodFilter.TODAY -> {
+                startCal.apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                endCal.apply {
+                    set(Calendar.HOUR_OF_DAY, 23)
+                    set(Calendar.MINUTE, 59)
+                    set(Calendar.SECOND, 59)
+                    set(Calendar.MILLISECOND, 999)
+                }
+            }
+            DriverHistoryPeriodFilter.YESTERDAY -> {
+                startCal.apply {
+                    add(Calendar.DAY_OF_YEAR, -1)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                endCal.apply {
+                    add(Calendar.DAY_OF_YEAR, -1)
+                    set(Calendar.HOUR_OF_DAY, 23)
+                    set(Calendar.MINUTE, 59)
+                    set(Calendar.SECOND, 59)
+                    set(Calendar.MILLISECOND, 999)
+                }
+            }
+            DriverHistoryPeriodFilter.CUSTOM_RANGE -> {
+                val startUtcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                    timeInMillis = customRangeStartUtcMillis ?: System.currentTimeMillis()
+                }
+                val endUtcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                    timeInMillis = customRangeEndUtcMillis ?: (customRangeStartUtcMillis ?: System.currentTimeMillis())
+                }
+
+                startCal.apply {
+                    set(startUtcCal.get(Calendar.YEAR), startUtcCal.get(Calendar.MONTH), startUtcCal.get(Calendar.DAY_OF_MONTH), 0, 0, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                endCal.apply {
+                    set(endUtcCal.get(Calendar.YEAR), endUtcCal.get(Calendar.MONTH), endUtcCal.get(Calendar.DAY_OF_MONTH), 23, 59, 59)
+                    set(Calendar.MILLISECOND, 999)
+                }
+            }
+        }
+        Pair(startCal, endCal)
+    }
+
+    val sdfUtc = remember {
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+    }
+
+    val shortDateSdf = remember { SimpleDateFormat("dd/MM", Locale.getDefault()) }
+    val fullDateSdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
+
+    val customRangeSummary = remember(customRangeStartUtcMillis, customRangeEndUtcMillis) {
+        if (customRangeStartUtcMillis != null && customRangeEndUtcMillis != null) {
+            val startUtcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = customRangeStartUtcMillis!! }
+            val endUtcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = customRangeEndUtcMillis!! }
+            val startLocal = Calendar.getInstance().apply {
+                set(startUtcCal.get(Calendar.YEAR), startUtcCal.get(Calendar.MONTH), startUtcCal.get(Calendar.DAY_OF_MONTH))
+            }
+            val endLocal = Calendar.getInstance().apply {
+                set(endUtcCal.get(Calendar.YEAR), endUtcCal.get(Calendar.MONTH), endUtcCal.get(Calendar.DAY_OF_MONTH))
+            }
+            if (customRangeStartUtcMillis == customRangeEndUtcMillis) {
+                fullDateSdf.format(startLocal.time)
+            } else {
+                "${shortDateSdf.format(startLocal.time)} - ${shortDateSdf.format(endLocal.time)}"
+            }
+        } else {
+            "Rango de fechas"
+        }
+    }
+
+    fun loadTrips() {
+        val (startCal, endCal) = localBounds
+        val startUtc = sdfUtc.format(startCal.time)
+        val endUtc = sdfUtc.format(endCal.time)
+        val startMs = startCal.timeInMillis
+        val endMs = endCal.timeInMillis
+
         coroutineScope.launch {
             isLoading = true
-            repository.getDriverTripHistory(days = days).onSuccess {
-                trips = it.sortedByDescending { trip -> trip.created_at }
+            repository.getDriverTripHistory(startDateUtc = startUtc, endDateUtc = endUtc).onSuccess { list ->
+                // Filtro estricto en memoria en la zona horaria local del dispositivo
+                trips = list.filter { trip ->
+                    val epoch = parseIsoTimestamp(trip.created_at)
+                    epoch in startMs..endMs
+                }.sortedByDescending { it.created_at }
+            }.onFailure {
+                Toast.makeText(context, "Error al cargar historial: ${it.message}", Toast.LENGTH_SHORT).show()
             }
             isLoading = false
         }
     }
 
-    LaunchedEffect(selectedDays) {
-        loadTrips(selectedDays)
+    LaunchedEffect(currentPeriodFilter, customRangeStartUtcMillis, customRangeEndUtcMillis) {
+        loadTrips()
+    }
+
+    // Configuración de límites para el selector de fechas (máximo 7 días hacia atrás hasta hoy)
+    val todayLocal = remember { Calendar.getInstance() }
+    val maxAllowedUtcMidnight = remember(todayLocal) {
+        Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            clear()
+            set(todayLocal.get(Calendar.YEAR), todayLocal.get(Calendar.MONTH), todayLocal.get(Calendar.DAY_OF_MONTH), 0, 0, 0)
+        }.timeInMillis
+    }
+    val minAllowedUtcMidnight = remember(maxAllowedUtcMidnight) {
+        Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            timeInMillis = maxAllowedUtcMidnight
+            add(Calendar.DAY_OF_YEAR, -7)
+        }.timeInMillis
+    }
+
+    val selectableDates = remember(minAllowedUtcMidnight, maxAllowedUtcMidnight) {
+        object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis in minAllowedUtcMidnight..maxAllowedUtcMidnight
+            }
+            override fun isSelectableYear(year: Int): Boolean {
+                val minYear = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                    timeInMillis = minAllowedUtcMidnight
+                }.get(Calendar.YEAR)
+                val maxYear = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                    timeInMillis = maxAllowedUtcMidnight
+                }.get(Calendar.YEAR)
+                return year in minYear..maxYear
+            }
+        }
     }
 
     val dateFormat = remember {
@@ -110,7 +251,11 @@ fun DriverTripHistoryScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Últimos $selectedDays días (máx. 7 días)",
+                            text = when (currentPeriodFilter) {
+                                DriverHistoryPeriodFilter.TODAY -> "Viajes de hoy"
+                                DriverHistoryPeriodFilter.YESTERDAY -> "Viajes de ayer"
+                                DriverHistoryPeriodFilter.CUSTOM_RANGE -> "Rango: $customRangeSummary"
+                            },
                             color = Color(0xFF94A3B8),
                             fontSize = 12.sp
                         )
@@ -153,7 +298,7 @@ fun DriverTripHistoryScreen(
                 .padding(innerPadding)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // ── Filtro de Rango en Días (1 a 7 días hacia Supabase) ──────────
+                // ── Filtro de Período (Hoy, Ayer o DatePicker máx. 7 días hacia atrás) ──────────
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -176,7 +321,7 @@ fun DriverTripHistoryScreen(
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
-                                text = "Periodo (1 a 7 días):",
+                                text = "Periodo:",
                                 color = Color.White,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold
@@ -187,7 +332,11 @@ fun DriverTripHistoryScreen(
                             color = Color(0x33F9D423)
                         ) {
                             Text(
-                                text = if (selectedDays == 1) "Solo Hoy" else "$selectedDays días",
+                                text = when (currentPeriodFilter) {
+                                    DriverHistoryPeriodFilter.TODAY -> "Solo Hoy"
+                                    DriverHistoryPeriodFilter.YESTERDAY -> "Solo Ayer"
+                                    DriverHistoryPeriodFilter.CUSTOM_RANGE -> customRangeSummary
+                                },
                                 color = Color(0xFFF9D423),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
@@ -196,31 +345,162 @@ fun DriverTripHistoryScreen(
                         }
                     }
 
-                    LazyRow(
+                    // Chips de Selección: Hoy, Ayer, Rango de fechas (Date Picker)
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        (1..7).forEach { days ->
-                            item {
-                                FilterChip(
-                                    selected = selectedDays == days,
-                                    onClick = {
-                                        if (selectedDays != days) {
-                                            selectedDays = days
-                                        }
-                                    },
-                                    label = {
-                                        Text(if (days == 1) "1 día (Hoy)" else "$days días")
-                                    },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = Color(0xFFF9D423),
-                                        selectedLabelColor = Color(0xFF0F2027),
-                                        containerColor = Color(0x22FFFFFF),
-                                        labelColor = Color.White
+                        // Opción 1: Hoy
+                        FilterChip(
+                            selected = currentPeriodFilter == DriverHistoryPeriodFilter.TODAY,
+                            onClick = {
+                                currentPeriodFilter = DriverHistoryPeriodFilter.TODAY
+                            },
+                            label = { Text("Hoy") },
+                            leadingIcon = if (currentPeriodFilter == DriverHistoryPeriodFilter.TODAY) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.Today,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
                                     )
+                                }
+                            } else null,
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFFF9D423),
+                                selectedLabelColor = Color(0xFF0F2027),
+                                selectedLeadingIconColor = Color(0xFF0F2027),
+                                containerColor = Color(0x22FFFFFF),
+                                labelColor = Color.White
+                            )
+                        )
+
+                        // Opción 2: Ayer
+                        FilterChip(
+                            selected = currentPeriodFilter == DriverHistoryPeriodFilter.YESTERDAY,
+                            onClick = {
+                                currentPeriodFilter = DriverHistoryPeriodFilter.YESTERDAY
+                            },
+                            label = { Text("Ayer") },
+                            leadingIcon = if (currentPeriodFilter == DriverHistoryPeriodFilter.YESTERDAY) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.History,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            } else null,
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFFF9D423),
+                                selectedLabelColor = Color(0xFF0F2027),
+                                selectedLeadingIconColor = Color(0xFF0F2027),
+                                containerColor = Color(0x22FFFFFF),
+                                labelColor = Color.White
+                            )
+                        )
+
+                        // Opción 3: Date picker (Rango máx. 7 días hacia atrás)
+                        FilterChip(
+                            selected = currentPeriodFilter == DriverHistoryPeriodFilter.CUSTOM_RANGE,
+                            onClick = {
+                                showDatePickerDialog = true
+                            },
+                            label = {
+                                Text(
+                                    if (currentPeriodFilter == DriverHistoryPeriodFilter.CUSTOM_RANGE) {
+                                        customRangeSummary
+                                    } else {
+                                        "Rango de fechas"
+                                    }
                                 )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFFF9D423),
+                                selectedLabelColor = Color(0xFF0F2027),
+                                selectedLeadingIconColor = Color(0xFF0F2027),
+                                containerColor = Color(0x22FFFFFF),
+                                labelColor = Color.White
+                            )
+                        )
+                    }
+                }
+
+                // Modal DatePickerDialog con DateRangePicker
+                if (showDatePickerDialog) {
+                    val dateRangePickerState = rememberDateRangePickerState(
+                        initialSelectedStartDateMillis = customRangeStartUtcMillis ?: maxAllowedUtcMidnight,
+                        initialSelectedEndDateMillis = customRangeEndUtcMillis ?: maxAllowedUtcMidnight,
+                        selectableDates = selectableDates
+                    )
+
+                    DatePickerDialog(
+                        onDismissRequest = { showDatePickerDialog = false },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    val start = dateRangePickerState.selectedStartDateMillis
+                                    val end = dateRangePickerState.selectedEndDateMillis ?: start
+                                    if (start != null && end != null) {
+                                        customRangeStartUtcMillis = minOf(start, end)
+                                        customRangeEndUtcMillis = maxOf(start, end)
+                                        currentPeriodFilter = DriverHistoryPeriodFilter.CUSTOM_RANGE
+                                        showDatePickerDialog = false
+                                    }
+                                },
+                                enabled = dateRangePickerState.selectedStartDateMillis != null
+                            ) {
+                                Text("Aplicar", color = Color(0xFFF9D423), fontWeight = FontWeight.Bold)
                             }
-                        }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDatePickerDialog = false }) {
+                                Text("Cancelar", color = Color.White)
+                            }
+                        },
+                        colors = DatePickerDefaults.colors(
+                            containerColor = Color(0xFF1E293B)
+                        )
+                    ) {
+                        DateRangePicker(
+                            state = dateRangePickerState,
+                            title = {
+                                Text(
+                                    text = "Rango de fechas (máx. 7 días)",
+                                    modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp),
+                                    color = Color.White,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            },
+                            showModeToggle = false,
+                            colors = DatePickerDefaults.colors(
+                                containerColor = Color(0xFF1E293B),
+                                titleContentColor = Color.White,
+                                headlineContentColor = Color.White,
+                                weekdayContentColor = Color(0xFF94A3B8),
+                                subheadContentColor = Color(0xFFCBD5E1),
+                                navigationContentColor = Color.White,
+                                yearContentColor = Color.White,
+                                currentYearContentColor = Color(0xFFF9D423),
+                                selectedYearContentColor = Color(0xFF0F2027),
+                                selectedYearContainerColor = Color(0xFFF9D423),
+                                dayContentColor = Color.White,
+                                disabledDayContentColor = Color(0xFF475569),
+                                selectedDayContentColor = Color(0xFF0F2027),
+                                selectedDayContainerColor = Color(0xFFF9D423),
+                                dayInSelectionRangeContentColor = Color(0xFF0F2027),
+                                dayInSelectionRangeContainerColor = Color(0x66F9D423)
+                            ),
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
                     }
                 }
 
