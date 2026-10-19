@@ -39,9 +39,9 @@ data class DriverLocation(
         }
 
     /**
-     * Determina si el conductor ha enviado un latido reciente (por defecto en los últimos 3 minutos).
+     * Determina si el conductor ha enviado un latido reciente (por defecto en los últimos 5 minutos).
      */
-    fun isRecentlyActive(maxAgeMillis: Long = 180_000L): Boolean {
+    fun isRecentlyActive(maxAgeMillis: Long = 300_000L): Boolean {
         if (!activo) return false
         val lastMs = updatedAtMillis
         if (lastMs <= 0L) return true // Compatibilidad si no venía timestamp

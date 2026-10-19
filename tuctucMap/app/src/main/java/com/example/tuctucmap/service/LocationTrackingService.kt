@@ -42,8 +42,9 @@ class LocationTrackingService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var pendingTripsJob: Job? = null
     private var statusObserverJob: Job? = null
-    private var currentGpsPriority = Priority.PRIORITY_HIGH_ACCURACY
-    private var currentGpsIntervalMs = 5000L
+    private var isLocationUpdatesActive = false
+    private var currentGpsPriority: Int? = null
+    private var currentGpsIntervalMs: Long? = null
 
     private var tts: TextToSpeech? = null
     private var isTtsReady = false
@@ -307,7 +308,7 @@ class LocationTrackingService : Service() {
     }
 
     private fun applyLocationRequest(priority: Int, intervalMs: Long) {
-        if (currentGpsPriority == priority && currentGpsIntervalMs == intervalMs && isRunning) {
+        if (isLocationUpdatesActive && currentGpsPriority == priority && currentGpsIntervalMs == intervalMs) {
             return
         }
         currentGpsPriority = priority
@@ -324,7 +325,9 @@ class LocationTrackingService : Service() {
                 locationCallback,
                 Looper.getMainLooper()
             )
+            isLocationUpdatesActive = true
         } catch (unlikely: SecurityException) {
+            isLocationUpdatesActive = false
             isRunning = false
             stopSelf()
         }
@@ -333,6 +336,17 @@ class LocationTrackingService : Service() {
     private fun startLocationUpdates() {
         // Inicializar con alta precisión para inicio de turno
         applyLocationRequest(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
+
+        // Obtener de inmediato la última ubicación conocida para no demorar la aparición en el mapa
+        try {
+            fusedLocationClient.lastLocation.addOnSuccessListener { lastLoc ->
+                if (lastLoc != null && currentLocation.value == null) {
+                    currentLocation.value = lastLoc
+                    recordTripLocation(lastLoc)
+                    updateSupabaseLocation(lastLoc)
+                }
+            }
+        } catch (_: SecurityException) {}
 
         // Monitoreo adaptativo de energía: relajar GPS en pausa para no agotar la batería del teléfono
         statusObserverJob?.cancel()
@@ -435,6 +449,12 @@ class LocationTrackingService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         isRunning = false
+        isLocationUpdatesActive = false
+        currentGpsPriority = null
+        currentGpsIntervalMs = null
+        currentLocation.value = null
+        lastSentLocation = null
+        lastSentTimestamp = 0L
         pendingTripsJob?.cancel()
         statusObserverJob?.cancel()
         fusedLocationClient.removeLocationUpdates(locationCallback)
