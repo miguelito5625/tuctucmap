@@ -1,0 +1,22 @@
+# ==========================================
+# Graphify Exclusions for TucTuc Map
+# ==========================================
+
+# Play Store media and screenshots (not part of codebase architecture)
+recursos_playstore/
+*.mp4
+*.png
+*.webp
+
+# Android compiled graphics and mipmaps
+tuctucMap/app/src/main/res/mipmap*
+tuctucMap/app/src/main/res/drawable/*.png
+tuctucMap/app/src/main/ic_launcher-playstore.png
+
+# Build artifacts & caches (backup in case .gitignore is bypassed)
+build/
+dist/
+.gradle/
+.angular/
+node_modules/
+graphify-out/

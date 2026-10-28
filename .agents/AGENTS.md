@@ -50,6 +50,11 @@ Para optimizar el uso de tokens y mantener procedimientos estandarizados, este p
    - Incremento secuencial de `versionCode` y `versionName` en `build.gradle.kts`.
    - Extracción y síntesis de commits desde la fecha de modificación del último `.aab` para redactar el Nombre y las Notas de la versión en formato Google Play Console (`<es-419>`).
 
+6. **[`graphify`](C:/Users/exbinario/.gemini/config/skills/graphify/SKILL.md):**
+   - Grafo de conocimiento y navegación arquitectónica (GraphRAG) en `graphify-out/`.
+   - Consultas con token-budget reducido (`python -m graphify query "<pregunta>"`), trazabilidad de rutas entre conceptos (`python -m graphify path "A" "B"`) y análisis de impacto (`python -m graphify affected "X"`).
+   - Sincronización incremental sin costo de API (`python -m graphify update .`).
+
 ---
 
 ## 3. Reglas Obligatorias del Agente (AI Rules)
@@ -73,6 +78,9 @@ Las siguientes 7 reglas tienen carácter mandatorio e ineludible en toda tarea:
    - Tras editar código en `tuctucMap/` o `tuctucMapDashboard/`, el agente **DEBE** compilar (`.\gradlew.bat assembleDebug` o `npm run build`), verificar la salida y resolver proactivamente cualquier error antes de finalizar la respuesta.
 7. **Sincronización y Push Obligatorio a GitHub:**
    - Cada vez que el usuario solicite agregar o modificar funciones en cualquiera de los proyectos, tras verificar la compilación exitosa, el agente **DEBE** preparar los cambios (`git add`), crear el commit semántico (`git commit -m "..."`) y hacer push a GitHub (`git push origin <rama>`), siguiendo el runbook [`tuctuc-git-sync`](./skills/tuctuc-git-sync/SKILL.md).
+8. **Consulta Obligatoria a Graphify para Eficiencia de Tokens:**
+   - **Antes de explorar:** Ante cualquier solicitud de funcionalidad, duda arquitectónica o análisis de impacto, consultar primero el grafo de conocimiento en `graphify-out/` (`python -m graphify query "<pregunta>"`, `python -m graphify path "A" "B"` o `python -m graphify affected "X"`). Esto evita consumir decenas de miles de tokens leyendo archivos completos innecesariamente.
+   - **Mantenimiento del grafo:** Tras implementar o modificar código en cualquiera de los tres subsistemas, ejecutar `python -m graphify update .` para refrescar el grafo con análisis AST local (0 tokens de API).
 
 
 ---
