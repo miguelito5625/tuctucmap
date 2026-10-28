@@ -45,6 +45,9 @@
       >
         <mat-icon matListItemIcon>directions_car</mat-icon>
         <span matListItemTitle>Conductores</span>
+        @if (pendingDriversCount() > 0) {
+          <span matListItemMeta class="nav-badge-pending">{{ pendingDriversCount() }}</span>
+        }
       </a>
 
       <a

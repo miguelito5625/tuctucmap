@@ -509,3 +509,14 @@ CREATE POLICY "Participants and admin can update trips" ON public.trips
     auth.uid() = driver_id OR
     public.is_admin()
   );
+
+-- Habilitar Supabase Realtime para tablas requeridas en el Dashboard
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'subscription_payment_requests'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.subscription_payment_requests;
+  END IF;
+END $$;

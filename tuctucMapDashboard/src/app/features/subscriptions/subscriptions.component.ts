@@ -1,6 +1,7 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -1398,10 +1399,11 @@ export class RejectRenewalDialogComponent {
     }
   `]
 })
-export class SubscriptionsComponent implements OnInit {
+export class SubscriptionsComponent implements OnInit, OnDestroy {
   private readonly supabaseService = inject(SupabaseService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly subs = new Subscription();
 
   // Tab 1: Solicitudes de Renovación
   readonly requestColumns: string[] = ['conductor', 'contacto', 'plan', 'boleta', 'fecha', 'estado', 'acciones'];
@@ -1456,6 +1458,18 @@ export class SubscriptionsComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.loadAllData();
+
+    // Sincronización en tiempo real reactiva
+    this.subs.add(
+      this.supabaseService.getPaymentRequestsChanges$().subscribe(() => {
+        this.loadRequests();
+        this.loadSubscriptions();
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
   }
 
   async loadAllData(): Promise<void> {
@@ -1470,6 +1484,7 @@ export class SubscriptionsComponent implements OnInit {
     try {
       const data = await this.supabaseService.getPaymentRequests();
       this.paymentRequests.set(data);
+      await this.supabaseService.refreshPendingPaymentRequestsCount();
     } catch (e) {
       console.error('Error cargando solicitudes:', e);
       this.snackBar.open('Error al cargar solicitudes de renovación', 'Cerrar', { duration: 3000 });

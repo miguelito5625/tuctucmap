@@ -44,30 +44,45 @@ export class ShellComponent implements OnInit, OnDestroy {
   readonly sidenavOpened = signal<boolean>(true);
   readonly sidenavMode = computed<'over' | 'side'>(() => (this.isMobile() ? 'over' : 'side'));
 
-  private breakpointSub?: Subscription;
+  private readonly subs = new Subscription();
+  private visibilityHandler?: () => void;
 
   adminName = signal<string>('Cargando...');
   readonly pendingRenewalsCount = signal<number>(0);
+  readonly pendingDriversCount = signal<number>(0);
 
   ngOnInit(): void {
-    this.breakpointSub = this.breakpointObserver
-      .observe(['(max-width: 991.98px)'])
-      .subscribe((result) => {
-        const mobile = result.matches;
-        this.isMobile.set(mobile);
-        this.sidenavOpened.set(!mobile);
-      });
+    this.subs.add(
+      this.breakpointObserver
+        .observe(['(max-width: 991.98px)'])
+        .subscribe((result) => {
+          const mobile = result.matches;
+          this.isMobile.set(mobile);
+          this.sidenavOpened.set(!mobile);
+        })
+    );
+
+    this.subs.add(
+      this.supabaseService.getPendingPaymentRequestsCount$().subscribe((count) => {
+        this.pendingRenewalsCount.set(count);
+      })
+    );
+
+    this.subs.add(
+      this.supabaseService.getPendingDriversCount$().subscribe((count) => {
+        this.pendingDriversCount.set(count);
+      })
+    );
 
     this.loadProfile();
-    this.loadPendingRenewals();
-  }
 
-  async loadPendingRenewals(): Promise<void> {
-    try {
-      const count = await this.supabaseService.getPendingPaymentRequestsCount();
-      this.pendingRenewalsCount.set(count);
-    } catch {
-      // Ignore
+    if (typeof document !== 'undefined') {
+      this.visibilityHandler = () => {
+        if (document.visibilityState === 'visible') {
+          this.supabaseService.refreshPendingPaymentRequestsCount();
+        }
+      };
+      document.addEventListener('visibilitychange', this.visibilityHandler);
     }
   }
 
@@ -85,7 +100,10 @@ export class ShellComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.breakpointSub?.unsubscribe();
+    this.subs.unsubscribe();
+    if (this.visibilityHandler && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+    }
   }
 
   onNavItemClick(): void {

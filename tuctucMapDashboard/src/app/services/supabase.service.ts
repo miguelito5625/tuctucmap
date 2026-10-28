@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, Subject } from 'rxjs';
 import {
   AppConfig,
   Driver,
@@ -182,6 +182,11 @@ export class SupabaseService {
 
   private driversSubject = new BehaviorSubject<Driver[]>([]);
   private channel: any;
+  private pendingDriversCountSubject = new BehaviorSubject<number>(0);
+
+  private pendingPaymentRequestsSubject = new BehaviorSubject<number>(0);
+  private paymentRequestsChangeSubject = new Subject<void>();
+  private paymentRequestsChannel: any;
 
   getDrivers(): Observable<Driver[]> {
     this.fetchDrivers();
@@ -198,6 +203,11 @@ export class SupabaseService {
     return this.driversSubject.asObservable();
   }
 
+  getPendingDriversCount$(): Observable<number> {
+    this.getDrivers();
+    return this.pendingDriversCountSubject.asObservable();
+  }
+
   private async fetchDrivers(): Promise<void> {
     try {
       await this.supabase.rpc('sync_server_time_and_expire');
@@ -211,7 +221,10 @@ export class SupabaseService {
       .eq('role', 'driver');
     
     if (!error && data) {
-      this.driversSubject.next(this.mapProfilesToDrivers(data));
+      const drivers = this.mapProfilesToDrivers(data);
+      this.driversSubject.next(drivers);
+      const pendingCount = drivers.filter(d => d.estadoAprobacion === 'pendiente').length;
+      this.pendingDriversCountSubject.next(pendingCount);
     }
   }
 
@@ -570,6 +583,43 @@ export class SupabaseService {
     }));
   }
 
+  private initPaymentRequestsRealtime(): void {
+    if (!this.paymentRequestsChannel) {
+      this.paymentRequestsChannel = this.supabase
+        .channel('public:subscription_payment_requests')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'subscription_payment_requests' }, () => {
+          this.refreshPendingPaymentRequestsCount();
+          this.paymentRequestsChangeSubject.next();
+        })
+        .subscribe();
+    }
+  }
+
+  async refreshPendingPaymentRequestsCount(): Promise<number> {
+    try {
+      const { count, error } = await this.supabase
+        .from('subscription_payment_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pendiente');
+      const val = (!error && count != null) ? count : 0;
+      this.pendingPaymentRequestsSubject.next(val);
+      return val;
+    } catch {
+      return this.pendingPaymentRequestsSubject.value;
+    }
+  }
+
+  getPendingPaymentRequestsCount$(): Observable<number> {
+    this.initPaymentRequestsRealtime();
+    this.refreshPendingPaymentRequestsCount();
+    return this.pendingPaymentRequestsSubject.asObservable();
+  }
+
+  getPaymentRequestsChanges$(): Observable<void> {
+    this.initPaymentRequestsRealtime();
+    return this.paymentRequestsChangeSubject.asObservable();
+  }
+
   async approvePaymentRequest(requestId: string, customEndDate?: Date): Promise<void> {
     const params: any = { p_request_id: requestId };
     if (customEndDate) {
@@ -580,7 +630,11 @@ export class SupabaseService {
       console.error('Error al aprobar solicitud de renovación:', error);
       throw error;
     }
-    await this.fetchDrivers();
+    await Promise.all([
+      this.refreshPendingPaymentRequestsCount(),
+      this.fetchDrivers()
+    ]);
+    this.paymentRequestsChangeSubject.next();
   }
 
   async rejectPaymentRequest(requestId: string, rejectionReason?: string): Promise<void> {
@@ -592,20 +646,15 @@ export class SupabaseService {
       console.error('Error al rechazar solicitud de renovación:', error);
       throw error;
     }
-    await this.fetchDrivers();
+    await Promise.all([
+      this.refreshPendingPaymentRequestsCount(),
+      this.fetchDrivers()
+    ]);
+    this.paymentRequestsChangeSubject.next();
   }
 
   async getPendingPaymentRequestsCount(): Promise<number> {
-    try {
-      const { count, error } = await this.supabase
-        .from('subscription_payment_requests')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pendiente');
-      if (error) return 0;
-      return count || 0;
-    } catch {
-      return 0;
-    }
+    return await this.refreshPendingPaymentRequestsCount();
   }
 }
 
