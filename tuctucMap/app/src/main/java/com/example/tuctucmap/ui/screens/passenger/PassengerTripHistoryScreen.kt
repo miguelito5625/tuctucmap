@@ -95,7 +95,7 @@ fun PassengerTripHistoryScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(trips) { trip ->
+                    items(trips, key = { it.id.ifBlank { it.created_at } }) { trip ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()

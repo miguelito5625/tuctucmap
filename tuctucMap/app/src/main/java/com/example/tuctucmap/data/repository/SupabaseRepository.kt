@@ -11,7 +11,9 @@ import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
+import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.realtime
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
@@ -52,6 +55,22 @@ class SupabaseRepository {
         @Volatile
         var cachedAppConfig: AppConfig = AppConfig()
             private set
+
+        @Volatile
+        private var lastServerClockSyncElapsedMs: Long = 0L
+
+        @Volatile
+        private var lastAppConfigFetchElapsedMs: Long = 0L
+
+        private val repositoryIoScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+        private val tripColumnsWithoutRoute = Columns.list(
+            "id", "passenger_id", "driver_id", "passenger_lat", "passenger_lon",
+            "status", "message", "created_at", "fare", "distance_km",
+            "passenger_name", "passenger_phone"
+        )
+
+        private val tripSummaryColumns = Columns.list("id", "fare")
 
         @Volatile
         private var firebaseClockListenerInitialized = false
@@ -114,11 +133,17 @@ class SupabaseRepository {
 
     /**
      * Sincroniza la hora real del servidor PostgreSQL y expira suscripciones vencidas en BD.
+     * Incluye debounce de 60s para evitar llamadas RPC repetidas durante transiciones de pantalla.
      */
-    suspend fun syncServerTimeAndExpire(): Long {
+    suspend fun syncServerTimeAndExpire(force: Boolean = false): Long {
+        val nowElapsed = android.os.SystemClock.elapsedRealtime()
+        if (!force && lastServerClockSyncElapsedMs > 0L && (nowElapsed - lastServerClockSyncElapsedMs) < 60_000L) {
+            return ServerClock.nowMillis()
+        }
         return try {
             val serverMs = supabase.postgrest.rpc("sync_server_time_and_expire").decodeAs<Long>()
             ServerClock.updateFromServerEpoch(serverMs)
+            lastServerClockSyncElapsedMs = android.os.SystemClock.elapsedRealtime()
             serverMs
         } catch (_: Exception) {
             ServerClock.nowMillis()
@@ -127,14 +152,20 @@ class SupabaseRepository {
 
     /**
      * Obtiene la configuración dinámica del negocio (WhatsApp admin, cuentas bancarias, tarifas, radio km).
+     * Incluye caché en memoria con TTL de 60s para ahorrar tráfico de red.
      */
-    suspend fun getAppConfig(): AppConfig {
+    suspend fun getAppConfig(force: Boolean = false): AppConfig {
+        val nowElapsed = android.os.SystemClock.elapsedRealtime()
+        if (!force && lastAppConfigFetchElapsedMs > 0L && (nowElapsed - lastAppConfigFetchElapsedMs) < 60_000L) {
+            return cachedAppConfig
+        }
         return try {
             val cfg = supabase.postgrest["app_config"].select {
                 filter { eq("id", "default") }
             }.decodeSingleOrNull<AppConfig>()
             if (cfg != null) {
                 cachedAppConfig = cfg
+                lastAppConfigFetchElapsedMs = android.os.SystemClock.elapsedRealtime()
                 cfg
             } else {
                 cachedAppConfig
@@ -318,7 +349,7 @@ class SupabaseRepository {
     }
 
     fun getDriverProfileOnce(uid: String, onResult: (Driver?) -> Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
+        repositoryIoScope.launch {
             try {
                 syncServerTimeAndExpire()
                 val driver = supabase.postgrest["profiles"].select {
@@ -332,7 +363,7 @@ class SupabaseRepository {
     }
 
     fun getPassengerProfileOnce(uid: String, onResult: (Passenger?) -> Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
+        repositoryIoScope.launch {
             try {
                 val passenger = supabase.postgrest["profiles"].select {
                     filter { eq("id", uid) }
@@ -598,7 +629,7 @@ class SupabaseRepository {
             }
             val startOfTodayUtc = sdf.format(cal.time)
 
-            val todayTrips = supabase.postgrest["trips"].select {
+            val todayTrips = supabase.postgrest["trips"].select(columns = tripSummaryColumns) {
                 filter {
                     eq("driver_id", uid)
                     eq("status", "completed")
@@ -699,8 +730,10 @@ class SupabaseRepository {
     suspend fun getPassengerTripHistory(): Result<List<CompletedTripResponseDto>> {
         return try {
             val uid = currentUserUid ?: return Result.failure(Exception("No user"))
-            val trips = supabase.postgrest["trips"].select {
+            val trips = supabase.postgrest["trips"].select(columns = tripColumnsWithoutRoute) {
                 filter { eq("passenger_id", uid) }
+                order("created_at", Order.DESCENDING)
+                limit(50)
             }.decodeList<CompletedTripResponseDto>()
 
             val driverIds = trips.map { it.driver_id }.filter { it.isNotBlank() }.distinct()
@@ -829,13 +862,14 @@ class SupabaseRepository {
             }
             val sevenDaysAgoUtc = sdf.format(cal.time)
 
-            val trips = supabase.postgrest["trips"].select {
+            val trips = supabase.postgrest["trips"].select(columns = tripColumnsWithoutRoute) {
                 filter {
                     eq("driver_id", uid)
                     eq("status", "completed")
                     gte("created_at", sevenDaysAgoUtc)
                 }
                 order("created_at", Order.DESCENDING)
+                limit(300)
             }.decodeList<CompletedTripResponseDto>()
 
             val passengerIds = trips.mapNotNull { it.passenger_id }.filter { it.isNotBlank() }.distinct()
@@ -1255,6 +1289,7 @@ class SupabaseRepository {
         val channel = supabase.channel(uniqueChannelId)
         val flow = channel.postgresChangeFlow<PostgresAction>("public") {
             table = "profiles"
+            filter("id", FilterOperator.EQ, uid)
         }
 
         launch {
@@ -1288,6 +1323,7 @@ class SupabaseRepository {
         val channel = supabase.channel(uniqueChannelId)
         val flow = channel.postgresChangeFlow<PostgresAction>("public") {
             table = "profiles"
+            filter("id", FilterOperator.EQ, uid)
         }
 
         launch {

@@ -1,8 +1,10 @@
 package com.example.tuctucmap
 
+import android.app.ActivityManager
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.os.StatFs
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -10,6 +12,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
+import androidx.lifecycle.lifecycleScope
 import com.example.tuctucmap.data.SecurePrefs
 import com.example.tuctucmap.data.model.Driver
 import com.example.tuctucmap.data.model.ServerClock
@@ -22,8 +25,10 @@ import com.example.tuctucmap.ui.screens.AnimatedSplashScreen
 import com.example.tuctucmap.ui.theme.TuctucMapTheme
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.status.SessionStatus
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import org.osmdroid.config.Configuration
 
@@ -37,31 +42,53 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val osmConfig = Configuration.getInstance()
-        val osmdroidPrefs = getSharedPreferences("osmdroid_prefs", Context.MODE_PRIVATE)
-        val defaultPrefs = getSharedPreferences("${packageName}_preferences", Context.MODE_PRIVATE)
         val currentUserAgent = "TucTucMap/1.0 (Android; app.tuctucmap.gt)"
-
-        osmdroidPrefs.edit().putString("osmdroid.userAgentValue", currentUserAgent).apply()
-        defaultPrefs.edit().putString("osmdroid.userAgentValue", currentUserAgent).apply()
-
-        osmConfig.load(applicationContext, osmdroidPrefs)
         osmConfig.userAgentValue = currentUserAgent
-        // Optimización de caché en disco de OpenStreetMap (150 MB máx) para gama baja y reducción de datos móviles
-        osmConfig.tileFileSystemCacheMaxBytes = 150L * 1024L * 1024L
-        osmConfig.tileFileSystemCacheTrimBytes = 120L * 1024L * 1024L
-        osmConfig.save(applicationContext, osmdroidPrefs)
 
-        // Limpiar caché de tiles si venía con versión anterior o bloqueada
-        val lastUserAgent = osmdroidPrefs.getString("applied_user_agent_v2", null)
-        if (lastUserAgent != currentUserAgent) {
+        // Ajustar límites de memoria de tiles según el hardware del dispositivo (Low-RAM)
+        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+        val isLowRam = activityManager?.isLowRamDevice == true
+        if (isLowRam) {
+            osmConfig.cacheMapTileCount = 12.toShort()
+            osmConfig.tileDownloadThreads = 2.toShort()
+            osmConfig.tileFileSystemThreads = 2.toShort()
+        }
+
+        // Ejecutar I/O de preferencias, cálculo de StatFs y limpieza de caché en segundo plano (Dispatchers.IO)
+        // para no bloquear el hilo principal durante el Cold Start.
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
-                osmConfig.osmdroidTileCache?.deleteRecursively()
-                val osmdroidDir = java.io.File(filesDir, "osmdroid")
-                if (osmdroidDir.exists()) {
-                    osmdroidDir.deleteRecursively()
+                val osmdroidPrefs = getSharedPreferences("osmdroid_prefs", Context.MODE_PRIVATE)
+                val defaultPrefs = getSharedPreferences("${packageName}_preferences", Context.MODE_PRIVATE)
+
+                osmdroidPrefs.edit().putString("osmdroid.userAgentValue", currentUserAgent).apply()
+                defaultPrefs.edit().putString("osmdroid.userAgentValue", currentUserAgent).apply()
+
+                osmConfig.load(applicationContext, osmdroidPrefs)
+                osmConfig.userAgentValue = currentUserAgent
+
+                val availableBytes = try {
+                    StatFs(filesDir.absolutePath).availableBytes
+                } catch (_: Exception) {
+                    500L * 1024L * 1024L
+                }
+                val maxCacheCap = if (isLowRam) 60L * 1024L * 1024L else 150L * 1024L * 1024L
+                val dynamicMaxBytes = (availableBytes / 10L).coerceIn(25L * 1024L * 1024L, maxCacheCap)
+
+                osmConfig.tileFileSystemCacheMaxBytes = dynamicMaxBytes
+                osmConfig.tileFileSystemCacheTrimBytes = (dynamicMaxBytes * 8L) / 10L
+                osmConfig.save(applicationContext, osmdroidPrefs)
+
+                val lastUserAgent = osmdroidPrefs.getString("applied_user_agent_v2", null)
+                if (lastUserAgent != currentUserAgent) {
+                    osmConfig.osmdroidTileCache?.deleteRecursively()
+                    val osmdroidDir = java.io.File(filesDir, "osmdroid")
+                    if (osmdroidDir.exists()) {
+                        osmdroidDir.deleteRecursively()
+                    }
+                    osmdroidPrefs.edit().putString("applied_user_agent_v2", currentUserAgent).apply()
                 }
             } catch (_: Exception) {}
-            osmdroidPrefs.edit().putString("applied_user_agent_v2", currentUserAgent).apply()
         }
 
         enableEdgeToEdge()
@@ -72,15 +99,17 @@ class MainActivity : ComponentActivity() {
                 var isSplashFinished by remember { mutableStateOf(false) }
 
                 LaunchedEffect(Unit) {
+                    // Precargar configuración dinámica en paralelo sin bloquear la resolución de pantalla
+                    launch(Dispatchers.IO) {
+                        try {
+                            withTimeoutOrNull(2500L) {
+                                repository.getAppConfig()
+                            }
+                        } catch (_: Exception) {}
+                    }
+
                     val sharedPrefs = getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
                     val savedRole = sharedPrefs.getString("user_role", null)
-
-                    // Precargar configuración dinámica y sincronizar reloj del servidor en paralelo
-                    try {
-                        withTimeoutOrNull(1500L) {
-                            repository.getAppConfig()
-                        }
-                    } catch (_: Exception) {}
 
                     if (savedRole.isNullOrBlank()) {
                         // Usuario sin sesión previa iniciada: acceso público directo al mapa como invitado

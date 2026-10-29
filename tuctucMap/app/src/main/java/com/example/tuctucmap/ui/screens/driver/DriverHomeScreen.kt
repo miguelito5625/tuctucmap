@@ -81,7 +81,7 @@ fun DriverHomeScreen(
 
     val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    var pendingTrips by remember { mutableStateOf<List<SupabaseRepository.TripInfo>>(emptyList()) }
+    val pendingTrips by LocationTrackingService.pendingTripsFlow.collectAsState()
     var showRenewalDialog by remember { mutableStateOf(false) }
 
     // Cache local persistente y estado compartido de viaje activo del conductor
@@ -218,86 +218,10 @@ fun DriverHomeScreen(
         }
     }
 
-    // ── Motor de voz Text-To-Speech para anuncios de solicitudes entrantes ──────────────
-    var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
-    DisposableEffect(context) {
-        var ttsRef: TextToSpeech? = null
-        val listener = TextToSpeech.OnInitListener { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                val spanishLocales = listOf(
-                    Locale.forLanguageTag("es-419"), // Español Latinoamérica
-                    Locale.forLanguageTag("es-GT"),  // Español Guatemala
-                    Locale.forLanguageTag("es-US"),  // Español EE.UU.
-                    Locale.forLanguageTag("es-ES"),  // Español España
-                    Locale.forLanguageTag("es")      // Español general
-                )
-                var langSet = false
-                for (loc in spanishLocales) {
-                    val result = ttsRef?.setLanguage(loc)
-                    if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
-                        langSet = true
-                        break
-                    }
-                }
-                if (!langSet) {
-                    ttsRef?.language = Locale.getDefault()
-                }
-            }
-        }
-        val tts = TextToSpeech(context, listener)
-        ttsRef = tts
-        textToSpeech = tts
-        onDispose {
-            tts.stop()
-            tts.shutdown()
-        }
-    }
-
-    // Alarma auditiva y voz al llegar solicitudes pendientes (coordinado con LocationTrackingService para no duplicar audio)
-    var previousTripsCount by remember { mutableIntStateOf(0) }
-    LaunchedEffect(pendingTrips.size, activeAcceptedTrip, driverAvailability, isServiceRunning) {
-        if (activeAcceptedTrip == null && isServiceRunning && driverAvailability == "disponible") {
-            if (pendingTrips.size > previousTripsCount) {
-                val latestTrip = pendingTrips.firstOrNull()
-                if (latestTrip != null && LocationTrackingService.announcedTripIds.add(latestTrip.tripId)) {
-                    try {
-                        val uri =
-                            android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION)
-                        val r = android.media.RingtoneManager.getRingtone(context, uri)
-                        r.play()
-                    } catch (_: Exception) {
-                    }
-
-                    if (textToSpeech != null) {
-                        try {
-                            val msg = latestTrip.message.ifBlank { "Solicitud de viaje" }
-                            textToSpeech?.speak("¡Nueva solicitud de viaje! $msg", TextToSpeech.QUEUE_FLUSH, null, null)
-                        } catch (_: Exception) {
-                        }
-                    }
-                }
-            }
-        } else {
-            try {
-                textToSpeech?.stop()
-            } catch (_: Exception) {
-            }
-        }
-        previousTripsCount = pendingTrips.size
-    }
-
-    // Escuchar solicitudes pendientes en Firebase dentro del radio configurado y excluyendo ignoradas localmente
-    LaunchedEffect(uid) {
-        if (uid.isNotBlank()) {
-            repository.observePendingTripsForDriver(
-                driverId = uid,
-                driverCoordProvider = {
-                    val loc = currentLocation
-                    if (loc != null) Pair(loc.latitude, loc.longitude) else null
-                }
-            ).collectLatest { trips ->
-                pendingTrips = trips.filterNot { LocationTrackingService.ignoredBroadcastTripIds.contains(it.tripId) }
-            }
+    // Detener síntesis de voz automáticamente si el conductor acepta un viaje, cambia a pausa o apaga el servicio
+    LaunchedEffect(activeAcceptedTrip, driverAvailability, isServiceRunning) {
+        if (activeAcceptedTrip != null || !isServiceRunning || driverAvailability != "disponible") {
+            LocationTrackingService.stopSpeaking()
         }
     }
 
@@ -1900,10 +1824,7 @@ fun DriverHomeScreen(
                                     LocationTrackingService.activeAcceptedTrip.value = null
                                     tripSharedPrefs.edit().clear().apply()
                                     showFinishTripDialog = false
-                                    try {
-                                        textToSpeech?.stop()
-                                    } catch (_: Exception) {
-                                    }
+                                    LocationTrackingService.stopSpeaking()
                                     refreshTripStats()
                                     Toast.makeText(
                                         context,
@@ -2018,8 +1939,7 @@ fun DriverHomeScreen(
                                                 if (isBroadcast) {
                                                     // Solicitud general (broadcast): solo ignorar localmente en este teléfono
                                                     // sin cancelar el viaje para el pasajero ni para los demás conductores.
-                                                    LocationTrackingService.ignoredBroadcastTripIds.add(trip.tripId)
-                                                    pendingTrips = pendingTrips.filterNot { it.tripId == trip.tripId }
+                                                    LocationTrackingService.dismissBroadcastTrip(trip.tripId)
                                                 } else {
                                                     // Solicitud directa a este conductor específico
                                                     coroutineScope.launch {
@@ -2133,10 +2053,7 @@ fun DriverHomeScreen(
                                                             currentLocation,
                                                             acceptedTrip
                                                         )
-                                                        try {
-                                                            textToSpeech?.stop()
-                                                        } catch (_: Exception) {
-                                                        }
+                                                        LocationTrackingService.stopSpeaking()
                                                         Toast.makeText(
                                                             context,
                                                             "¡Viaje aceptado! En camino a recoger al pasajero.",

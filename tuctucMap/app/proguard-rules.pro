@@ -16,9 +16,9 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
-# Mantener modelos de datos para Firebase Realtime Database y Supabase
+# Mantener modelos de datos y DTOs internos para Firebase Realtime Database y Supabase
 -keep class com.example.tuctucmap.data.model.** { *; }
--keep class com.example.tuctucmap.data.repository.** { *; }
+-keep class com.example.tuctucmap.data.repository.SupabaseRepository$* { *; }
 
 # Ktor & Supabase
 -dontwarn io.ktor.**

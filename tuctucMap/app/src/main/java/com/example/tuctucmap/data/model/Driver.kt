@@ -160,40 +160,74 @@ fun calculateRemainingDays(expiryMs: Long, nowMs: Long = ServerClock.nowMillis()
     return kotlin.math.ceil(daysDouble).toInt()
 }
 
+private val isoTimestampCache = object : java.util.LinkedHashMap<String, Long>(256, 0.75f, true) {
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Long>?): Boolean {
+        return size > 512
+    }
+}
+
+private val fallbackIsoFormatters = object : ThreadLocal<List<java.text.SimpleDateFormat>>() {
+    override fun initialValue(): List<java.text.SimpleDateFormat> {
+        val utc = java.util.TimeZone.getTimeZone("UTC")
+        val patterns = arrayOf(
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+            "yyyy-MM-dd'T'HH:mm:ssXXX",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss"
+        )
+        return patterns.map { pattern ->
+            java.text.SimpleDateFormat(pattern, java.util.Locale.US).apply {
+                timeZone = utc
+            }
+        }
+    }
+}
+
 /**
  * Parsea una cadena de fecha ISO 8601 (procedente de Supabase TIMESTAMPTZ) a milisegundos de época.
+ * Incluye caché LRU en memoria O(1) y reutilización ThreadLocal de SimpleDateFormat para API 24-25.
  */
 fun parseIsoTimestamp(dateStr: String?): Long {
     if (dateStr.isNullOrBlank()) return 0L
-    
+
+    synchronized(isoTimestampCache) {
+        isoTimestampCache[dateStr]?.let { return it }
+    }
+
+    var parsedMs = 0L
+
     // API 26+ (Android 8.0+)
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
         try {
-            return java.time.Instant.parse(dateStr).toEpochMilli()
-        } catch (_: Exception) {}
-        try {
-            return java.time.OffsetDateTime.parse(dateStr).toInstant().toEpochMilli()
-        } catch (_: Exception) {}
+            parsedMs = java.time.Instant.parse(dateStr).toEpochMilli()
+        } catch (_: Exception) {
+            try {
+                parsedMs = java.time.OffsetDateTime.parse(dateStr).toInstant().toEpochMilli()
+            } catch (_: Exception) {}
+        }
     }
 
-    // Fallbacks para formatos ISO 8601 comunes
-    val patterns = arrayOf(
-        "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX",
-        "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
-        "yyyy-MM-dd'T'HH:mm:ssXXX",
-        "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
-        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-        "yyyy-MM-dd'T'HH:mm:ss'Z'",
-        "yyyy-MM-dd'T'HH:mm:ss"
-    )
-    for (pattern in patterns) {
-        try {
-            val sdf = java.text.SimpleDateFormat(pattern, java.util.Locale.US)
-            sdf.timeZone = java.util.TimeZone.getTimeZone("UTC")
-            val date = sdf.parse(dateStr)
-            if (date != null) return date.time
-        } catch (_: Exception) {}
+    if (parsedMs <= 0L) {
+        val formatters = fallbackIsoFormatters.get() ?: emptyList()
+        for (sdf in formatters) {
+            try {
+                val date = sdf.parse(dateStr)
+                if (date != null) {
+                    parsedMs = date.time
+                    break
+                }
+            } catch (_: Exception) {}
+        }
     }
 
-    return 0L
+    if (parsedMs > 0L) {
+        synchronized(isoTimestampCache) {
+            isoTimestampCache[dateStr] = parsedMs
+        }
+    }
+
+    return parsedMs
 }

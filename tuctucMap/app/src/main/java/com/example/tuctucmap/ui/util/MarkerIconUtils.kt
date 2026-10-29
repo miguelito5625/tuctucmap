@@ -2,223 +2,226 @@ package com.example.tuctucmap.ui.util
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.core.content.ContextCompat
 import com.example.tuctucmap.R
+import kotlin.math.roundToInt
 
 /**
  * Gestor optimizado de iconos de marcadores para OSMDroid.
- * Procesa el mapa de bits con fondo transparente una sola vez y lo almacena
- * en memoria, evitando cálculos pesados de píxeles y recolección de basura
- * repetitiva en el hilo principal durante recomposiciones de Compose.
+ *
+ * Optimizaciones aplicadas para dispositivos de gama baja:
+ * 1. Usa recursos WebP preprocesados en `drawable-nodpi` (`inScaled = false`) evitando picos de
+ *    37-67 MB de RAM al decodificar en pantallas xxhdpi/xxxhdpi y eliminando los bucles de píxeles en CPU.
+ * 2. Escala el icono de TucTuc dinámicamente según la densidad de pantalla (`48.dp`) en lugar de
+ *    144px fijos que saturaban pantallas mdpi/hdpi.
+ * 3. Retorna nuevas envolturas `BitmapDrawable(resources, cachedBitmap)` por cada llamada,
+ *    compartiendo el mismo `Bitmap` en memoria pero aislando `alpha` y `bounds` entre marcadores.
  */
 object MarkerIconUtils {
+
     @Volatile
-    private var cachedTucTucIcon: Drawable? = null
+    private var cachedActiveBitmap: Bitmap? = null
 
-    fun getTucTucIcon(context: Context): Drawable {
-        cachedTucTucIcon?.let { return it }
+    @Volatile
+    private var cachedPausedBitmap: Bitmap? = null
 
+    @Volatile
+    private var cachedAssignedBitmap: Bitmap? = null
+
+    @Volatile
+    private var cachedPassengerPickupBitmap: Bitmap? = null
+
+    private fun getOrCreateActiveBitmap(context: Context): Bitmap {
+        cachedActiveBitmap?.let { if (!it.isRecycled) return it }
         synchronized(this) {
-            cachedTucTucIcon?.let { return it }
-
-            val drawable = ContextCompat.getDrawable(context, R.drawable.ic_tuc_tuc)
-            val processed = if (drawable is BitmapDrawable) {
-                val originalBitmap = drawable.bitmap
-                val size = 144
-                val scaledBitmap = Bitmap.createScaledBitmap(originalBitmap, size, size, true)
-                val width = scaledBitmap.width
-                val height = scaledBitmap.height
-                val pixels = IntArray(width * height)
-                scaledBitmap.getPixels(pixels, 0, width, 0, 0, width, height)
-                for (i in pixels.indices) {
-                    val pixel = pixels[i]
-                    val r = (pixel shr 16) and 0xff
-                    val g = (pixel shr 8) and 0xff
-                    val b = pixel and 0xff
-                    if (r > 230 && g > 230 && b > 230) {
-                        pixels[i] = 0x00000000
+            cachedActiveBitmap?.let { if (!it.isRecycled) return it }
+            val density = context.resources.displayMetrics.density
+            val targetSizePx = (48f * density).roundToInt().coerceIn(64, 192)
+            val options = BitmapFactory.Options().apply {
+                inScaled = false
+                inPreferredConfig = Bitmap.Config.ARGB_8888
+            }
+            val rawBitmap = BitmapFactory.decodeResource(
+                context.resources,
+                R.drawable.ic_tuc_tuc,
+                options
+            )
+            val scaled = if (rawBitmap != null) {
+                if (rawBitmap.width == targetSizePx && rawBitmap.height == targetSizePx) {
+                    rawBitmap
+                } else {
+                    Bitmap.createScaledBitmap(rawBitmap, targetSizePx, targetSizePx, true).also {
+                        if (it != rawBitmap) rawBitmap.recycle()
                     }
                 }
-                val transparentBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                transparentBitmap.setPixels(pixels, 0, width, 0, 0, width, height)
-                BitmapDrawable(context.resources, transparentBitmap)
             } else {
-                drawable ?: BitmapDrawable(context.resources, Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888))
+                Bitmap.createBitmap(targetSizePx, targetSizePx, Bitmap.Config.ARGB_8888)
             }
-
-            cachedTucTucIcon = processed
-            return processed
+            cachedActiveBitmap = scaled
+            return scaled
         }
     }
 
-    @Volatile
-    private var cachedPausedTucTucIcon: Drawable? = null
+    /**
+     * Retorna un Drawable del TucTuc activo listo para asignarse a un Marker de OSMDroid.
+     * Cada llamada retorna un `BitmapDrawable` independiente respaldado por el mismo `Bitmap` en caché,
+     * evitando que `marker.setAlpha(...)` contamine a otros marcadores del mapa.
+     */
+    fun getTucTucIcon(context: Context): Drawable {
+        return BitmapDrawable(context.resources, getOrCreateActiveBitmap(context))
+    }
 
     /**
-     * Devuelve una versión tintada en ámbar y atenuada del icono del tuctuc
-     * para representar visualmente en el mapa a conductores en pausa u ocupados.
+     * Retorna una versión en escala de grises y semitransparente del icono del TucTuc
+     * para representar conductores temporalmente en pausa ("Ocupado"), generada por Canvas/ColorMatrix
+     * sin bucles de píxeles en CPU.
      */
     fun getPausedTucTucIcon(context: Context): Drawable {
-        cachedPausedTucTucIcon?.let { return it }
+        val pausedBmp = cachedPausedBitmap?.takeIf { !it.isRecycled } ?: synchronized(this) {
+            cachedPausedBitmap?.takeIf { !it.isRecycled } ?: run {
+                val activeBmp = getOrCreateActiveBitmap(context)
+                val grayBmp = Bitmap.createBitmap(
+                    activeBmp.width,
+                    activeBmp.height,
+                    Bitmap.Config.ARGB_8888
+                )
+                val canvas = Canvas(grayBmp)
+                val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
+                    colorFilter = ColorMatrixColorFilter(ColorMatrix().apply { setSaturation(0f) })
+                    alpha = 180 // ~70% opacidad
+                }
+                canvas.drawBitmap(activeBmp, 0f, 0f, paint)
+                cachedPausedBitmap = grayBmp
+                grayBmp
+            }
+        }
+        return BitmapDrawable(context.resources, pausedBmp)
+    }
 
-        synchronized(this) {
-            cachedPausedTucTucIcon?.let { return it }
+    /**
+     * Devuelve el marcador de punto de recogida del pasajero (Pin verde esmeralda con Quetzal interior).
+     */
+    fun getPassengerPickupIcon(context: Context): Drawable {
+        val pickupBmp = cachedPassengerPickupBitmap?.takeIf { !it.isRecycled } ?: synchronized(this) {
+            cachedPassengerPickupBitmap?.takeIf { !it.isRecycled } ?: run {
+                val density = context.resources.displayMetrics.density
+                val width = (48 * density).toInt().coerceAtLeast(48)
+                val height = (58 * density).toInt().coerceAtLeast(58)
+                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bitmap)
 
-            val baseDrawable = getTucTucIcon(context)
-            val processed = if (baseDrawable is BitmapDrawable) {
-                val src = baseDrawable.bitmap
-                val w = src.width
-                val h = src.height
-                val pixels = IntArray(w * h)
-                src.getPixels(pixels, 0, w, 0, 0, w, h)
+                val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+                val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    style = Paint.Style.STROKE
+                    strokeWidth = 2.5f * density
+                    color = Color.WHITE
+                }
 
-                for (i in pixels.indices) {
-                    val pixel = pixels[i]
-                    val a = (pixel shr 24) and 0xff
-                    if (a > 0) {
-                        val r = (pixel shr 16) and 0xff
-                        val g = (pixel shr 8) and 0xff
-                        val b = pixel and 0xff
+                val centerX = width / 2f
+                val centerY = (width / 2f)
+                val radius = (width / 2f) - (3 * density)
 
-                        // Desaturación y tinte cálido ámbar/naranja (#FFA726)
-                        val gray = (r * 0.299 + g * 0.587 + b * 0.114).toInt()
-                        val tintedR = (gray * 0.35 + 255 * 0.65).toInt().coerceIn(0, 255)
-                        val tintedG = (gray * 0.35 + 167 * 0.65).toInt().coerceIn(0, 255)
-                        val tintedB = (gray * 0.35 + 38 * 0.65).toInt().coerceIn(0, 255)
+                // Pin: Triángulo inferior
+                val tipPath = Path().apply {
+                    moveTo(centerX - (9 * density), centerY + (radius * 0.55f))
+                    lineTo(centerX, height.toFloat() - (2 * density))
+                    lineTo(centerX + (9 * density), centerY + (radius * 0.55f))
+                    close()
+                }
+                paint.color = Color.parseColor("#059669") // Verde esmeralda llamativo
+                canvas.drawPath(tipPath, paint)
 
-                        val finalA = (a * 0.85f).toInt().coerceIn(0, 255)
-                        pixels[i] = (finalA shl 24) or (tintedR shl 16) or (tintedG shl 8) or tintedB
+                // Círculo exterior (Verde esmeralda)
+                canvas.drawCircle(centerX, centerY, radius, paint)
+                // Borde exterior blanco
+                canvas.drawCircle(centerX, centerY, radius, strokePaint)
+
+                // Círculo interior blanco
+                paint.color = Color.WHITE
+                canvas.drawCircle(centerX, centerY, radius - (3.5f * density), paint)
+
+                // Quetzal dentro del círculo decodificado sin escalado redundante
+                val options = BitmapFactory.Options().apply {
+                    inScaled = false
+                    inPreferredConfig = Bitmap.Config.ARGB_8888
+                }
+                val quetzalBmp = BitmapFactory.decodeResource(
+                    context.resources,
+                    R.drawable.ic_quetzal_passenger,
+                    options
+                )
+                if (quetzalBmp != null) {
+                    val iconSize = (radius * 1.4f)
+                    val left = centerX - iconSize / 2f
+                    val top = centerY - iconSize / 2f
+                    val destRect = RectF(left, top, left + iconSize, top + iconSize)
+                    val bmpPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+                    canvas.drawBitmap(quetzalBmp, null, destRect, bmpPaint)
+                    quetzalBmp.recycle()
+                } else {
+                    val fallback = ContextCompat.getDrawable(context, R.drawable.ic_quetzal_passenger)
+                    if (fallback != null) {
+                        val iconSize = (radius * 1.4f).toInt()
+                        val left = (centerX - iconSize / 2f).toInt()
+                        val top = (centerY - iconSize / 2f).toInt()
+                        fallback.setBounds(left, top, left + iconSize, top + iconSize)
+                        fallback.draw(canvas)
                     }
                 }
 
-                val pausedBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-                pausedBitmap.setPixels(pixels, 0, w, 0, 0, w, h)
-                BitmapDrawable(context.resources, pausedBitmap)
-            } else {
-                baseDrawable
+                cachedPassengerPickupBitmap = bitmap
+                bitmap
             }
-
-            cachedPausedTucTucIcon = processed
-            return processed
         }
+        return BitmapDrawable(context.resources, pickupBmp)
     }
 
-    @Volatile
-    private var cachedPassengerPickupIcon: Drawable? = null
-
     /**
-     * Genera un pin de recogida distintivo para el pasajero con el icono del Quetzal
-     * sobre un fondo circular blanco con contorno verde esmeralda y punta inferior.
-     */
-    fun getPassengerPickupIcon(context: Context): Drawable {
-        cachedPassengerPickupIcon?.let { return it }
-
-        synchronized(this) {
-            cachedPassengerPickupIcon?.let { return it }
-
-            val density = context.resources.displayMetrics.density
-            val width = (52 * density).toInt()
-            val height = (64 * density).toInt()
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            val canvas = android.graphics.Canvas(bitmap)
-
-            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
-            val strokePaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                style = android.graphics.Paint.Style.STROKE
-                strokeWidth = 3f * density
-                color = android.graphics.Color.WHITE
-            }
-
-            val centerX = width / 2f
-            val radius = (width / 2f) - (4 * density)
-            val centerY = radius + (3 * density)
-
-            // Pin: Triángulo inferior
-            val tipPath = android.graphics.Path().apply {
-                moveTo(centerX - (9 * density), centerY + (radius * 0.55f))
-                lineTo(centerX, height.toFloat() - (2 * density))
-                lineTo(centerX + (9 * density), centerY + (radius * 0.55f))
-                close()
-            }
-            paint.color = android.graphics.Color.parseColor("#059669") // Verde esmeralda llamativo
-            canvas.drawPath(tipPath, paint)
-
-            // Círculo exterior (Verde esmeralda)
-            canvas.drawCircle(centerX, centerY, radius, paint)
-            // Borde exterior blanco
-            canvas.drawCircle(centerX, centerY, radius, strokePaint)
-
-            // Círculo interior blanco
-            paint.color = android.graphics.Color.WHITE
-            canvas.drawCircle(centerX, centerY, radius - (3.5f * density), paint)
-
-            // Quetzal o pasajero dentro del círculo
-            val quetzal = ContextCompat.getDrawable(context, R.drawable.ic_quetzal_passenger)
-            if (quetzal != null) {
-                val iconSize = (radius * 1.4f).toInt()
-                val left = (centerX - iconSize / 2f).toInt()
-                val top = (centerY - iconSize / 2f).toInt()
-                quetzal.setBounds(left, top, left + iconSize, top + iconSize)
-                quetzal.draw(canvas)
-            }
-
-            val result = BitmapDrawable(context.resources, bitmap)
-            cachedPassengerPickupIcon = result
-            return result
-        }
-    }
-
-    @Volatile
-    private var cachedAssignedTucTucIcon: Drawable? = null
-
-    /**
-     * Devuelve una versión destacada del TucTuc con halo verde esmeralda / cian brillante
+     * Devuelve una versión destacada del TucTuc con halo cian brillante
      * para identificar inequívocamente al conductor que aceptó el viaje del pasajero.
      */
     fun getAssignedDriverTucTucIcon(context: Context): Drawable {
-        cachedAssignedTucTucIcon?.let { return it }
-
-        synchronized(this) {
-            cachedAssignedTucTucIcon?.let { return it }
-
-            val baseDrawable = getTucTucIcon(context)
-            val processed = if (baseDrawable is BitmapDrawable) {
-                val src = baseDrawable.bitmap
+        val assignedBmp = cachedAssignedBitmap?.takeIf { !it.isRecycled } ?: synchronized(this) {
+            cachedAssignedBitmap?.takeIf { !it.isRecycled } ?: run {
+                val src = getOrCreateActiveBitmap(context)
                 val density = context.resources.displayMetrics.density
                 val haloPadding = (8 * density).toInt()
                 val w = src.width + haloPadding * 2
                 val h = src.height + haloPadding * 2
                 val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-                val canvas = android.graphics.Canvas(bitmap)
+                val canvas = Canvas(bitmap)
 
                 // Halo circular cian neón translúcido
-                val haloPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                    color = android.graphics.Color.parseColor("#4D00E5FF")
-                    style = android.graphics.Paint.Style.FILL
+                val haloPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = Color.parseColor("#4D00E5FF")
+                    style = Paint.Style.FILL
                 }
                 canvas.drawCircle(w / 2f, h / 2f, (w / 2f) - (2 * density), haloPaint)
 
                 // Anillo exterior brillante cian
-                val ringPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                    color = android.graphics.Color.parseColor("#00E5FF")
-                    style = android.graphics.Paint.Style.STROKE
+                val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = Color.parseColor("#00E5FF")
+                    style = Paint.Style.STROKE
                     strokeWidth = 3f * density
                 }
                 canvas.drawCircle(w / 2f, h / 2f, (w / 2f) - (3 * density), ringPaint)
 
                 // Dibujar el icono del TucTuc centrado
                 canvas.drawBitmap(src, haloPadding.toFloat(), haloPadding.toFloat(), null)
-                BitmapDrawable(context.resources, bitmap)
-            } else {
-                baseDrawable
+                cachedAssignedBitmap = bitmap
+                bitmap
             }
-
-            cachedAssignedTucTucIcon = processed
-            return processed
         }
+        return BitmapDrawable(context.resources, assignedBmp)
     }
 }
-
-

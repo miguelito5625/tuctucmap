@@ -11,15 +11,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -57,7 +53,7 @@ fun AnimatedSplashScreen(
     LaunchedEffect(Unit) {
         animProgress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 2350, easing = LinearEasing)
+            animationSpec = tween(durationMillis = 1650, easing = LinearEasing)
         )
         onAnimationFinished()
     }
@@ -159,7 +155,7 @@ fun AnimatedSplashScreen(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFF233439))
-            .alpha(overallAlpha),
+            .graphicsLayer { alpha = overallAlpha },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -200,23 +196,23 @@ fun AnimatedSplashScreen(
                         )
                     }
 
-                    // 2. Renderizado de cada puff de humo generado
+                    // 2. Renderizado de cada puff de humo generado (sin instanciar Shaders por frame)
                     for (puff in smokePuffs) {
                         if (p >= puff.spawnProgress) {
                             val life = ((p - puff.spawnProgress) / puff.duration).coerceIn(0f, 1f)
                             if (life < 1f) {
                                 val currentAlpha = puff.baseAlpha * (1f - life)
-                                val initialR = with(density) { puff.initialRadiusDp.dp.toPx() }
-                                val maxR = with(density) { puff.maxRadiusDp.dp.toPx() }
+                                val initialR = puff.initialRadiusDp.dp.toPx()
+                                val maxR = puff.maxRadiusDp.dp.toPx()
                                 val currentR = initialR + (maxR - initialR) * sqrt(life)
 
-                                val driftX = with(density) { puff.driftXDp.dp.toPx() } * life
-                                val driftY = with(density) { puff.driftYDp.dp.toPx() } * life
+                                val driftX = puff.driftXDp.dp.toPx() * life
+                                val driftY = puff.driftYDp.dp.toPx() * life
 
                                 // Si el vehículo ya aceleró hacia la izquierda (p > 0.78),
                                 // el humo permanece en el suelo donde se generó
                                 val smokeWorldOffsetX = if (p > 0.78f) {
-                                    with(density) { -vehicleOffsetX.toPx() * (1f - life * 0.4f) }
+                                    -vehicleOffsetX.toPx() * (1f - life * 0.4f)
                                 } else 0f
 
                                 val puffCenter = Offset(
@@ -224,17 +220,15 @@ fun AnimatedSplashScreen(
                                     y = rearWheelY + driftY
                                 )
 
+                                // Dibujo en dos capas concéntricas sin asignar Brush.radialGradient en cada frame
                                 drawCircle(
-                                    brush = Brush.radialGradient(
-                                        colors = listOf(
-                                            puff.color.copy(alpha = currentAlpha),
-                                            puff.color.copy(alpha = currentAlpha * 0.5f),
-                                            puff.color.copy(alpha = 0f)
-                                        ),
-                                        center = puffCenter,
-                                        radius = currentR
-                                    ),
+                                    color = puff.color.copy(alpha = currentAlpha * 0.35f),
                                     radius = currentR,
+                                    center = puffCenter
+                                )
+                                drawCircle(
+                                    color = puff.color.copy(alpha = currentAlpha * 0.70f),
+                                    radius = currentR * 0.58f,
                                     center = puffCenter
                                 )
                             }
@@ -270,14 +264,17 @@ fun AnimatedSplashScreen(
                     }
                 }
 
-                // Sprite del Mototaxi con desplazamiento, rotación y vibración
+                // Sprite del Mototaxi con transformación en fase de dibujo (graphicsLayer) sin relayout
                 Image(
                     painter = painterResource(id = R.drawable.splash_tuc_tuc),
                     contentDescription = "TucTuc Mototaxi",
                     modifier = Modifier
                         .fillMaxSize()
-                        .offset(x = vehicleOffsetX, y = vehicleVibrationY)
-                        .rotate(vehicleRotation)
+                        .graphicsLayer {
+                            translationX = vehicleOffsetX.toPx()
+                            translationY = vehicleVibrationY.toPx()
+                            rotationZ = vehicleRotation
+                        }
                 )
             }
 
@@ -313,7 +310,7 @@ private fun AnimatedAppName(
     }
 
     Row(
-        modifier = modifier.alpha(exitAlpha),
+        modifier = modifier.graphicsLayer { alpha = exitAlpha },
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -321,9 +318,9 @@ private fun AnimatedAppName(
             val charSpawn = startReveal + (index * letterStep)
             val charProgress = ((progress - charSpawn) / 0.08f).coerceIn(0f, 1f)
 
-            // Letra animada (fade-in + slide-up + scale)
+            // Letra animada en fase de dibujo (graphicsLayer) para cero costo de Layout por frame
             val letterAlpha = charProgress
-            val letterOffsetY = ((1f - charProgress) * 16f).dp
+            val letterOffsetYDp = (1f - charProgress) * 16f
             val letterScale = 0.75f + (0.25f * charProgress)
 
             Text(
@@ -332,10 +329,12 @@ private fun AnimatedAppName(
                 fontSize = 38.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.SansSerif,
-                modifier = Modifier
-                    .offset(y = letterOffsetY)
-                    .alpha(letterAlpha)
-                    .scale(letterScale)
+                modifier = Modifier.graphicsLayer {
+                    translationY = letterOffsetYDp.dp.toPx()
+                    alpha = letterAlpha
+                    scaleX = letterScale
+                    scaleY = letterScale
+                }
             )
         }
     }

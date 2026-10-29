@@ -53,9 +53,11 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
    - Implementado en `PassengerLocationUtils.kt`.
    - **Avatar Activo por Defecto:** Quetzal guatemalteco animado (`ic_quetzal_passenger.png`, ~72dp) saludando continuamente al usuario con alita ondeando rítmicamente, ondas de saludo cian (`👋`), rebote de respiración y pulso de radar GPS en las patitas (~22 FPS).
    - **Reversión y Conmutación Fácil:** Enum `PassengerAvatarType` (`QUETZAL` y `CLASSIC_HUMAN`). La figura anterior (persona con chaqueta azul `#0066FF` y gorra amarilla) se conserva 100% intacta y funcional en `PassengerCharacterRenderer`, conmutable al instante mediante la variable `ACTIVE_PASSENGER_AVATAR`.
-3. **Gestión de Marcadores y Caché de Iconos (`MarkerIconUtils`):**
+3. **Gestión de Marcadores, Caché de Iconos (`MarkerIconUtils`) y Ciclo de Vida de `MapView`:**
    - Implementado en `MarkerIconUtils.kt`.
-   - Procesa una única vez el drawable del mototaxi con fondo transparente y lo conserva en memoria (`@Volatile cachedTucTucIcon`) para evitar bucles pesados de píxeles en el hilo principal durante recomposiciones.
+   - Utiliza recursos WebP preprocesados con transparencia en `res/drawable-nodpi/` (`ic_tuc_tuc.webp`, `ic_quetzal_passenger.webp`, `splash_tuc_tuc.webp`) con `inScaled = false`, evitando picos de 37-67 MB de RAM al decodificar en pantallas `xxhdpi`/`xxxhdpi` y eliminando bucles de píxeles en el hilo principal.
+   - Escala el icono del TucTuc dinámicamente a `48.dp` según la densidad de pantalla y retorna nuevas envolturas `BitmapDrawable(resources, cachedBitmap)` por marcador para evitar colisiones de `alpha` o `bounds`.
+   - Todos los `MapView` (`PassengerMapScreen`, `ActiveDriversMapView`, `DriverRouteToPassengerScreen`) están vinculados a `LifecycleEventObserver` (`onResume()`, `onPause()`, `disableMyLocation()` y `onDetach()`).
    - Genera dinámicamente el pin de recogida del pasajero (`getPassengerPickupIcon`) con el icono del Quetzal sobre un escudo circular esmeralda y blanco.
 4. **Trazado de Ruta al Pasajero (Nivel 1 con OSRM & OSMDroid):**
    - Implementado en `OsrmRoutingService.kt` y `DriverRouteToPassengerScreen.kt`.
@@ -73,7 +75,7 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
 2. **Servicio en Segundo Plano (`LocationTrackingService`):**
    - Ubicación: `tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt`.
    - Emisión adaptativa hacia Firebase Realtime Database (`>= 8 metros` o heartbeat cada `45 segundos`).
-   - **Alerta de Viaje con Pantalla Apagada o en WhatsApp:** El servicio observa `observePendingTripsForDriver(driverId)` directamente en segundo plano. Cuando entra una solicitud dentro del radio del conductor, reproduce el timbre de llamada, anuncia por voz (`TextToSpeech` en español) el nombre del pasajero y la distancia, y lanza una notificación de alta prioridad (`IMPORTANCE_HIGH`) que abre `MainActivity`. Comparte `announcedTripIds` e `ignoredBroadcastTripIds` con `DriverHomeScreen` para no duplicar anuncios.
+   - **Fuente Única de Solicitudes y Voz (`pendingTripsFlow` & `TextToSpeech`):** El servicio centraliza la única instancia de `TextToSpeech` y la única suscripción a `observePendingTripsForDriver(driverId)`, exponiendo `pendingTripsFlow` hacia `DriverHomeScreen` y `ActiveDriversMapView` y utilizando el icono vectorial monocromático `R.drawable.ic_stat_tuctuc` para notificaciones del sistema. `announcedTripIds` e `ignoredBroadcastTripIds` están acotados mediante LRU (`<= 200` entradas).
 
 ---
 

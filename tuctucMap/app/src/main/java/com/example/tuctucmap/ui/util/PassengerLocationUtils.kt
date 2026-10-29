@@ -104,17 +104,17 @@ class PassengerLocationOverlay(
         }
 
         // 4. Optimización de batería y GPU para gama media y baja:
-        // Solo programar el siguiente fotograma si el avatar está dentro de la pantalla visible
-        val isVisibleOnScreen = (px >= -150f && px <= (mapView.width + 150f) && py >= -150f && py <= (mapView.height + 150f))
+        // Solo programar el siguiente fotograma si el MapView está visible en ventana y el avatar está dentro del área visible.
+        // Si está fuera de vista, OSMDroid volverá a invocar drawMyLocation automáticamente al arrastrar el mapa o recibir nuevo GPS.
+        val isVisibleOnScreen = mapView.isShown &&
+            (px >= -150f && px <= (mapView.width + 150f) && py >= -150f && py <= (mapView.height + 150f))
         if (isVisibleOnScreen) {
             mapView.postInvalidateDelayed(125L)
-        } else {
-            // Fuera de vista, comprobar con muy baja frecuencia (1200ms) para cero consumo de CPU
-            mapView.postInvalidateDelayed(1200L)
         }
     }
 
     override fun onDetach(mapView: MapView) {
+        disableMyLocation()
         super.onDetach(mapView)
         // Nota: Los fotogramas se mantienen en la caché en memoria del objeto Renderer
         // para evitar bloqueos del RenderThread o excepciones por uso de bitmaps reciclados.
@@ -139,7 +139,11 @@ object QuetzalCharacterRenderer {
             val density = context.resources.displayMetrics.density
             val sizePx = (sizeDp * density).toInt()
 
-            val baseBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.ic_quetzal_passenger)
+            val decodeOptions = BitmapFactory.Options().apply {
+                inScaled = false
+                inPreferredConfig = Bitmap.Config.ARGB_8888
+            }
+            val baseBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.ic_quetzal_passenger, decodeOptions)
                 ?: return PassengerCharacterRenderer.generateWavingFrames(context, frameCount, sizeDp)
 
             val frames = (0 until frameCount).map { i ->

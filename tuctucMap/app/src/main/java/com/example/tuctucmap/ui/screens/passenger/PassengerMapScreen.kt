@@ -196,13 +196,35 @@ fun PassengerMapScreen(
     var myLocationOverlayInstance by remember { mutableStateOf<MyLocationNewOverlay?>(null) }
     val driverMarkers = remember { mutableMapOf<String, Marker>() }
     val driverAnimators = remember { mutableMapOf<String, ValueAnimator>() }
+    var lastMapRenderSignature by remember { mutableStateOf<Any?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
-    DisposableEffect(Unit) {
+    DisposableEffect(lifecycleOwner, mapViewInstance, myLocationOverlayInstance, hasLocationPermission) {
+        val map = mapViewInstance
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    map?.onResume()
+                    if (hasLocationPermission) {
+                        myLocationOverlayInstance?.enableMyLocation()
+                    }
+                }
+                Lifecycle.Event.ON_PAUSE -> {
+                    myLocationOverlayInstance?.disableMyLocation()
+                    map?.onPause()
+                }
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
             driverAnimators.values.forEach { it.cancel() }
             driverAnimators.clear()
             driverMarkers.clear()
+            myLocationOverlayInstance?.disableMyLocation()
+            map?.onPause()
+            map?.onDetach()
         }
     }
 
@@ -574,6 +596,16 @@ fun PassengerMapScreen(
                         }
                     },
                     update = { mapView ->
+                        // Evitar re-ejecutar el bucle de marcadores e invalidar el mapa cuando el usuario
+                        // escribe texto en los formularios (tripMessage, guestName, guestPhone).
+                        val currentSignature = Triple(
+                            rawDriverLocations.toList(),
+                            routePointsToPassenger,
+                            Triple(activeTrip?.tripId, activeTrip?.status, activeTrip?.driverId)
+                        )
+                        if (currentSignature == lastMapRenderSignature) return@AndroidView
+                        lastMapRenderSignature = currentSignature
+
                         // Sincronizar trazado de ruta por calles con doble contorno de alto contraste
                         if (routePointsToPassenger.isNotEmpty()) {
                             if (routeCasingPolyline == null) {
@@ -658,10 +690,15 @@ fun PassengerMapScreen(
                             val isAvail = driverLoc.isAvailable
 
                             // Para el pasajero que solicitó el viaje se destaca a su conductor; para otros pasajeros se mantiene el estado ocupado/en pausa
-                            val targetIcon = when {
-                                isAssignedToMyTrip -> assignedTucTucIcon
-                                isAvail -> tucTucIcon
-                                else -> pausedTucTucIcon
+                            val iconStateKey = when {
+                                isAssignedToMyTrip -> 2
+                                isAvail -> 1
+                                else -> 0
+                            }
+                            fun createTargetIcon() = when (iconStateKey) {
+                                2 -> com.example.tuctucmap.ui.util.MarkerIconUtils.getAssignedDriverTucTucIcon(context)
+                                1 -> com.example.tuctucmap.ui.util.MarkerIconUtils.getTucTucIcon(context)
+                                else -> com.example.tuctucmap.ui.util.MarkerIconUtils.getPausedTucTucIcon(context)
                             }
                             val targetAlpha = if (isAssignedToMyTrip || isAvail) 1.0f else 0.65f
                             val statusTag = when {
@@ -678,7 +715,8 @@ fun PassengerMapScreen(
                                     setAlpha(0f)
                                     title = markerTitle
                                     snippet = "Placas: ${driverLoc.placas} • $statusTag"
-                                    icon = targetIcon
+                                    icon = createTargetIcon()
+                                    relatedObject = iconStateKey
                                     setOnMarkerClickListener { _, _ ->
                                         selectedDriver = driverLoc
                                         showBottomSheet = true
@@ -699,6 +737,8 @@ fun PassengerMapScreen(
                                         mapView.invalidate()
                                     }
                                 }
+                                driverAnimators[driverLoc.uid]?.cancel()
+                                driverAnimators[driverLoc.uid] = entranceAnimator
                                 entranceAnimator.start()
                             } else {
                                 val oldGeoPoint = marker.position
@@ -710,13 +750,15 @@ fun PassengerMapScreen(
                                 // Cancelar proactivamente cualquier animación previa para evitar saturar el hilo de dibujo.
                                 if (latDiff > 0.000025 || lonDiff > 0.000025) {
                                     driverAnimators[driverLoc.uid]?.cancel()
+                                    val startLat = oldGeoPoint.latitude
+                                    val startLon = oldGeoPoint.longitude
                                     val animator = ValueAnimator.ofFloat(0f, 1f).apply {
                                         duration = 3500L
                                         interpolator = LinearInterpolator()
                                         addUpdateListener { animation ->
                                             val fraction = animation.animatedFraction
-                                            val lat = oldGeoPoint.latitude + (newGeoPoint.latitude - oldGeoPoint.latitude) * fraction
-                                            val lon = oldGeoPoint.longitude + (newGeoPoint.longitude - oldGeoPoint.longitude) * fraction
+                                            val lat = startLat + (newGeoPoint.latitude - startLat) * fraction
+                                            val lon = startLon + (newGeoPoint.longitude - startLon) * fraction
                                             marker.position = GeoPoint(lat, lon)
                                             mapView.invalidate()
                                         }
@@ -733,7 +775,10 @@ fun PassengerMapScreen(
                                 }
                                 marker.title = markerTitle
                                 marker.snippet = "Placas: ${driverLoc.placas} • $statusTag"
-                                marker.icon = targetIcon
+                                if (marker.relatedObject != iconStateKey) {
+                                    marker.icon = createTargetIcon()
+                                    marker.relatedObject = iconStateKey
+                                }
                                 marker.setAlpha(targetAlpha)
                             }
                         }

@@ -66,14 +66,42 @@ class LocationTrackingService : Service() {
         private const val CHANNEL_ID = "tuctuc_driver_tracking_channel_v3"
         private const val ALERT_CHANNEL_ID = "tuctuc_driver_trip_alert_channel_v1"
 
+        private fun createBoundedSet(maxEntries: Int = 200): MutableSet<String> {
+            return Collections.synchronizedSet(
+                Collections.newSetFromMap(
+                    object : java.util.LinkedHashMap<String, Boolean>(maxEntries + 16, 0.75f, true) {
+                        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean {
+                            return size > maxEntries
+                        }
+                    }
+                )
+            )
+        }
+
+        @Volatile
+        private var activeServiceInstance: LocationTrackingService? = null
+
         var isRunning = false
             private set
         val currentLocation = MutableStateFlow<Location?>(null)
         val driverStatus = MutableStateFlow("disponible") // "disponible", "ocupado", "en_pausa"
+        val pendingTripsFlow = MutableStateFlow<List<SupabaseRepository.TripInfo>>(emptyList())
 
-        // Conjunto compartido de IDs de viajes ya anunciados por voz o ignorados localmente por este conductor
-        val announcedTripIds: MutableSet<String> = Collections.synchronizedSet(mutableSetOf())
-        val ignoredBroadcastTripIds: MutableSet<String> = Collections.synchronizedSet(mutableSetOf())
+        // Conjunto compartido acotado (LRU <= 200) de IDs de viajes ya anunciados por voz o ignorados localmente
+        val announcedTripIds: MutableSet<String> = createBoundedSet(200)
+        val ignoredBroadcastTripIds: MutableSet<String> = createBoundedSet(200)
+
+        fun stopSpeaking() {
+            try {
+                activeServiceInstance?.tts?.stop()
+            } catch (_: Exception) {}
+        }
+
+        fun dismissBroadcastTrip(tripId: String) {
+            ignoredBroadcastTripIds.add(tripId)
+            stopSpeaking()
+            pendingTripsFlow.value = pendingTripsFlow.value.filterNot { it.tripId == tripId }
+        }
 
         // Control de rastreo de viaje activo del conductor
         var activeTripId: String? = null
@@ -186,12 +214,23 @@ class LocationTrackingService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        activeServiceInstance = this
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         tts = TextToSpeech(this) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                val res = tts?.setLanguage(Locale("es", "GT"))
-                if (res == TextToSpeech.LANG_MISSING_DATA || res == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    tts?.setLanguage(Locale("es", "MX"))
+                val spanishLocales = listOf(
+                    Locale.forLanguageTag("es-GT"),
+                    Locale.forLanguageTag("es-419"),
+                    Locale.forLanguageTag("es-MX"),
+                    Locale.forLanguageTag("es-US"),
+                    Locale.forLanguageTag("es-ES"),
+                    Locale.forLanguageTag("es")
+                )
+                for (loc in spanishLocales) {
+                    val res = tts?.setLanguage(loc)
+                    if (res != TextToSpeech.LANG_MISSING_DATA && res != TextToSpeech.LANG_NOT_SUPPORTED) {
+                        break
+                    }
                 }
                 isTtsReady = true
             }
@@ -256,9 +295,14 @@ class LocationTrackingService : Service() {
                     if (loc != null) Pair(loc.latitude, loc.longitude) else null
                 }
             ).collect { trips ->
-                if (driverStatus.value != "disponible" || !activeTripId.isNullOrBlank()) return@collect
+                val visibleTrips = trips.filterNot { ignoredBroadcastTripIds.contains(it.tripId) }
+                pendingTripsFlow.value = visibleTrips
+                if (driverStatus.value != "disponible" || !activeTripId.isNullOrBlank()) {
+                    stopSpeaking()
+                    return@collect
+                }
 
-                val nextTrip = trips.firstOrNull { !ignoredBroadcastTripIds.contains(it.tripId) }
+                val nextTrip = visibleTrips.firstOrNull()
                 if (nextTrip != null && announcedTripIds.add(nextTrip.tripId)) {
                     triggerTripAlert(nextTrip)
                 }
@@ -297,7 +341,7 @@ class LocationTrackingService : Service() {
             val alertNotification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
                 .setContentTitle("¡Pasajero solicita un TucTuc!")
                 .setContentText(safeMsg.ifBlank { "Toca aquí para ver la ubicación y aceptar el viaje" })
-                .setSmallIcon(R.drawable.ic_tuc_tuc)
+                .setSmallIcon(R.drawable.ic_stat_tuctuc)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -444,7 +488,7 @@ class LocationTrackingService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("TucTuc Map - Conductor en Turno")
             .setContentText("Transmitiendo ubicación y atento a solicitudes")
-            .setSmallIcon(R.drawable.ic_tuc_tuc)
+            .setSmallIcon(R.drawable.ic_stat_tuctuc)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -456,11 +500,15 @@ class LocationTrackingService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        if (activeServiceInstance === this) {
+            activeServiceInstance = null
+        }
         isRunning = false
         isLocationUpdatesActive = false
         currentGpsPriority = null
         currentGpsIntervalMs = null
         currentLocation.value = null
+        pendingTripsFlow.value = emptyList()
         lastSentLocation = null
         lastSentTimestamp = 0L
         pendingTripsJob?.cancel()

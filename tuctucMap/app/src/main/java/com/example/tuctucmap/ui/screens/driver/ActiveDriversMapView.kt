@@ -119,6 +119,36 @@ fun DriverMapFullscreenScreen(
     var mapViewInstance by remember { mutableStateOf<MapView?>(null) }
     var myLocationOverlayInstance by remember { mutableStateOf<MyLocationNewOverlay?>(null) }
     val driverMarkers = remember { mutableMapOf<String, Marker>() }
+    val activeAnimators = remember { mutableMapOf<String, ValueAnimator>() }
+
+    // Gestión estricta de ciclo de vida del MapView y liberación de GPS/tiles al salir
+    DisposableEffect(lifecycleOwner, mapViewInstance, myLocationOverlayInstance, hasLocationPermission) {
+        val map = mapViewInstance
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    map?.onResume()
+                    if (hasLocationPermission) {
+                        myLocationOverlayInstance?.enableMyLocation()
+                    }
+                }
+                Lifecycle.Event.ON_PAUSE -> {
+                    myLocationOverlayInstance?.disableMyLocation()
+                    map?.onPause()
+                }
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            activeAnimators.values.forEach { it.cancel() }
+            activeAnimators.clear()
+            myLocationOverlayInstance?.disableMyLocation()
+            map?.onPause()
+            map?.onDetach()
+        }
+    }
 
     val coroutineScope = rememberCoroutineScope()
     val uid = repository.currentUserUid ?: ""
@@ -129,23 +159,8 @@ fun DriverMapFullscreenScreen(
         }
     }
 
-    var pendingTrips by remember { mutableStateOf<List<SupabaseRepository.TripInfo>>(emptyList()) }
-    var activeAcceptedTrip by remember { mutableStateOf<SupabaseRepository.TripInfo?>(null) }
-    LaunchedEffect(uid) {
-        if (uid.isNotBlank()) {
-            repository.observePendingTripsForDriver(uid).collectLatest { trips ->
-                pendingTrips = trips
-            }
-        }
-    }
-    LaunchedEffect(uid) {
-        if (uid.isNotBlank()) {
-            repository.observeAcceptedTripForDriver(uid).collectLatest { active ->
-                activeAcceptedTrip = active
-            }
-        }
-    }
-
+    val pendingTrips by LocationTrackingService.pendingTripsFlow.collectAsState()
+    val activeAcceptedTrip by LocationTrackingService.activeAcceptedTrip.collectAsState()
     val currentLocation by LocationTrackingService.currentLocation.collectAsState()
     val driverStatus by LocationTrackingService.driverStatus.collectAsState()
 
@@ -236,8 +251,9 @@ fun DriverMapFullscreenScreen(
                 update = { mapView ->
                     val currentUids = driverLocations.map { it.uid }.toSet()
                     val removedUids = driverMarkers.keys.filter { it !in currentUids }
-                    for (uid in removedUids) {
-                        val marker = driverMarkers.remove(uid)
+                    for (removedUid in removedUids) {
+                        activeAnimators.remove(removedUid)?.cancel()
+                        val marker = driverMarkers.remove(removedUid)
                         if (marker != null) {
                             val startLat = marker.position.latitude
                             val exitAnimator = ValueAnimator.ofFloat(1f, 0f).apply {
@@ -266,7 +282,11 @@ fun DriverMapFullscreenScreen(
                         var marker = driverMarkers[driverLoc.uid]
 
                         val isAvail = driverLoc.isAvailable
-                        val targetIcon = if (isAvail) tucTucIcon else pausedTucTucIcon
+                        val targetIcon = if (isAvail) {
+                            com.example.tuctucmap.ui.util.MarkerIconUtils.getTucTucIcon(context)
+                        } else {
+                            com.example.tuctucmap.ui.util.MarkerIconUtils.getPausedTucTucIcon(context)
+                        }
                         val targetAlpha = if (isAvail) 1.0f else 0.65f
                         val statusTag = if (isAvail) "🟢 DISPONIBLE" else "🟠 EN PAUSA"
 
@@ -278,6 +298,7 @@ fun DriverMapFullscreenScreen(
                                 title = driverLoc.nombre
                                 snippet = "Placas: ${driverLoc.placas} • $statusTag"
                                 icon = targetIcon
+                                relatedObject = isAvail
                                 setOnMarkerClickListener { _, _ ->
                                     selectedDriver = driverLoc
                                     showBottomSheet = true
@@ -298,25 +319,37 @@ fun DriverMapFullscreenScreen(
                                     mapView.invalidate()
                                 }
                             }
+                            activeAnimators[driverLoc.uid]?.cancel()
+                            activeAnimators[driverLoc.uid] = entranceAnimator
                             entranceAnimator.start()
                         } else {
                             val oldGeoPoint = marker.position
-                            if (oldGeoPoint.latitude != newGeoPoint.latitude || oldGeoPoint.longitude != newGeoPoint.longitude) {
-                                val animator = ValueAnimator.ofFloat(0f, 1f)
-                                animator.duration = 4000L
-                                animator.interpolator = LinearInterpolator()
-                                animator.addUpdateListener { animation ->
-                                    val fraction = animation.animatedFraction
-                                    val lat = oldGeoPoint.latitude + (newGeoPoint.latitude - oldGeoPoint.latitude) * fraction
-                                    val lon = oldGeoPoint.longitude + (newGeoPoint.longitude - oldGeoPoint.longitude) * fraction
-                                    marker?.position = GeoPoint(lat, lon)
-                                    mapView.invalidate()
+                            val latDiff = newGeoPoint.latitude - oldGeoPoint.latitude
+                            val lonDiff = newGeoPoint.longitude - oldGeoPoint.longitude
+                            if (kotlin.math.abs(latDiff) > 0.00001 || kotlin.math.abs(lonDiff) > 0.00001) {
+                                activeAnimators[driverLoc.uid]?.cancel()
+                                val startLat = oldGeoPoint.latitude
+                                val startLon = oldGeoPoint.longitude
+                                val animator = ValueAnimator.ofFloat(0f, 1f).apply {
+                                    duration = 3500L
+                                    interpolator = LinearInterpolator()
+                                    addUpdateListener { animation ->
+                                        val fraction = animation.animatedFraction
+                                        val lat = startLat + (newGeoPoint.latitude - startLat) * fraction
+                                        val lon = startLon + (newGeoPoint.longitude - startLon) * fraction
+                                        marker.position = GeoPoint(lat, lon)
+                                        mapView.invalidate()
+                                    }
                                 }
+                                activeAnimators[driverLoc.uid] = animator
                                 animator.start()
                             }
                             marker.title = driverLoc.nombre
                             marker.snippet = "Placas: ${driverLoc.placas} • $statusTag"
-                            marker.icon = targetIcon
+                            if (marker.relatedObject != isAvail) {
+                                marker.icon = targetIcon
+                                marker.relatedObject = isAvail
+                            }
                             marker.setAlpha(targetAlpha)
                         }
                     }
@@ -462,12 +495,17 @@ fun DriverMapFullscreenScreen(
                                         IconButton(
                                             onClick = {
                                                 isVisible = false
-                                                coroutineScope.launch {
-                                                    kotlinx.coroutines.delay(200)
-                                                    repository.saveTripRecord(trip, "rejected")
-                                                    repository.updateTripStatus(trip.tripId, "cancelled")
-                                                    kotlinx.coroutines.delay(10000)
-                                                    repository.deleteTrip(trip.tripId)
+                                                val isBroadcast = trip.driverId.isBlank() || trip.driverId == "broadcast"
+                                                if (isBroadcast) {
+                                                    LocationTrackingService.dismissBroadcastTrip(trip.tripId)
+                                                } else {
+                                                    coroutineScope.launch {
+                                                        kotlinx.coroutines.delay(200)
+                                                        repository.saveTripRecord(trip, "rejected")
+                                                        repository.updateTripStatus(trip.tripId, "cancelled")
+                                                        kotlinx.coroutines.delay(10000)
+                                                        repository.deleteTrip(trip.tripId)
+                                                    }
                                                 }
                                             },
                                             modifier = Modifier.size(32.dp)

@@ -1,11 +1,11 @@
 # Graph Report - tuctucmap  (2026-10-28)
 
 ## Corpus Check
-- 102 files · ~89,970 words
+- 103 files · ~97,178 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 865 nodes · 1386 edges · 59 communities (48 shown, 11 thin omitted)
+- 902 nodes · 1435 edges · 57 communities (46 shown, 11 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 12 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
@@ -21,7 +21,7 @@
 - tuctucMapDashboard
 - DatabaseError
 - LocationTrackingService
-- Result
+- Informe Técnico y Financiero: Análisis de Costos Cloud (Supabase vs. Firebase) y Rentabilidad de TucTuc Map
 - Política de Privacidad y Deslinde de Responsabilidad de TucTuc Map
 - DriversComponent
 - Vistas y Navegación (Jetpack Compose)
@@ -29,9 +29,8 @@
 - devDependencies
 - SecurePrefs
 - db_config.js
-- Driver
 - SubscriptionsComponent
-- AppDrawer.kt
+- Color.kt
 - SupabaseRepository
 - db.sql
 - databaseTuctucApp/package.json
@@ -45,7 +44,7 @@
 - TucTucMap Dashboard — Plan de Implementación
 - ShellComponent
 - BusinessConfigComponent
-- SupabaseRepository.kt
+- Flow
 - TucTucMap Dashboard — Tasks
 - TuctucMapDashboard
 - AGENTS.md
@@ -54,7 +53,7 @@
 - TripInfo
 - PassengerDestinationPreferences
 - Skill: Angular Dashboard (TucTuc Map)
-- AcceptTripResult
+- Transaction
 - Contexto del Proyecto: TucTuc Map (Monorepo)
 - gradlew
 - ExampleInstrumentedTest
@@ -67,7 +66,7 @@
 - DataSnapshot
 
 ## God Nodes (most connected - your core abstractions)
-1. `SupabaseRepository` - 97 edges
+1. `SupabaseRepository` - 98 edges
 2. `SupabaseService` - 49 edges
 3. `LocationTrackingService` - 26 edges
 4. `AppNavigation()` - 26 edges
@@ -75,8 +74,8 @@
 6. `Screen` - 20 edges
 7. `SecurePrefs` - 19 edges
 8. `Driver` - 14 edges
-9. `PassengerMapScreen()` - 13 edges
-10. `SubscriptionsComponent` - 12 edges
+9. `FleetMapComponent` - 14 edges
+10. `PassengerMapScreen()` - 13 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `AppNavigation()` --calls--> `DriverMapFullscreenScreen()`  [INFERRED]
@@ -93,7 +92,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (59 total, 11 thin omitted)
+## Communities (57 total, 11 thin omitted)
 
 ### Community 0 - "SupabaseService"
 Cohesion: 0.05
@@ -101,7 +100,7 @@ Nodes (23): Injectable, leaflet, authGuard(), AppConfig, FinancialKPIs, LiveDriv
 
 ### Community 1 - "AppNavigation"
 Cohesion: 0.05
-Nodes (49): Bundle, ComponentActivity, AppConfig, calculateRemainingDays(), Driver, parseIsoTimestamp(), ServerClock, SubscriptionRenewalRequest (+41 more)
+Nodes (50): Bundle, ComponentActivity, SessionStatus, AppConfig, calculateRemainingDays(), Driver, parseIsoTimestamp(), ServerClock (+42 more)
 
 ### Community 2 - "PassengerMapScreen.kt"
 Cohesion: 0.06
@@ -112,16 +111,16 @@ Cohesion: 0.05
 Nodes (40): src/material-theme.scss, src/styles.css, build, serve, test, builder, configurations, defaultConfiguration (+32 more)
 
 ### Community 4 - "DatabaseError"
-Cohesion: 0.12
+Cohesion: 0.14
 Nodes (6): DatabaseError, ValueEventListener, ValueEventListener, ValueEventListener, ValueEventListener, ValueEventListener
 
 ### Community 5 - "LocationTrackingService"
-Cohesion: 0.08
-Nodes (27): FusedLocationProviderClient, IBinder, Intent, Job, Location, LocationResult, Notification, Service (+19 more)
+Cohesion: 0.07
+Nodes (28): FusedLocationProviderClient, IBinder, Intent, Job, Location, LocationResult, Notification, Service (+20 more)
 
-### Community 6 - "Result"
-Cohesion: 0.16
-Nodes (3): Result, CompletedTripResponseDto, DriverTodaySummary
+### Community 6 - "Informe Técnico y Financiero: Análisis de Costos Cloud (Supabase vs. Firebase) y Rentabilidad de TucTuc Map"
+Cohesion: 0.06
+Nodes (35): 10. Fuentes Oficiales Consultadas, 1. Resumen Ejecutivo, 2.1 Base de Datos Relacional y Lógica deServidor (`databaseTuctucApp/db.sql`), 2.2 Telemetría GPS en Tiempo Real y Despacho de Viajes (`LocationTrackingService.kt` y `SupabaseRepository.kt`), 2.3 Autenticación (`SupabaseRepository.kt`), 2.4 Almacenamiento de Archivos (Cloud Storage), 2.5 Notificaciones y Alertas de Viaje (`LocationTrackingService.kt`, líneas 247–310), 2.6 Mapas y Ruteo Vial (`MapTileUtils.kt`, `OsrmRoutingService.kt`, `fleet-map.component.ts`) (+27 more)
 
 ### Community 7 - "Política de Privacidad y Deslinde de Responsabilidad de TucTuc Map"
 Cohesion: 0.06
@@ -155,13 +154,13 @@ Nodes (13): { Client }, { dbConfig }, dbConfig, fs, path, { Client }, { dbConfig
 Cohesion: 0.15
 Nodes (5): SubscriptionPaymentRequest, ApproveRenewalDialogComponent, RejectRenewalDialogComponent, SubscriptionsComponent, Component
 
-### Community 16 - "AppDrawer.kt"
-Cohesion: 0.12
+### Community 16 - "Color.kt"
+Cohesion: 0.10
 Nodes (21): ImageVector, Passenger, DrawerNavigationItem(), DriverDrawerItem, HISTORY, HOME, MAP, PROFILE (+13 more)
 
 ### Community 18 - "SupabaseRepository"
-Cohesion: 0.10
-Nodes (11): kotlinx, PaymentRequestInsertDto, SupabaseRepository, TripSummaryDto, UpdateDriverProfileDto, UpdatePassengerProfileDto, DriverLoginScreen(), DriverPendingScreen() (+3 more)
+Cohesion: 0.08
+Nodes (13): kotlinx, Result, CompletedTripResponseDto, DriverTodaySummary, PaymentRequestInsertDto, SupabaseRepository, TripSummaryDto, UpdateDriverProfileDto (+5 more)
 
 ### Community 19 - "db.sql"
 Cohesion: 0.14
@@ -180,7 +179,7 @@ Cohesion: 0.18
 Nodes (10): 1. Modelo SaaS: Suscripción para Conductores (Recomendado), 2. Publicidad Geolocalizada e Hiperlocal (Pasajeros), 3. Modelo B2B: Portal para Sindicatos y Asociaciones de Tuc Tucs, 4. Funciones Premium de Pasajeros (Microtransacciones), Mecánica:, Mecánica:, Mecánica:, Mecánica: (+2 more)
 
 ### Community 23 - "FleetMapComponent"
-Cohesion: 0.26
+Cohesion: 0.23
 Nodes (3): FleetMapComponent, Component, ViewChild
 
 ### Community 24 - "3. Protocolo de Ejecución Paso a Paso"
@@ -203,9 +202,9 @@ Nodes (8): 1. Stack Tecnológico & Dependencias, 2. Convenciones Críticas de UI
 Cohesion: 0.25
 Nodes (7): Decisiones Técnicas, Estructura de Archivos a Crear/Modificar, Flujo de Datos, Módulos de Angular Material a Importar, Objetivo, TucTucMap Dashboard — Plan de Implementación, Verificación
 
-### Community 32 - "SupabaseRepository.kt"
-Cohesion: 0.26
-Nodes (7): AppConfig, Driver, Flow, MutableData, Passenger, SessionStatus, Transaction
+### Community 32 - "Flow"
+Cohesion: 0.29
+Nodes (3): AppConfig, Flow, Driver
 
 ### Community 33 - "TucTucMap Dashboard — Tasks"
 Cohesion: 0.25
@@ -228,16 +227,16 @@ Cohesion: 0.36
 Nodes (4): App, appConfig, routes, Component
 
 ### Community 39 - "TripInfo"
-Cohesion: 0.38
+Cohesion: 0.39
 Nodes (3): CompletedTripDto, RoutePoint, TripInfo
 
 ### Community 41 - "Skill: Angular Dashboard (TucTuc Map)"
 Cohesion: 0.33
 Nodes (5): 1. Stack Tecnológico & Dependencias, 2. Autenticación, Secretos y Seguridad Administrativa (RLS & XSS), 3. Módulos y Funcionalidades Clave, 4. Verificación y Compilación Obligatoria, Skill: Angular Dashboard (TucTuc Map)
 
-### Community 43 - "AcceptTripResult"
-Cohesion: 0.40
-Nodes (4): AcceptTripResult, AlreadyTaken, Error, Success
+### Community 43 - "Transaction"
+Cohesion: 0.25
+Nodes (6): MutableData, AcceptTripResult, AlreadyTaken, Error, Success, Transaction
 
 ### Community 44 - "Contexto del Proyecto: TucTuc Map (Monorepo)"
 Cohesion: 0.40
@@ -247,29 +246,25 @@ Nodes (5): 1. Estructura del Monorepo y Límites de Subsistemas, 2. Skills de Tr
 Cohesion: 0.83
 Nodes (3): gradlew script, die(), warn()
 
-### Community 66 - "DataSnapshot"
-Cohesion: 0.27
-Nodes (3): DataSnapshot, DriverLocation, com
-
 ## Knowledge Gaps
-- **233 isolated node(s):** `Success`, `AlreadyTaken`, `Error`, `TripSummaryDto`, `RenewalRequestStatus` (+228 more)
+- **258 isolated node(s):** `{ Client }`, `{ dbConfig }`, `public.app_config`, `fs`, `path` (+253 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `SupabaseRepository` connect `SupabaseRepository` to `SupabaseRepository.kt`, `AppNavigation`, `DataSnapshot`, `PassengerMapScreen.kt`, `DatabaseError`, `LocationTrackingService`, `Result`, `TripInfo`, `AcceptTripResult`, `AppDrawer.kt`?**
-  _High betweenness centrality (0.091) - this node is a cross-community bridge._
+- **Why does `SupabaseRepository` connect `SupabaseRepository` to `Flow`, `AppNavigation`, `DataSnapshot`, `PassengerMapScreen.kt`, `DatabaseError`, `LocationTrackingService`, `TripInfo`, `Transaction`, `Color.kt`?**
+  _High betweenness centrality (0.080) - this node is a cross-community bridge._
 - **Why does `SupabaseService` connect `SupabaseService` to `SubscriptionsComponent`?**
-  _High betweenness centrality (0.024) - this node is a cross-community bridge._
+  _High betweenness centrality (0.022) - this node is a cross-community bridge._
 - **Why does `leaflet` connect `SupabaseService` to `tuctucMapDashboard`?**
-  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+  _High betweenness centrality (0.019) - this node is a cross-community bridge._
 - **Are the 10 inferred relationships involving `AppNavigation()` (e.g. with `DriverMapFullscreenScreen()` and `DriverHomeScreen()`) actually correct?**
   _`AppNavigation()` has 10 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Success`, `AlreadyTaken`, `Error` to the rest of the system?**
-  _233 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `{ Client }`, `{ dbConfig }`, `public.app_config` to the rest of the system?**
+  _258 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `SupabaseService` be split into smaller, more focused modules?**
   _Cohesion score 0.05221518987341772 - nodes in this community are weakly interconnected._
 - **Should `AppNavigation` be split into smaller, more focused modules?**
-  _Cohesion score 0.053005464480874315 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05273937532002048 - nodes in this community are weakly interconnected._

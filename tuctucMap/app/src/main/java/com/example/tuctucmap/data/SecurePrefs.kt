@@ -33,6 +33,9 @@ object SecurePrefs : SessionManager {
         isLenient = true
     }
 
+    @Volatile
+    private var cachedSecretKey: SecretKey? = null
+
     private fun getContext(context: Context? = null): Context {
         return context ?: try {
             TucTucApplication.appContext
@@ -42,23 +45,30 @@ object SecurePrefs : SessionManager {
     }
 
     private fun getOrCreateSecretKey(): SecretKey {
-        val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
-        if (keyStore.containsAlias(KEY_ALIAS)) {
-            val entry = keyStore.getEntry(KEY_ALIAS, null) as KeyStore.SecretKeyEntry
-            return entry.secretKey
-        }
+        cachedSecretKey?.let { return it }
+        synchronized(this) {
+            cachedSecretKey?.let { return it }
+            val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
+            if (keyStore.containsAlias(KEY_ALIAS)) {
+                val entry = keyStore.getEntry(KEY_ALIAS, null) as KeyStore.SecretKeyEntry
+                cachedSecretKey = entry.secretKey
+                return entry.secretKey
+            }
 
-        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
-        val spec = KeyGenParameterSpec.Builder(
-            KEY_ALIAS,
-            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-        )
-            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-            .setKeySize(256)
-            .build()
-        keyGenerator.init(spec)
-        return keyGenerator.generateKey()
+            val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
+            val spec = KeyGenParameterSpec.Builder(
+                KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(256)
+                .build()
+            keyGenerator.init(spec)
+            val generated = keyGenerator.generateKey()
+            cachedSecretKey = generated
+            return generated
+        }
     }
 
     fun encrypt(plainText: String): String? {
@@ -124,13 +134,11 @@ object SecurePrefs : SessionManager {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val sessionJsonStr = json.encodeToString(session)
         val encSession = encrypt(sessionJsonStr) ?: return
-        val encAccess = encrypt(session.accessToken) ?: return
-        val encRefresh = encrypt(session.refreshToken) ?: return
 
         prefs.edit()
             .putString("supabase_session", encSession)
-            .putString("supabase_access", encAccess)
-            .putString("supabase_refresh", encRefresh)
+            .remove("supabase_access")
+            .remove("supabase_refresh")
             .apply()
     }
 

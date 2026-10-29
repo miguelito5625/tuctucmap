@@ -44,8 +44,17 @@ object OsrmRoutingService {
             }
     }
 
+    @Volatile private var cachedStartLat: Double = 0.0
+    @Volatile private var cachedStartLon: Double = 0.0
+    @Volatile private var cachedEndLat: Double = 0.0
+    @Volatile private var cachedEndLon: Double = 0.0
+    @Volatile private var cachedResult: RouteResult? = null
+    @Volatile private var cachedAtElapsedMs: Long = 0L
+
     /**
      * Obtiene el trazado de la ruta por calles desde [startLat, startLon] hasta [endLat, endLon].
+     * Incluye caché en memoria para desplazamientos < 20m dentro de 25s, evitando llamadas HTTP
+     * duplicadas al cambiar entre DriverHomeScreen y DriverRouteToPassengerScreen.
      */
     suspend fun getRoute(
         startLat: Double,
@@ -61,6 +70,16 @@ object OsrmRoutingService {
                 durationSeconds = 0.0,
                 isSuccess = false
             )
+        }
+
+        val prev = cachedResult
+        val nowElapsed = android.os.SystemClock.elapsedRealtime()
+        if (prev != null && prev.isSuccess && (nowElapsed - cachedAtElapsedMs) < 25_000L) {
+            val startDiff = calculateHaversineMeters(startLat, startLon, cachedStartLat, cachedStartLon)
+            val endDiff = calculateHaversineMeters(endLat, endLon, cachedEndLat, cachedEndLon)
+            if (startDiff < 20.0 && endDiff < 10.0) {
+                return@withContext prev
+            }
         }
 
         try {
@@ -108,12 +127,19 @@ object OsrmRoutingService {
                         }
 
                         if (points.isNotEmpty()) {
-                            return@withContext RouteResult(
+                            val successResult = RouteResult(
                                 points = points,
                                 distanceMeters = distance,
                                 durationSeconds = duration,
                                 isSuccess = true
                             )
+                            cachedStartLat = startLat
+                            cachedStartLon = startLon
+                            cachedEndLat = endLat
+                            cachedEndLon = endLon
+                            cachedResult = successResult
+                            cachedAtElapsedMs = android.os.SystemClock.elapsedRealtime()
+                            return@withContext successResult
                         }
                     }
                 }

@@ -824,10 +824,10 @@ fun DriverReportsScreen(
                             }
                         }
                     } else {
-                        items(filteredTrips) { trip ->
+                        items(filteredTrips, key = { it.id.ifBlank { it.created_at } }) { trip ->
                             val epoch = parseIsoTimestamp(trip.created_at)
                             val timeStr = if (epoch > 0L) timeFormat.format(Date(epoch)) else "--:--"
-                            val dateStr = if (epoch > 0L) SimpleDateFormat("dd/MM", Locale.getDefault()).format(Date(epoch)) else ""
+                            val dateStr = if (epoch > 0L) shortDateSdf.format(Date(epoch)) else ""
 
                             Surface(
                                 shape = RoundedCornerShape(14.dp),

@@ -80,6 +80,24 @@ fun DriverRouteToPassengerScreen(
     var routePolyline by remember { mutableStateOf<Polyline?>(null) }
     var routeCasingPolyline by remember { mutableStateOf<Polyline?>(null) }
 
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, mapViewInstance) {
+        val map = mapViewInstance
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            when (event) {
+                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> map?.onResume()
+                androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> map?.onPause()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            map?.onPause()
+            map?.onDetach()
+        }
+    }
+
     var showFinishTripDialog by remember { mutableStateOf(false) }
     var fareInputText by remember { mutableStateOf("") }
     var suggestedFares by remember { mutableStateOf<List<Double>>(emptyList()) }
@@ -243,14 +261,18 @@ fun DriverRouteToPassengerScreen(
                 },
                 update = { map ->
                     currentLocation?.let { loc ->
-                        val geo = GeoPoint(loc.latitude, loc.longitude)
-                        if (driverMarker != null) {
-                            if (!map.overlays.contains(driverMarker)) {
-                                map.overlays.add(driverMarker)
-                            }
-                            driverMarker?.position = geo
+                        val marker = driverMarker ?: return@let
+                        val oldPos = marker.position
+                        val moved = oldPos == null ||
+                            kotlin.math.abs(oldPos.latitude - loc.latitude) > 0.000005 ||
+                            kotlin.math.abs(oldPos.longitude - loc.longitude) > 0.000005
+                        if (!map.overlays.contains(marker)) {
+                            map.overlays.add(marker)
                         }
-                        map.invalidate()
+                        if (moved) {
+                            marker.position = GeoPoint(loc.latitude, loc.longitude)
+                            map.invalidate()
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxSize()
