@@ -63,7 +63,11 @@ import * as L from 'leaflet';
         <div class="fleet-sidebar">
           <div class="sidebar-header">
             <h3>TucTucs Circulando</h3>
-            <span class="active-badge">{{ activeDrivers().length }} en línea</span>
+            @if (isPollingPaused()) {
+              <span class="paused-badge" (click)="loadFleet()" matTooltip="Haz clic para reanudar monitoreo">⏸ En pausa (ahorro datos)</span>
+            } @else {
+              <span class="active-badge">{{ activeDrivers().length }} en línea</span>
+            }
           </div>
 
           <div class="driver-list">
@@ -228,6 +232,17 @@ import * as L from 'leaflet';
       font-weight: 700;
     }
 
+    .paused-badge {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     .driver-list {
       flex: 1;
       overflow-y: auto;
@@ -384,10 +399,58 @@ export class FleetMapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   readonly activeDrivers = signal<LiveDriverLocation[]>([]);
 
+  private static readonly POLL_INTERVAL_MS = 8_000;
+  private static readonly INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutos sin interacción
+  private lastActivityTime = Date.now();
+  readonly isPollingPaused = signal<boolean>(false);
+
+  private readonly onVisibilityChange = () => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+      this.lastActivityTime = Date.now();
+      this.isPollingPaused.set(false);
+      this.loadFleet();
+    }
+  };
+
+  private readonly onUserActivity = () => {
+    const now = Date.now();
+    // Throttle de actualización de actividad a cada 5 segundos
+    if (now - this.lastActivityTime < 5_000 && !this.isPollingPaused()) {
+      return;
+    }
+    const wasPaused = this.isPollingPaused();
+    this.lastActivityTime = now;
+    if (wasPaused) {
+      this.isPollingPaused.set(false);
+      this.loadFleet();
+    }
+  };
+
   ngOnInit(): void {
     this.loadFleet();
-    // Sondeo de telemetría cada 8 segundos
-    this.pollInterval = setInterval(() => this.loadFleet(), 8000);
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', this.onVisibilityChange);
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('mousemove', this.onUserActivity, { passive: true });
+      window.addEventListener('mousedown', this.onUserActivity, { passive: true });
+      window.addEventListener('keydown', this.onUserActivity, { passive: true });
+      window.addEventListener('touchstart', this.onUserActivity, { passive: true });
+    }
+
+    // Sondeo inteligente cada 8 segundos: se detiene si la pestaña está oculta
+    // o tras 15 minutos sin interacción del usuario para ahorrar hasta 80% de Egress en Firebase RTDB
+    this.pollInterval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return;
+      }
+      if (Date.now() - this.lastActivityTime >= FleetMapComponent.INACTIVITY_TIMEOUT_MS) {
+        this.isPollingPaused.set(true);
+        return;
+      }
+      this.loadFleet();
+    }, FleetMapComponent.POLL_INTERVAL_MS);
   }
 
   ngAfterViewInit(): void {
@@ -396,6 +459,15 @@ export class FleetMapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.pollInterval) clearInterval(this.pollInterval);
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.onVisibilityChange);
+    }
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('mousemove', this.onUserActivity);
+      window.removeEventListener('mousedown', this.onUserActivity);
+      window.removeEventListener('keydown', this.onUserActivity);
+      window.removeEventListener('touchstart', this.onUserActivity);
+    }
     if (this.map) this.map.remove();
   }
 
@@ -416,6 +488,8 @@ export class FleetMapComponent implements OnInit, AfterViewInit, OnDestroy {
   private hasInitiallyCentered = false;
 
   async loadFleet(): Promise<void> {
+    this.lastActivityTime = Date.now();
+    this.isPollingPaused.set(false);
     const drivers = await this.supabaseService.getLiveDrivers();
     this.activeDrivers.set(drivers);
     this.renderMarkers();

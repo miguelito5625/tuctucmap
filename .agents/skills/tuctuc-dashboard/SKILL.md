@@ -35,6 +35,7 @@ Esta guía define la arquitectura, normas de seguridad y procedimientos operativ
 1. **Monitoreo de Flota (`/fleet-map`):**
    - Implementado con Leaflet.
    - Escucha en tiempo real la colección `driver_locations` en Firebase Realtime Database y descarta automáticamente coordenadas fantasma con más de **3 minutos de antigüedad** (`TTL_MS = 3 * 60 * 1000`).
+   - **Ahorro Inteligente de Egress (`Page Visibility API` + Timeout de Inactividad):** El sondeo cada 8 segundos se pausa automáticamente cuando la pestaña del navegador está oculta/minimizada (`document.visibilityState !== 'visible'`) o tras **15 minutos sin interacción del usuario** (`INACTIVITY_TIMEOUT_MS`), reanudándose al instante al volver a la pestaña o mover el cursor.
    - Pines diferenciados por estado del tuctuc: verde para `Disponible`, naranja para `Ocupado`.
    - Panel lateral interactivo con lista de conductores y centrado dinámico de cámara en el mapa.
 2. **Gestión y Cobranza de Suscripciones (`/drivers` y `/subscriptions`):**

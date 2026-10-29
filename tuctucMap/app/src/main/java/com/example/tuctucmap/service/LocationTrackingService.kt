@@ -273,9 +273,10 @@ class LocationTrackingService : Service() {
             ringtone?.play()
         } catch (_: Exception) {}
 
+        val safeMsg = SupabaseRepository.sanitizeTripMessage(trip.message)
         if (isTtsReady) {
-            val msg = if (trip.message.isNotBlank()) {
-                "Nueva solicitud de viaje. El pasajero dice: ${trip.message}"
+            val msg = if (safeMsg.isNotBlank()) {
+                "Nueva solicitud de viaje. El pasajero dice: $safeMsg"
             } else {
                 "Nueva solicitud de viaje cercana disponible."
             }
@@ -295,7 +296,7 @@ class LocationTrackingService : Service() {
 
             val alertNotification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
                 .setContentTitle("¡Pasajero solicita un TucTuc!")
-                .setContentText(trip.message.ifBlank { "Toca aquí para ver la ubicación y aceptar el viaje" })
+                .setContentText(safeMsg.ifBlank { "Toca aquí para ver la ubicación y aceptar el viaje" })
                 .setSmallIcon(R.drawable.ic_tuc_tuc)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)

@@ -36,6 +36,19 @@ import kotlin.math.*
 class SupabaseRepository {
 
     companion object {
+        const val MAX_TRIP_MESSAGE_LENGTH = 100
+        const val MAX_PASSENGER_NAME_LENGTH = 50
+        const val MAX_PHONE_LENGTH = 15
+
+        fun sanitizeTripMessage(raw: String): String {
+            return raw
+                .replace("\r", " ")
+                .replace("\n", " ")
+                .trim()
+                .replace(Regex("\\s+"), " ")
+                .take(MAX_TRIP_MESSAGE_LENGTH)
+        }
+
         @Volatile
         var cachedAppConfig: AppConfig = AppConfig()
             private set
@@ -643,8 +656,9 @@ class SupabaseRepository {
                 false
             }
             val passengerIdToSave = if (isValidPassengerUuid) tripInfo.passengerId else null
-            val effectivePassengerName = tripInfo.passengerName.trim().ifBlank { "Pasajero" }
-            val effectivePassengerPhone = tripInfo.passengerPhone.trim().ifBlank { null }
+            val effectivePassengerName = tripInfo.passengerName.trim().take(MAX_PASSENGER_NAME_LENGTH).ifBlank { "Pasajero" }
+            val effectivePassengerPhone = tripInfo.passengerPhone.trim().take(MAX_PHONE_LENGTH).ifBlank { null }
+            val safeMessage = sanitizeTripMessage(tripInfo.message).ifBlank { "Viaje realizado" }
 
             val dto = CompletedTripDto(
                 passenger_id = passengerIdToSave,
@@ -652,7 +666,7 @@ class SupabaseRepository {
                 passenger_lat = tripInfo.passengerLat,
                 passenger_lon = tripInfo.passengerLon,
                 status = status,
-                message = tripInfo.message.ifBlank { "Viaje realizado" },
+                message = safeMessage,
                 fare = fare ?: tripInfo.fare,
                 distance_km = distanceKm ?: tripInfo.distanceKm,
                 route_points = routePoints ?: tripInfo.routePoints,
@@ -879,13 +893,17 @@ class SupabaseRepository {
             val newTripRef = tripsRef.push()
             val tripId = newTripRef.key ?: java.util.UUID.randomUUID().toString()
 
+            val safeMessage = sanitizeTripMessage(message).ifBlank { "Pasajero esperando tuctuc" }
+            val safeName = passengerName.replace("\r", " ").replace("\n", " ").trim().take(MAX_PASSENGER_NAME_LENGTH).ifBlank { "Pasajero" }
+            val safePhone = passengerPhone.trim().take(MAX_PHONE_LENGTH)
+
             val trip = TripInfo(
                 tripId = tripId,
                 passengerId = uid,
-                passengerName = passengerName,
-                passengerPhone = passengerPhone,
+                passengerName = safeName,
+                passengerPhone = safePhone,
                 driverId = "", // Broadcast: vacio indica que cualquier conductor cercano puede aceptarlo
-                message = message,
+                message = safeMessage,
                 passengerLat = lat,
                 passengerLon = lon,
                 status = "requested",
@@ -906,11 +924,13 @@ class SupabaseRepository {
             val newTripRef = tripsRef.push()
             val tripId = newTripRef.key ?: java.util.UUID.randomUUID().toString()
 
+            val safeMessage = sanitizeTripMessage(message).ifBlank { "Pasajero esperando tuctuc" }
+
             val trip = TripInfo(
                 tripId = tripId,
                 passengerId = uid,
                 driverId = driverId,
-                message = message,
+                message = safeMessage,
                 passengerLat = lat,
                 passengerLon = lon,
                 status = "requested",
@@ -1004,7 +1024,13 @@ class SupabaseRepository {
                                         ) <= maxRadiusMeters
                                     }
                                 if (withinRadius) {
-                                    pendingTrips.add(trip)
+                                    pendingTrips.add(
+                                        trip.copy(
+                                            message = sanitizeTripMessage(trip.message),
+                                            passengerName = trip.passengerName.take(MAX_PASSENGER_NAME_LENGTH),
+                                            passengerPhone = trip.passengerPhone.take(MAX_PHONE_LENGTH)
+                                        )
+                                    )
                                 }
                             } else {
                                 if (trip.passengerId == currentUserUid || trip.driverId == driverId) {

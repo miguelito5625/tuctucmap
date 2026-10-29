@@ -308,16 +308,28 @@ fun DriverSubscriptionScreen(
                             lineHeight = 16.sp
                         )
 
-                        // Selector de Planes
+                        // Selector de Planes con Incentivo de Ahorro (Quincenal / Mensual)
+                        val quincenalSavings = ((appConfig.priceSemanal * 2) - appConfig.priceQuincenal).toInt()
+                        val mensualSavings = ((appConfig.priceSemanal * 4) - appConfig.priceMensual).toInt()
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             listOf(
-                                Triple("semanal", "Semanal", "${appConfig.currencySymbol}${appConfig.priceSemanal.toInt()} (7d)"),
-                                Triple("quincenal", "Quincenal", "${appConfig.currencySymbol}${appConfig.priceQuincenal.toInt()} (15d)"),
-                                Triple("mensual", "Mensual", "${appConfig.currencySymbol}${appConfig.priceMensual.toInt()} (30d)")
-                            ).forEach { (key, label, price) ->
+                                Quadruple("semanal", "Semanal", "${appConfig.currencySymbol}${appConfig.priceSemanal.toInt()} (7d)", ""),
+                                Quadruple(
+                                    "quincenal",
+                                    "Quincenal",
+                                    "${appConfig.currencySymbol}${appConfig.priceQuincenal.toInt()} (15d)",
+                                    if (quincenalSavings > 0) "Ahorra ${appConfig.currencySymbol}$quincenalSavings" else ""
+                                ),
+                                Quadruple(
+                                    "mensual",
+                                    "Mensual",
+                                    "${appConfig.currencySymbol}${appConfig.priceMensual.toInt()} (30d)",
+                                    if (mensualSavings > 0) "Ahorra ${appConfig.currencySymbol}$mensualSavings" else ""
+                                )
+                            ).forEach { (key, label, price, savingsLabel) ->
                                 val isSelected = selectedPlan == key
                                 Surface(
                                     onClick = { selectedPlan = key },
@@ -344,6 +356,15 @@ fun DriverSubscriptionScreen(
                                             fontSize = 11.sp,
                                             color = if (isSelected) Color(0xFF0F2027) else Color(0xFF94A3B8)
                                         )
+                                        if (savingsLabel.isNotBlank()) {
+                                            Spacer(modifier = Modifier.height(3.dp))
+                                            Text(
+                                                text = savingsLabel,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = if (isSelected) Color(0xFF065F46) else Color(0xFF4ADE80)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -415,10 +436,10 @@ fun DriverSubscriptionScreen(
                             }
                         }
 
-                        // Campo N° de Boleta o Referencia (Opcional)
+                        // Campo N° de Boleta o Referencia (Opcional, máx. 40 caracteres)
                         OutlinedTextField(
                             value = referenceInput,
-                            onValueChange = { referenceInput = it },
+                            onValueChange = { referenceInput = it.replace("\r", " ").replace("\n", " ").take(40) },
                             label = { Text("No. de Boleta o Comprobante (Opcional)") },
                             placeholder = { Text("Ej. 98451203") },
                             singleLine = true,

@@ -11,6 +11,20 @@ import org.json.JSONArray
 object PassengerDestinationPreferences {
     private const val PREFS_NAME = "tuctuc_prefs"
     private const val KEY_RECENT_DESTINATIONS = "passenger_recent_destinations"
+    const val MAX_DESTINATION_LENGTH = 100
+
+    /**
+     * Normaliza y trunca el destino a [MAX_DESTINATION_LENGTH] caracteres para evitar
+     * textos gigantes que inflen el Egress en Firebase RTDB o el almacenamiento en Supabase.
+     */
+    fun sanitizeDestination(raw: String): String {
+        return raw
+            .replace("\r", " ")
+            .replace("\n", " ")
+            .trim()
+            .replace(Regex("\\s+"), " ")
+            .take(MAX_DESTINATION_LENGTH)
+    }
 
     /**
      * Obtiene hasta 5 sugerencias de destinos basadas en el historial del pasajero.
@@ -23,7 +37,7 @@ object PassengerDestinationPreferences {
             val jsonArray = JSONArray(savedJson)
             val list = mutableListOf<String>()
             for (i in 0 until jsonArray.length()) {
-                val item = jsonArray.optString(i)?.trim().orEmpty()
+                val item = sanitizeDestination(jsonArray.optString(i).orEmpty())
                 if (item.isNotBlank() && !list.any { it.equals(item, ignoreCase = true) }) {
                     list.add(item)
                 }
@@ -39,7 +53,7 @@ object PassengerDestinationPreferences {
      * Lo posiciona al inicio de la lista y conserva únicamente los últimos 5 destinos únicos.
      */
     fun saveDestination(context: Context, destination: String) {
-        val cleanDest = destination.trim()
+        val cleanDest = sanitizeDestination(destination)
         if (cleanDest.isBlank()) return
 
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

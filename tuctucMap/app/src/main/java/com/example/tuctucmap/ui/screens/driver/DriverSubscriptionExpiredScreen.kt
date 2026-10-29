@@ -219,6 +219,8 @@ fun DriverSubscriptionExpiredScreen(
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    val quincenalSavings = ((appConfig.priceSemanal * 2) - appConfig.priceQuincenal).toInt()
+                    val mensualSavings = ((appConfig.priceSemanal * 4) - appConfig.priceMensual).toInt()
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -236,7 +238,11 @@ fun DriverSubscriptionExpiredScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("• Plan Quincenal (15 días):", color = Color.LightGray, fontSize = 13.sp)
+                        Text(
+                            if (quincenalSavings > 0) "• Plan Quincenal (15d - Ahorra Q$quincenalSavings):" else "• Plan Quincenal (15 días):",
+                            color = Color.LightGray,
+                            fontSize = 13.sp
+                        )
                         Text(
                             String.format(Locale.US, "Q %.2f", appConfig.priceQuincenal),
                             color = Color(0xFFF9D423),
@@ -249,7 +255,11 @@ fun DriverSubscriptionExpiredScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("• Plan Mensual (30 días):", color = Color.LightGray, fontSize = 13.sp)
+                        Text(
+                            if (mensualSavings > 0) "• Plan Mensual (30d - Ahorra Q$mensualSavings):" else "• Plan Mensual (30 días):",
+                            color = Color.LightGray,
+                            fontSize = 13.sp
+                        )
                         Text(
                             String.format(Locale.US, "Q %.2f", appConfig.priceMensual),
                             color = Color(0xFF4ADE80),
@@ -332,7 +342,7 @@ fun DriverSubscriptionExpiredScreen(
                     )
                     OutlinedTextField(
                         value = boletaRefInput,
-                        onValueChange = { boletaRefInput = it },
+                        onValueChange = { boletaRefInput = it.replace("\r", " ").replace("\n", " ").take(40) },
                         label = { Text("Número de boleta o comprobante", fontSize = 12.sp) },
                         placeholder = { Text("Ej. 84920145") },
                         singleLine = true,

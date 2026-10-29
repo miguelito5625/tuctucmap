@@ -151,15 +151,20 @@ CREATE TABLE IF NOT EXISTS public.trips (
     status TEXT CHECK (status IN ('requested', 'accepted', 'completed', 'cancelled', 'rejected')) DEFAULT 'requested',
     passenger_lat DOUBLE PRECISION,
     passenger_lon DOUBLE PRECISION,
-    message TEXT,
+    message TEXT CHECK (message IS NULL OR char_length(message) <= 150),
     fare NUMERIC(10,2) DEFAULT NULL,
     distance_km NUMERIC(10,2) DEFAULT NULL,
     route_points JSONB DEFAULT NULL,
-    passenger_name TEXT DEFAULT NULL,
-    passenger_phone TEXT DEFAULT NULL,
+    passenger_name TEXT CHECK (passenger_name IS NULL OR char_length(passenger_name) <= 80) DEFAULT NULL,
+    passenger_phone TEXT CHECK (passenger_phone IS NULL OR char_length(passenger_phone) <= 25) DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Asegurar límite de longitud en texto de destino (message) y datos del pasajero para prevenir inyección de textos gigantes
+ALTER TABLE public.trips DROP CONSTRAINT IF EXISTS trips_message_max_length_check;
+ALTER TABLE public.trips ADD CONSTRAINT trips_message_max_length_check
+    CHECK (message IS NULL OR char_length(message) <= 150) NOT VALID;
 
 -- Índices de rendimiento para consultas por fecha y conductor
 CREATE INDEX IF NOT EXISTS idx_trips_driver_created ON public.trips(driver_id, created_at DESC);

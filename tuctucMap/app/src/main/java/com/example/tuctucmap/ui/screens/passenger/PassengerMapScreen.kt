@@ -1259,7 +1259,7 @@ fun PassengerMapScreen(
 
                                     OutlinedTextField(
                                         value = guestName,
-                                        onValueChange = { guestName = it },
+                                        onValueChange = { guestName = it.replace("\r", " ").replace("\n", " ").take(50) },
                                         label = { Text("Tu Nombre", color = Color.LightGray) },
                                         placeholder = { Text("Ej: Juan Pérez", color = Color.Gray) },
                                         modifier = Modifier.fillMaxWidth(),
@@ -1276,7 +1276,7 @@ fun PassengerMapScreen(
 
                                     OutlinedTextField(
                                         value = guestPhone,
-                                        onValueChange = { guestPhone = it },
+                                        onValueChange = { guestPhone = it.filter { ch -> ch.isDigit() || ch == '-' || ch == '+' || ch == ' ' }.take(15) },
                                         label = { Text("Tu Teléfono", color = Color.LightGray) },
                                         placeholder = { Text("Ej: 5555-1234", color = Color.Gray) },
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -1317,7 +1317,17 @@ fun PassengerMapScreen(
                                 // Campo de Destino dentro del mismo formulario
                                 OutlinedTextField(
                                     value = tripMessage,
-                                    onValueChange = { tripMessage = it },
+                                    onValueChange = { input -> tripMessage = input.replace("\r", " ").replace("\n", " ").take(PassengerDestinationPreferences.MAX_DESTINATION_LENGTH) },
+                                    supportingText = {
+                                        val maxDestLen = PassengerDestinationPreferences.MAX_DESTINATION_LENGTH
+                                        Text(
+                                            text = "${tripMessage.length}/$maxDestLen caracteres máx.",
+                                            fontSize = 11.sp,
+                                            color = if (tripMessage.length >= maxDestLen) Color(0xFFF9D423) else Color(0xFF94A3B8),
+                                            modifier = Modifier.fillMaxWidth(),
+                                            textAlign = TextAlign.End
+                                        )
+                                    },
                                     label = { Text("Destino", color = Color.LightGray) },
                                     placeholder = { Text("¿Hacia dónde vas? (Ej: Parque Central)", color = Color.Gray) },
                                     leadingIcon = {
@@ -1368,7 +1378,7 @@ fun PassengerMapScreen(
                                     ) {
                                         recentDestinations.forEach { dest ->
                                             SuggestionChip(
-                                                onClick = { tripMessage = dest },
+                                                onClick = { tripMessage = PassengerDestinationPreferences.sanitizeDestination(dest) },
                                                 label = { Text(dest, fontSize = 11.sp, color = Color.White) },
                                                 colors = SuggestionChipDefaults.suggestionChipColors(
                                                     containerColor = Color(0xFF334155)
