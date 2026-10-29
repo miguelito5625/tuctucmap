@@ -1,7 +1,7 @@
 {
   "0": "SupabaseService",
   "1": "MainActivity.kt",
-  "2": "PassengerLocationOverlay",
+  "2": "PassengerLocationUtils.kt",
   "3": "tuctucMapDashboard",
   "4": "DatabaseError",
   "5": "LocationTrackingService",
@@ -37,7 +37,7 @@
   "35": "AGENTS.md",
   "36": "Skill: Base de Datos & Backend (Supabase PostgreSQL)",
   "37": "App",
-  "38": "DriverTripHistoryScreen.kt",
+  "38": "DriverHistoryPeriodFilter",
   "39": "TripInfo",
   "40": "PassengerDestinationPreferences",
   "41": "Skill: Angular Dashboard (TucTuc Map)",
@@ -68,9 +68,12 @@
   "66": "DataSnapshot",
   "67": "@angular/cdk",
   "68": "@angular/core",
-  "69": "@angular/material",
+  "69": "ActiveDriversMapView.kt",
   "70": "@angular/platform-browser",
   "71": "rxjs",
   "72": "tslib",
-  "73": "@supabase/supabase-js"
+  "73": "@supabase/supabase-js",
+  "74": "SelectableDates",
+  "75": ".drawMyLocation",
+  "76": "@angular/common"
 }

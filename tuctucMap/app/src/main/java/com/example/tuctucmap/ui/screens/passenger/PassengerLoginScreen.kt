@@ -217,7 +217,7 @@ fun PassengerLoginScreen(
                             if (result.isSuccess) {
                                 onLoginSuccess()
                             } else {
-                                errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Error al ingresar"
+                                errorMessage = com.example.tuctucmap.data.repository.SupabaseRepository.formatAuthError(result.exceptionOrNull())
                             }
                         }
                     },

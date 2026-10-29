@@ -197,7 +197,7 @@ fun DriverLoginScreen(
                             if (result.isSuccess) {
                                 onLoginSuccess()
                             } else {
-                                errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Error de credenciales"
+                                errorMessage = com.example.tuctucmap.data.repository.SupabaseRepository.formatAuthError(result.exceptionOrNull())
                             }
                         }
                     },

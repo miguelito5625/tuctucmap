@@ -52,6 +52,19 @@ class SupabaseRepository {
                 .take(MAX_TRIP_MESSAGE_LENGTH)
         }
 
+        fun formatAuthError(error: Throwable?): String {
+            if (error == null) return "Error de autenticación"
+            val msg = error.message ?: error.localizedMessage ?: ""
+            val lower = msg.lowercase()
+            return when {
+                lower.contains("timeout") -> "No se pudo conectar al servidor. Revisa tu conexión a internet e inténtalo de nuevo."
+                lower.contains("unknownhost") || lower.contains("unresolvedaddress") || lower.contains("failed to connect") || lower.contains("connection refused") -> "Sin conexión a internet. Verifica tu red Wi-Fi o datos móviles."
+                lower.contains("invalid login credentials") || lower.contains("invalid_credentials") || lower.contains("invalid_grant") -> "Correo o contraseña incorrectos."
+                lower.contains("email not confirmed") -> "El correo no ha sido confirmado."
+                else -> "Error al iniciar sesión: ${msg.take(80)}"
+            }
+        }
+
         @Volatile
         var cachedAppConfig: AppConfig = AppConfig()
             private set

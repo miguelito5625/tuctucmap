@@ -1,23 +1,23 @@
 # Graph Report - tuctucmap  (2026-10-28)
 
 ## Corpus Check
-- 104 files · ~105,810 words
+- 104 files · ~105,972 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 946 nodes · 1488 edges · 74 communities (54 shown, 20 thin omitted)
+- 946 nodes · 1488 edges · 77 communities (55 shown, 22 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 12 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `6231fe68`
+- Built from commit: `f85ea2c5`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - SupabaseService
 - MainActivity.kt
-- PassengerLocationOverlay
+- PassengerLocationUtils.kt
 - tuctucMapDashboard
 - DatabaseError
 - LocationTrackingService
@@ -53,7 +53,7 @@
 - AGENTS.md
 - Skill: Base de Datos & Backend (Supabase PostgreSQL)
 - App
-- DriverTripHistoryScreen.kt
+- DriverHistoryPeriodFilter
 - TripInfo
 - PassengerDestinationPreferences
 - Skill: Angular Dashboard (TucTuc Map)
@@ -76,11 +76,14 @@
 - DataSnapshot
 - @angular/cdk
 - @angular/core
-- @angular/material
+- ActiveDriversMapView.kt
 - @angular/platform-browser
 - rxjs
 - tslib
 - @supabase/supabase-js
+- SelectableDates
+- .drawMyLocation
+- @angular/common
 
 ## God Nodes (most connected - your core abstractions)
 1. `SupabaseRepository` - 98 edges
@@ -109,7 +112,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (74 total, 20 thin omitted)
+## Communities (77 total, 22 thin omitted)
 
 ### Community 0 - "SupabaseService"
 Cohesion: 0.05
@@ -119,9 +122,9 @@ Nodes (23): Injectable, leaflet, authGuard(), AppConfig, FinancialKPIs, LiveDriv
 Cohesion: 0.10
 Nodes (23): Bundle, ComponentActivity, SessionStatus, parseIsoTimestamp(), MainActivity, AnimatedAppName(), AnimatedSplashScreen(), Modifier (+15 more)
 
-### Community 2 - "PassengerLocationOverlay"
-Cohesion: 0.23
-Nodes (10): android, org, Bitmap, Context, PassengerAvatarType, CLASSIC_HUMAN, QUETZAL, PassengerCharacterRenderer (+2 more)
+### Community 2 - "PassengerLocationUtils.kt"
+Cohesion: 0.32
+Nodes (7): Bitmap, Context, PassengerAvatarType, CLASSIC_HUMAN, QUETZAL, PassengerCharacterRenderer, QuetzalCharacterRenderer
 
 ### Community 3 - "tuctucMapDashboard"
 Cohesion: 0.05
@@ -153,7 +156,7 @@ Nodes (29): Configuración del Proyecto y Dependencias, Manifiesto de Android y 
 
 ### Community 10 - "dependencies"
 Cohesion: 0.13
-Nodes (15): @angular/animations, @angular/common, @angular/compiler, @angular/forms, @angular/router, leaflet, dependencies, @angular/animations (+7 more)
+Nodes (15): @angular/animations, @angular/compiler, @angular/forms, @angular/material, @angular/router, leaflet, dependencies, @angular/animations (+7 more)
 
 ### Community 11 - "devDependencies"
 Cohesion: 0.13
@@ -212,8 +215,8 @@ Cohesion: 0.20
 Nodes (10): 1. Activación Obligatoria, 2. Requisitos Previos al Commit (Garantía de Integridad), 3. Protocolo de Ejecución Paso a Paso, 4. Comunicación con el Usuario, Paso 1: Inspeccionar el Estado de Git, Paso 2: Preparar los Archivos (Staging), Paso 3: Crear el Commit Semántico, Paso 4: Validar Rama y Sincronizar Remoto (+2 more)
 
 ### Community 25 - "Intent"
-Cohesion: 0.19
-Nodes (11): Intent, MapView, MyLocationNewOverlay, DriverMapFullscreenScreen(), AnimatorListenerAdapter, Animator, AnimatorListenerAdapter, DriverRouteToPassengerScreen() (+3 more)
+Cohesion: 0.28
+Nodes (8): Intent, DriverSubscriptionExpiredScreen(), DriverTripCard(), DriverTripHistoryScreen(), Context, openWhatsApp(), ExternalNavigationUtils, Context
 
 ### Community 26 - "TripsComponent"
 Cohesion: 0.24
@@ -255,9 +258,9 @@ Nodes (6): 1. Arquitectura de Datos & Tablas Principales, 2. Row Level Security 
 Cohesion: 0.36
 Nodes (4): App, appConfig, routes, Component
 
-### Community 38 - "DriverTripHistoryScreen.kt"
-Cohesion: 0.19
-Nodes (10): DriverHistoryPeriodFilter, CUSTOM_RANGE, TODAY, YESTERDAY, DriverTripCard(), DriverTripHistoryScreen(), SelectableDates, Context (+2 more)
+### Community 38 - "DriverHistoryPeriodFilter"
+Cohesion: 0.50
+Nodes (4): DriverHistoryPeriodFilter, CUSTOM_RANGE, TODAY, YESTERDAY
 
 ### Community 39 - "TripInfo"
 Cohesion: 0.39
@@ -284,8 +287,8 @@ Cohesion: 0.83
 Nodes (3): gradlew script, die(), warn()
 
 ### Community 49 - "PassengerMapScreen.kt"
-Cohesion: 0.39
-Nodes (5): Animator, AnimatorListenerAdapter, PassengerMapScreen(), AnimatorListenerAdapter, AnimatorListenerAdapter
+Cohesion: 0.26
+Nodes (8): MapView, DriverRouteToPassengerScreen(), Animator, AnimatorListenerAdapter, PassengerMapScreen(), AnimatorListenerAdapter, AnimatorListenerAdapter, PassengerLocationOverlay
 
 ### Community 63 - "scripts"
 Cohesion: 0.33
@@ -295,15 +298,19 @@ Nodes (6): scripts, build, ng, start, test, watch
 Cohesion: 0.40
 Nodes (4): name, packageManager, private, version
 
+### Community 69 - "ActiveDriversMapView.kt"
+Cohesion: 0.43
+Nodes (5): MyLocationNewOverlay, DriverMapFullscreenScreen(), AnimatorListenerAdapter, Animator, AnimatorListenerAdapter
+
 ## Knowledge Gaps
 - **287 isolated node(s):** `{ Client }`, `{ dbConfig }`, `public.app_config`, `fs`, `path` (+282 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **20 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **22 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `SupabaseRepository` connect `SupabaseRepository` to `Flow`, `MainActivity.kt`, `DataSnapshot`, `DatabaseError`, `LocationTrackingService`, `DriverTripHistoryScreen.kt`, `TripInfo`, `Transaction`, `Color.kt`, `AppNavigation`, `PassengerMapScreen.kt`, `Intent`?**
+- **Why does `SupabaseRepository` connect `SupabaseRepository` to `Flow`, `MainActivity.kt`, `DataSnapshot`, `DatabaseError`, `LocationTrackingService`, `ActiveDriversMapView.kt`, `TripInfo`, `Transaction`, `Color.kt`, `AppNavigation`, `PassengerMapScreen.kt`, `Intent`?**
   _High betweenness centrality (0.075) - this node is a cross-community bridge._
 - **Why does `SupabaseService` connect `SupabaseService` to `SubscriptionsComponent`?**
   _High betweenness centrality (0.020) - this node is a cross-community bridge._
