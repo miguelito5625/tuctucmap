@@ -35,6 +35,8 @@ import java.util.Locale
 import com.example.tuctucmap.service.LocationTrackingService
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.tuctucmap.data.model.DriverLocation
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.ui.util.AppTileSource
@@ -71,10 +73,13 @@ fun DriverMapFullscreenScreen(
 
     // Colectar las ubicaciones activas en tiempo real
     val driverLocations = remember { mutableStateListOf<DriverLocation>() }
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
     LaunchedEffect(Unit) {
-        repository.observeActiveLocations().collectLatest { locations ->
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            repository.observeActiveLocations().collectLatest { locations ->
             driverLocations.clear()
-            driverLocations.addAll(locations)
+                driverLocations.addAll(locations)
+            }
         }
     }
 

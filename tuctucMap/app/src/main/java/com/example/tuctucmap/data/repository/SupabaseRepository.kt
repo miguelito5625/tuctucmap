@@ -420,23 +420,38 @@ class SupabaseRepository {
         latitud: Double,
         longitud: Double,
         status: String = "disponible",
-        numeroUnidad: String = ""
+        numeroUnidad: String = "",
+        includeStaticMetadata: Boolean = true
     ) {
         try {
-            val location = mapOf(
-                "driver_id" to uid,
-                "lat" to latitud,
-                "lon" to longitud,
-                "nombre" to nombre,
-                "telefono" to telefono,
-                "placas" to placas,
-                "numeroUnidad" to numeroUnidad,
-                "active" to true,
-                "status" to status,
-                "updated_at" to ServerClock.nowMillis().toString()
-            )
             val locationRef = Firebase.database.getReference("driver_locations").child(uid)
-            locationRef.setValue(location)
+            val nowStr = ServerClock.nowMillis().toString()
+            if (includeStaticMetadata) {
+                val fullLocation = mapOf<String, Any>(
+                    "driver_id" to uid,
+                    "lat" to latitud,
+                    "lon" to longitud,
+                    "nombre" to nombre,
+                    "telefono" to telefono,
+                    "placas" to placas,
+                    "numeroUnidad" to numeroUnidad,
+                    "active" to true,
+                    "status" to status,
+                    "updated_at" to nowStr
+                )
+                locationRef.updateChildren(fullLocation)
+            } else {
+                // Envío diferencial ligero: solo coordenadas y estado dinámico para ahorrar datos móviles
+                val deltaLocation = mapOf<String, Any>(
+                    "driver_id" to uid,
+                    "lat" to latitud,
+                    "lon" to longitud,
+                    "active" to true,
+                    "status" to status,
+                    "updated_at" to nowStr
+                )
+                locationRef.updateChildren(deltaLocation)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -1060,70 +1075,122 @@ class SupabaseRepository {
         }
     }
 
+    private fun parseDriverLocationSnapshot(child: DataSnapshot): DriverLocation? {
+        return try {
+            val activeVal = child.child("active").value
+            val active = when (activeVal) {
+                is Boolean -> activeVal
+                is String -> activeVal.equals("true", ignoreCase = true)
+                is Number -> activeVal.toInt() == 1
+                else -> false
+            }
+            if (!active) return null
+
+            val uid = child.child("driver_id").getValue(String::class.java)
+                ?: child.key
+                ?: ""
+            if (uid.isBlank()) return null
+
+            val latVal = child.child("lat").value
+            val lat = when (latVal) {
+                is Number -> latVal.toDouble()
+                is String -> latVal.toDoubleOrNull() ?: 0.0
+                else -> 0.0
+            }
+            val lonVal = child.child("lon").value
+            val lon = when (lonVal) {
+                is Number -> lonVal.toDouble()
+                is String -> lonVal.toDoubleOrNull() ?: 0.0
+                else -> 0.0
+            }
+            if (lat == 0.0 || lon == 0.0) return null
+
+            val nombre = child.child("nombre").getValue(String::class.java) ?: ""
+            val telefono = child.child("telefono").getValue(String::class.java) ?: ""
+            val placas = child.child("placas").getValue(String::class.java) ?: ""
+            val numeroUnidad = child.child("numeroUnidad").getValue(String::class.java) ?: ""
+            val status = child.child("status").getValue(String::class.java) ?: "disponible"
+            val updatedAt = child.child("updated_at").value?.toString() ?: ""
+
+            val driverLoc = DriverLocation(
+                uid = uid,
+                lat = lat,
+                lon = lon,
+                activo = true,
+                nombre = nombre,
+                telefono = telefono,
+                placas = placas,
+                numeroUnidad = numeroUnidad,
+                status = status,
+                timestamp = updatedAt
+            )
+
+            // Filtrar conductores con coordenadas reales y presencia reciente (5 min)
+            if (driverLoc.isRecentlyActive(300_000L)) driverLoc else null
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    /**
+     * Escucha las ubicaciones activas mediante ChildEventListener incremental.
+     * En lugar de descargar el árbol completo de conductores en cada paso de 8m (~96.6% ahorro de Egress),
+     * recibe únicamente el nodo del conductor que cambió y mantiene el estado en memoria.
+     */
     fun observeActiveLocations(): Flow<List<DriverLocation>> = callbackFlow {
         val databaseRef = Firebase.database.getReference("driver_locations")
+        val activeDriversMap = java.util.concurrent.ConcurrentHashMap<String, DriverLocation>()
 
-        val listener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val locations = mutableListOf<DriverLocation>()
-                for (child in snapshot.children) {
-                    try {
-                        val activeVal = child.child("active").value
-                        val active = when (activeVal) {
-                            is Boolean -> activeVal
-                            is String -> activeVal.equals("true", ignoreCase = true)
-                            is Number -> activeVal.toInt() == 1
-                            else -> false
-                        }
-                        if (active) {
-                            val uid = child.child("driver_id").getValue(String::class.java)
-                                ?: child.key
-                                ?: ""
-                            if (uid.isBlank()) continue
-
-                            val latVal = child.child("lat").value
-                            val lat = when (latVal) {
-                                is Number -> latVal.toDouble()
-                                is String -> latVal.toDoubleOrNull() ?: 0.0
-                                else -> 0.0
-                            }
-                            val lonVal = child.child("lon").value
-                            val lon = when (lonVal) {
-                                is Number -> lonVal.toDouble()
-                                is String -> lonVal.toDoubleOrNull() ?: 0.0
-                                else -> 0.0
-                            }
-
-                            val nombre = child.child("nombre").getValue(String::class.java) ?: ""
-                            val telefono = child.child("telefono").getValue(String::class.java) ?: ""
-                            val placas = child.child("placas").getValue(String::class.java) ?: ""
-                            val numeroUnidad = child.child("numeroUnidad").getValue(String::class.java) ?: ""
-                            val status = child.child("status").getValue(String::class.java) ?: "disponible"
-                            val updatedAt = child.child("updated_at").value?.toString() ?: ""
-
-                            val driverLoc = DriverLocation(
-                                uid = uid,
-                                lat = lat,
-                                lon = lon,
-                                activo = true,
-                                nombre = nombre,
-                                telefono = telefono,
-                                placas = placas,
-                                numeroUnidad = numeroUnidad,
-                                status = status,
-                                timestamp = updatedAt
-                            )
-
-                            // Filtrar conductores con coordenadas reales y presencia reciente (5 min)
-                            if (lat != 0.0 && lon != 0.0 && driverLoc.isRecentlyActive(300_000L)) {
-                                locations.add(driverLoc)
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+        fun emitCurrentActiveDrivers() {
+            val validDrivers = mutableListOf<DriverLocation>()
+            val iterator = activeDriversMap.entries.iterator()
+            while (iterator.hasNext()) {
+                val entry = iterator.next()
+                if (entry.value.isRecentlyActive(300_000L)) {
+                    validDrivers.add(entry.value)
+                } else {
+                    iterator.remove()
                 }
-                trySend(locations)
+            }
+            trySend(validDrivers)
+        }
+
+        // Emitir estado inicial vacío mientras se reciben los nodos activos
+        trySend(emptyList())
+
+        val childListener = object : com.google.firebase.database.ChildEventListener {
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                val key = snapshot.key ?: return
+                val parsed = parseDriverLocationSnapshot(snapshot)
+                if (parsed != null) {
+                    activeDriversMap[key] = parsed
+                } else {
+                    activeDriversMap.remove(key)
+                }
+                emitCurrentActiveDrivers()
+            }
+
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+                val key = snapshot.key ?: return
+                val parsed = parseDriverLocationSnapshot(snapshot)
+                if (parsed != null) {
+                    activeDriversMap[key] = parsed
+                } else {
+                    activeDriversMap.remove(key)
+                }
+                emitCurrentActiveDrivers()
+            }
+
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                val key = snapshot.key ?: return
+                if (activeDriversMap.remove(key) != null) {
+                    emitCurrentActiveDrivers()
+                }
+            }
+
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+                // No aplica ordenamiento dinámico
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -1131,8 +1198,19 @@ class SupabaseRepository {
             }
         }
 
-        databaseRef.addValueEventListener(listener)
-        awaitClose { databaseRef.removeEventListener(listener) }
+        // Barrido periódico cada 60s para descartar conductores cuyo heartbeat haya expirado
+        val expirySweepJob = launch {
+            while (true) {
+                kotlinx.coroutines.delay(60_000L)
+                emitCurrentActiveDrivers()
+            }
+        }
+
+        databaseRef.addChildEventListener(childListener)
+        awaitClose {
+            expirySweepJob.cancel()
+            databaseRef.removeEventListener(childListener)
+        }
     }
 
     fun observeDriverProfile(uid: String): Flow<Driver?> = callbackFlow {

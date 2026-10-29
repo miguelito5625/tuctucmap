@@ -58,6 +58,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.tuctucmap.data.PassengerDestinationPreferences
 import com.example.tuctucmap.data.model.DriverLocation
 import com.example.tuctucmap.data.repository.SupabaseRepository
@@ -96,7 +98,15 @@ fun PassengerMapScreen(
     onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val rawDriverLocations by repository.observeActiveLocations().collectAsState(initial = emptyList())
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    var rawDriverLocations by remember { mutableStateOf<List<DriverLocation>>(emptyList()) }
+    LaunchedEffect(repository, lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            repository.observeActiveLocations().collect { locations ->
+                rawDriverLocations = locations
+            }
+        }
+    }
 
     // Obtener los iconos de Tuc Tuc (activo, en pausa y asignado a mi viaje) con caché optimizada en memoria
     val tucTucIcon = remember(context) {

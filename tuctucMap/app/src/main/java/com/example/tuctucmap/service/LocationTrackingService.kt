@@ -58,6 +58,7 @@ class LocationTrackingService : Service() {
     // Control adaptativo de batería y datos móviles
     private var lastSentLocation: Location? = null
     private var lastSentTimestamp: Long = 0L
+    private var lastFullMetadataSentTimestamp: Long = 0L
 
     companion object {
         private const val NOTIFICATION_ID = 1001
@@ -221,6 +222,7 @@ class LocationTrackingService : Service() {
         }
 
         isRunning = true
+        lastFullMetadataSentTimestamp = 0L
         // Registrar limpieza por desconexión en Firebase una sola vez al inicio de turno
         repository.registerOnDisconnectCleanup(driverUid)
         createNotificationChannel()
@@ -378,6 +380,10 @@ class LocationTrackingService : Service() {
         val shouldSend = (lastLoc == null) || (distanceMoved >= 8.0f) || ((now - lastSentTimestamp) >= 45_000L)
 
         if (shouldSend) {
+            val includeMetadata = (lastLoc == null) || ((now - lastFullMetadataSentTimestamp) >= 180_000L)
+            if (includeMetadata) {
+                lastFullMetadataSentTimestamp = now
+            }
             lastSentLocation = location
             lastSentTimestamp = now
             val currentStatus = driverStatus.value
@@ -391,7 +397,8 @@ class LocationTrackingService : Service() {
                     latitud = location.latitude,
                     longitud = location.longitude,
                     status = currentStatus,
-                    numeroUnidad = driverUnidad
+                    numeroUnidad = driverUnidad,
+                    includeStaticMetadata = includeMetadata
                 )
             }
         }

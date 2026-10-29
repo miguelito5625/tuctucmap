@@ -165,6 +165,7 @@ CREATE TABLE IF NOT EXISTS public.trips (
 CREATE INDEX IF NOT EXISTS idx_trips_driver_created ON public.trips(driver_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_trips_passenger_created ON public.trips(passenger_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_driver_created ON public.driver_subscriptions(driver_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_trips_route_points_cleanup ON public.trips(created_at) WHERE route_points IS NOT NULL;
 
 -- ============================================================================
 -- FUNCIONES DE SEGURIDAD Y TRIGGERS (PREVENCIÓN DE ESCALACIÓN Y FRAUDE)
@@ -268,7 +269,22 @@ CREATE TRIGGER trg_protect_profile_sensitive_columns
   FOR EACH ROW
   EXECUTE FUNCTION public.protect_profile_sensitive_columns();
 
--- Función RPC para sincronizar hora real del servidor y expirar suscripciones vencidas automáticamente
+-- Función para purgar polilíneas GPS antiguas (> 30 días) conservando tarifas, distancias y registros históricos
+CREATE OR REPLACE FUNCTION public.cleanup_old_trip_route_points()
+RETURNS INT AS $$
+DECLARE
+  v_cleaned INT;
+BEGIN
+  UPDATE public.trips
+  SET route_points = NULL
+  WHERE created_at < NOW() - INTERVAL '30 days'
+    AND route_points IS NOT NULL;
+  GET DIAGNOSTICS v_cleaned = ROW_COUNT;
+  RETURN v_cleaned;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Función RPC para sincronizar hora real del servidor, expirar suscripciones vencidas y limpiar rutas antiguas
 CREATE OR REPLACE FUNCTION public.sync_server_time_and_expire()
 RETURNS BIGINT AS $$
 BEGIN
@@ -278,6 +294,12 @@ BEGIN
     AND approval_status = 'aprobado'
     AND subscription_end_date IS NOT NULL
     AND subscription_end_date < NOW();
+
+  -- Purgar automáticamente polilíneas GPS mayores a 30 días para mantener la base de datos bajo 150 MB
+  UPDATE public.trips
+  SET route_points = NULL
+  WHERE created_at < NOW() - INTERVAL '30 days'
+    AND route_points IS NOT NULL;
 
   RETURN (EXTRACT(EPOCH FROM NOW()) * 1000)::BIGINT;
 END;
