@@ -20,3 +20,4 @@ dist/
 .angular/
 node_modules/
 graphify-out/
+

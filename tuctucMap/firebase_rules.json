@@ -9,10 +9,10 @@
     },
     "trips": {
       ".read": "true",
-      ".indexOn": ["status", "driverId", "passengerId", "createdAt"],
+      ".indexOn": ["status", "driverId", "passengerId", "timestamp"],
       "$tripId": {
         ".write": "true",
-        ".validate": "!newData.exists() || (newData.hasChildren(['tripId', 'passengerId', 'passengerLat', 'passengerLon', 'status', 'createdAt']) && newData.child('tripId').val() == $tripId && newData.child('passengerLat').isNumber() && newData.child('passengerLat').val() >= -90 && newData.child('passengerLat').val() <= 90 && newData.child('passengerLon').isNumber() && newData.child('passengerLon').val() >= -180 && newData.child('passengerLon').val() <= 180 && (newData.child('status').val() == 'pending' || newData.child('status').val() == 'accepted' || newData.child('status').val() == 'completed' || newData.child('status').val() == 'cancelled' || newData.child('status').val() == 'rejected'))"
+        ".validate": "!newData.exists() || (newData.hasChildren(['tripId', 'passengerId', 'passengerLat', 'passengerLon', 'status', 'timestamp']) && newData.child('tripId').val() == $tripId && newData.child('passengerLat').isNumber() && newData.child('passengerLat').val() >= -90 && newData.child('passengerLat').val() <= 90 && newData.child('passengerLon').isNumber() && newData.child('passengerLon').val() >= -180 && newData.child('passengerLon').val() <= 180 && (newData.child('status').val() == 'requested' || newData.child('status').val() == 'accepted' || newData.child('status').val() == 'completed' || newData.child('status').val() == 'cancelled' || newData.child('status').val() == 'rejected' || newData.child('status').val() == 'timeout'))"
       }
     }
   }

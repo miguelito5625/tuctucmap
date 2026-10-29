@@ -492,10 +492,10 @@
     "semantic_hash": "3a2e1b98e05cf5571e37558b55174cc5"
   },
   "tuctucMap/firebase_rules.json": {
-    "mtime": 1792259789.0299523,
-    "seen": 1793227673.043068,
-    "ast_hash": "a9a575acf8607947ebfde0bdf6463b6a",
-    "semantic_hash": "a9a575acf8607947ebfde0bdf6463b6a"
+    "mtime": 1793232627.7307522,
+    "seen": 1793232678.2098942,
+    "ast_hash": "1f1a838ddf38bf2cc73441347f959fd3",
+    "semantic_hash": ""
   },
   "tuctucMap/gradlew": {
     "mtime": 1790739456.131829,
@@ -510,10 +510,10 @@
     "semantic_hash": "7feb4e4b4c4b05593c15b372340f3b0f"
   },
   ".agents/AGENTS.md": {
-    "mtime": 1792361929.0992553,
-    "seen": 1793227673.0430698,
-    "ast_hash": "cdfbdae2389ed32c8f0608f0ff27c76d",
-    "semantic_hash": "cdfbdae2389ed32c8f0608f0ff27c76d"
+    "mtime": 1793227700.7072947,
+    "seen": 1793232678.2098992,
+    "ast_hash": "eaa25a3655311b9c74cd940de8d015de",
+    "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
     "mtime": 1793227543.1557057,
@@ -557,36 +557,6 @@
     "ast_hash": "a831cf3669f1e6ab85d8a80ebe655f99",
     "semantic_hash": "a831cf3669f1e6ab85d8a80ebe655f99"
   },
-  "ANALISIS_SEGURIDAD_Y_FUNCIONAMIENTO.md": {
-    "mtime": 1792431682.0124054,
-    "seen": 1793227673.043076,
-    "ast_hash": "7e69a79323dbf9540d0df32f8d3b9705",
-    "semantic_hash": "7e69a79323dbf9540d0df32f8d3b9705"
-  },
-  "CONFIGURACION_Y_SECRETOS_REQUERIDOS.md": {
-    "mtime": 1792286406.313417,
-    "seen": 1793227673.0430768,
-    "ast_hash": "2e204f1637e1bbff4b634469cbc6c8f5",
-    "semantic_hash": "2e204f1637e1bbff4b634469cbc6c8f5"
-  },
-  "GUIA_PUBLICACION_PLAY_STORE.md": {
-    "mtime": 1792037452.8148198,
-    "seen": 1793227673.0430775,
-    "ast_hash": "bea3978710ffb48824fac1e234df189f",
-    "semantic_hash": "bea3978710ffb48824fac1e234df189f"
-  },
-  "OPTIMIZACION_RENDIMIENTO_Y_COSTOS.md": {
-    "mtime": 1792431682.0134661,
-    "seen": 1793227673.043078,
-    "ast_hash": "da37bee8dfd46293e8e6db382c40f9cb",
-    "semantic_hash": "da37bee8dfd46293e8e6db382c40f9cb"
-  },
-  "POLITICA_PRIVACIDAD.md": {
-    "mtime": 1792037754.5154314,
-    "seen": 1793227673.0430787,
-    "ast_hash": "f8e4a901544702b2b5aa32066bc4848a",
-    "semantic_hash": "f8e4a901544702b2b5aa32066bc4848a"
-  },
   "tuctucMapDashboard/ImplementationsPlans/first/implementation_plan.md": {
     "mtime": 1790739456.1378644,
     "seen": 1793227673.0430794,
@@ -616,5 +586,71 @@
     "seen": 1793227673.0430818,
     "ast_hash": "ca282a0fba242f15736c1ca66f82e2bf",
     "semantic_hash": "ca282a0fba242f15736c1ca66f82e2bf"
+  },
+  "Reportes/ANALISIS_SEGURIDAD_Y_FUNCIONAMIENTO.md": {
+    "mtime": 1792431682.0124054,
+    "seen": 1793232678.2099109,
+    "ast_hash": "7e69a79323dbf9540d0df32f8d3b9705",
+    "semantic_hash": ""
+  },
+  "Reportes/CONFIGURACION_Y_SECRETOS_REQUERIDOS.md": {
+    "mtime": 1792286406.313417,
+    "seen": 1793232678.2099123,
+    "ast_hash": "2e204f1637e1bbff4b634469cbc6c8f5",
+    "semantic_hash": ""
+  },
+  "Reportes/GUIA_PUBLICACION_PLAY_STORE.md": {
+    "mtime": 1792037452.8148198,
+    "seen": 1793232678.2099135,
+    "ast_hash": "bea3978710ffb48824fac1e234df189f",
+    "semantic_hash": ""
+  },
+  "Reportes/OPTIMIZACION_RENDIMIENTO_Y_COSTOS.md": {
+    "mtime": 1792431682.0134661,
+    "seen": 1793232678.209915,
+    "ast_hash": "da37bee8dfd46293e8e6db382c40f9cb",
+    "semantic_hash": ""
+  },
+  "Reportes/POLITICA_PRIVACIDAD.md": {
+    "mtime": 1792037754.5154314,
+    "seen": 1793232678.2099159,
+    "ast_hash": "f8e4a901544702b2b5aa32066bc4848a",
+    "semantic_hash": ""
+  },
+  "privacy.html": {
+    "mtime": 1792038435.4302197,
+    "seen": 1793232678.2099168,
+    "ast_hash": "7929aebea1cb526f821cf7891dd885af",
+    "semantic_hash": ""
+  },
+  "tuctucMapDashboard/src/app/features/business-config/business-config.component.html": {
+    "mtime": 1792347997.6459966,
+    "seen": 1793232678.2099235,
+    "ast_hash": "215e88c2b81872871a3513240cc77d90",
+    "semantic_hash": ""
+  },
+  "tuctucMapDashboard/src/app/features/drivers/drivers.component.html": {
+    "mtime": 1792347982.6336386,
+    "seen": 1793232678.2099247,
+    "ast_hash": "3b94d21e926913839f9dca9b3f256436",
+    "semantic_hash": ""
+  },
+  "tuctucMapDashboard/src/app/features/trips/trips.component.html": {
+    "mtime": 1792111056.7009292,
+    "seen": 1793232678.2099257,
+    "ast_hash": "c6386a42268f6340257a963fc9e2e8e3",
+    "semantic_hash": ""
+  },
+  "tuctucMapDashboard/src/app/shared/layout/shell.component.html": {
+    "mtime": 1793226104.1547244,
+    "seen": 1793232678.2099266,
+    "ast_hash": "1d65637bd72a6cae7e48a93bffdd3e37",
+    "semantic_hash": ""
+  },
+  "tuctucMapDashboard/src/index.html": {
+    "mtime": 1790739456.1535194,
+    "seen": 1793232678.2099278,
+    "ast_hash": "c4dddd427572a147f16a241b81ab2503",
+    "semantic_hash": ""
   }
 }
