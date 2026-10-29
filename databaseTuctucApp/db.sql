@@ -285,23 +285,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- Función RPC O(1) para sincronizar hora real del servidor y evaluar vencimiento del usuario actual por PRIMARY KEY
+-- Función RPC ultraligera de solo lectura para sincronizar la hora real del servidor (0 lecturas/escrituras en tablas)
 CREATE OR REPLACE FUNCTION public.sync_server_time_and_expire()
 RETURNS BIGINT AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL THEN
-    UPDATE public.profiles
-    SET approval_status = 'suscripcion_vencida'
-    WHERE id = auth.uid()
-      AND role = 'driver'
-      AND approval_status = 'aprobado'
-      AND subscription_end_date IS NOT NULL
-      AND subscription_end_date < NOW();
-  END IF;
-
-  RETURN (EXTRACT(EPOCH FROM NOW()) * 1000)::BIGINT;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+  SELECT (EXTRACT(EPOCH FROM NOW()) * 1000)::BIGINT;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
 -- Tareas programadas en segundo plano con pg_cron (escalable a 1,000+ conductores sin afectar latencia de clientes)
 CREATE EXTENSION IF NOT EXISTS pg_cron;
