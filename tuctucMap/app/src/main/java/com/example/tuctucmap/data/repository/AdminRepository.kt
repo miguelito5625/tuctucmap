@@ -6,6 +6,7 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.postgrest.query.Order
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -313,37 +314,59 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
 
     suspend fun getCompletedTrips(limit: Long = 100): Result<List<AdminTrip>> = withContext(Dispatchers.IO) {
         try {
-            val trips = supabase.postgrest["trips"].select {
+            val tripCols = Columns.list(
+                "id", "passenger_id", "passenger_name", "passenger_phone",
+                "driver_id", "status", "message", "fare", "distance_km",
+                "passenger_lat", "passenger_lon", "created_at"
+            )
+
+            val trips = supabase.postgrest["trips"].select(columns = tripCols) {
                 order("created_at", Order.DESCENDING)
                 limit(limit)
             }.decodeList<AdminTrip>()
 
-            val allProfiles = supabase.postgrest["profiles"].select().decodeList<AdminDriver>()
-            val profileMap = allProfiles.associateBy { it.id }
+            @kotlinx.serialization.Serializable
+            data class ProfileLookup(
+                val id: String = "",
+                val name: String? = null,
+                val phone: String? = null
+            )
+
+            val profileMap = try {
+                val list = supabase.postgrest["profiles"]
+                    .select(columns = Columns.list("id", "name", "phone"))
+                    .decodeList<ProfileLookup>()
+                list.associateBy { it.id }
+            } catch (e: Exception) {
+                android.util.Log.w("AdminRepository", "Profile lookup fallback in getCompletedTrips: ${e.message}")
+                emptyMap()
+            }
 
             for (t in trips) {
                 val directName = t.passengerNameDirect?.trim()
                 val mappedPassenger = t.passengerId?.let { profileMap[it] }
                 t.resolvedPassengerName = if (!directName.isNullOrBlank()) {
                     directName
-                } else if (mappedPassenger != null) {
-                    mappedPassenger.nombre
+                } else if (!mappedPassenger?.name.isNullOrBlank()) {
+                    mappedPassenger!!.name!!
                 } else {
                     "Pasajero (Invitado)"
                 }
 
                 t.resolvedPassengerPhone = t.passengerPhoneDirect?.trim()
-                    ?: mappedPassenger?.telefono
+                    ?.ifBlank { null }
+                    ?: mappedPassenger?.phone?.trim()
                     ?: ""
 
                 t.isRegisteredPassenger = !t.passengerId.isNullOrBlank()
 
-                val driver = profileMap[t.driverId]
-                t.resolvedDriverName = driver?.nombre?.ifBlank { "TucTuc" } ?: "TucTuc"
+                val driver = t.driverId?.let { profileMap[it] }
+                t.resolvedDriverName = driver?.name?.trim()?.ifBlank { "TucTuc" } ?: "TucTuc"
             }
 
             Result.success(trips)
         } catch (e: Exception) {
+            android.util.Log.e("AdminRepository", "Error in getCompletedTrips: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -383,7 +406,7 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
             @kotlinx.serialization.Serializable
             data class TripPassengerIdDto(val passenger_id: String? = null)
 
-            val trips = supabase.postgrest["trips"].select().decodeList<TripPassengerIdDto>()
+            val trips = supabase.postgrest["trips"].select(columns = Columns.list("passenger_id")).decodeList<TripPassengerIdDto>()
             val counts = mutableMapOf<String, Int>()
             for (t in trips) {
                 t.passenger_id?.let { pid ->

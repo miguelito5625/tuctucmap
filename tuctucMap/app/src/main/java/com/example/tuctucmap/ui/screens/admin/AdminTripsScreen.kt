@@ -48,15 +48,21 @@ fun AdminTripsScreen(
 
     var trips by remember { mutableStateOf<List<AdminTrip>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedTripForRoute by remember { mutableStateOf<AdminTrip?>(null) }
 
     fun loadTrips() {
         scope.launch {
             isLoading = true
+            errorMessage = null
             val res = adminRepo.getCompletedTrips(limit = 120)
             if (res.isSuccess) {
                 trips = res.getOrDefault(emptyList())
+            } else {
+                val err = res.exceptionOrNull()?.message ?: "Error al consultar los viajes"
+                errorMessage = err
+                android.util.Log.e("AdminTripsScreen", "Error loading trips: $err", res.exceptionOrNull())
             }
             isLoading = false
         }
@@ -136,6 +142,47 @@ fun AdminTripsScreen(
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = Color(0xFFF59E0B))
+                }
+            } else if (errorMessage != null) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ErrorOutline,
+                            contentDescription = null,
+                            tint = Color(0xFFEF4444),
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Error al cargar la auditoría",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = errorMessage ?: "",
+                            color = Color(0xFF94A3B8),
+                            fontSize = 12.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { loadTrips() },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFF59E0B),
+                                contentColor = Color(0xFF0F172A)
+                            ),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Reintentar", fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             } else if (filteredTrips.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

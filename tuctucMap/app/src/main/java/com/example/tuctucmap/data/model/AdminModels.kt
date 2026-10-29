@@ -13,21 +13,25 @@ data class UserRoleDto(
 @Serializable
 data class AdminDriver(
     val id: String = "",
-    val email: String = "",
+    val email: String? = null,
     @SerialName("name")
-    val nombre: String = "",
+    private val rawNombre: String? = null,
     @SerialName("phone")
-    val telefono: String = "",
+    private val rawTelefono: String? = null,
     @SerialName("plate_number")
-    val placas: String = "",
+    private val rawPlacas: String? = null,
     @SerialName("unit_number")
-    val numeroUnidad: String = "",
+    private val rawNumeroUnidad: String? = null,
     @SerialName("approval_status")
     val estadoAprobacion: String = "pendiente",
     @SerialName("subscription_end_date")
     val fechaVencimientoSuscripcion: String? = null,
     val role: String = "driver"
 ) {
+    val nombre: String get() = rawNombre?.trim() ?: ""
+    val telefono: String get() = rawTelefono?.trim() ?: ""
+    val placas: String get() = rawPlacas?.trim() ?: ""
+    val numeroUnidad: String get() = rawNumeroUnidad?.trim() ?: ""
     val displayIdentifier: String
         get() = if (numeroUnidad.isNotBlank()) "$numeroUnidad • $placas" else placas
 
@@ -127,9 +131,10 @@ data class AdminTrip(
     @SerialName("passenger_phone")
     val passengerPhoneDirect: String? = null,
     @SerialName("driver_id")
-    val driverId: String = "",
-    val status: String = "",
-    val message: String = "",
+    val driverId: String? = null,
+    val status: String? = "completed",
+    @SerialName("message")
+    private val rawMessage: String? = null,
     val fare: Double? = null,
     @SerialName("distance_km")
     val distanceKm: Double? = null,
@@ -138,29 +143,34 @@ data class AdminTrip(
     @SerialName("passenger_lon")
     val passengerLon: Double? = null,
     @SerialName("created_at")
-    val createdAt: String = "",
+    val createdAt: String? = null,
     var resolvedPassengerName: String = "",
     var resolvedPassengerPhone: String = "",
     var resolvedDriverName: String = "",
     var isRegisteredPassenger: Boolean = false
 ) {
-    val createdAtEpoch: Long get() = parseIsoTimestamp(createdAt)
+    val message: String get() = rawMessage ?: ""
+    val createdAtEpoch: Long get() = createdAt?.let { parseIsoTimestamp(it) } ?: 0L
 }
 
 @Serializable
 data class AdminPassenger(
     val id: String = "",
     @SerialName("name")
-    val nombre: String = "",
+    private val rawNombre: String? = null,
     @SerialName("phone")
-    val telefono: String = "",
-    val email: String = "",
+    private val rawTelefono: String? = null,
+    @SerialName("email")
+    private val rawEmail: String? = null,
     @SerialName("created_at")
-    val createdAt: String = "",
+    val createdAt: String? = null,
     val role: String = "passenger",
     var tripsCount: Int = 0
 ) {
-    val createdAtEpoch: Long get() = parseIsoTimestamp(createdAt)
+    val nombre: String get() = rawNombre ?: ""
+    val telefono: String get() = rawTelefono ?: ""
+    val email: String get() = rawEmail ?: ""
+    val createdAtEpoch: Long get() = createdAt?.let { parseIsoTimestamp(it) } ?: 0L
 }
 
 @Serializable
