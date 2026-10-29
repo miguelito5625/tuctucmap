@@ -166,6 +166,7 @@ CREATE INDEX IF NOT EXISTS idx_trips_driver_created ON public.trips(driver_id, c
 CREATE INDEX IF NOT EXISTS idx_trips_passenger_created ON public.trips(passenger_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_driver_created ON public.driver_subscriptions(driver_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_trips_route_points_cleanup ON public.trips(created_at) WHERE route_points IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_profiles_active_driver_sub ON public.profiles(subscription_end_date) WHERE role = 'driver' AND approval_status = 'aprobado';
 
 -- ============================================================================
 -- FUNCIONES DE SEGURIDAD Y TRIGGERS (PREVENCIÓN DE ESCALACIÓN Y FRAUDE)
@@ -284,26 +285,38 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- Función RPC para sincronizar hora real del servidor, expirar suscripciones vencidas y limpiar rutas antiguas
+-- Función RPC O(1) para sincronizar hora real del servidor y evaluar vencimiento del usuario actual por PRIMARY KEY
 CREATE OR REPLACE FUNCTION public.sync_server_time_and_expire()
 RETURNS BIGINT AS $$
 BEGIN
-  UPDATE public.profiles
-  SET approval_status = 'suscripcion_vencida'
-  WHERE role = 'driver'
-    AND approval_status = 'aprobado'
-    AND subscription_end_date IS NOT NULL
-    AND subscription_end_date < NOW();
-
-  -- Purgar automáticamente polilíneas GPS mayores a 30 días para mantener la base de datos bajo 150 MB
-  UPDATE public.trips
-  SET route_points = NULL
-  WHERE created_at < NOW() - INTERVAL '30 days'
-    AND route_points IS NOT NULL;
+  IF auth.uid() IS NOT NULL THEN
+    UPDATE public.profiles
+    SET approval_status = 'suscripcion_vencida'
+    WHERE id = auth.uid()
+      AND role = 'driver'
+      AND approval_status = 'aprobado'
+      AND subscription_end_date IS NOT NULL
+      AND subscription_end_date < NOW();
+  END IF;
 
   RETURN (EXTRACT(EPOCH FROM NOW()) * 1000)::BIGINT;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Tareas programadas en segundo plano con pg_cron (escalable a 1,000+ conductores sin afectar latencia de clientes)
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+SELECT cron.schedule(
+  'tuctuc-cleanup-old-route-points',
+  '0 9 * * *', -- 03:00 AM hora de Guatemala (UTC-6)
+  'SELECT public.cleanup_old_trip_route_points();'
+);
+
+SELECT cron.schedule(
+  'tuctuc-expire-driver-subscriptions',
+  '0 * * * *', -- Cada hora en el minuto 0
+  $$UPDATE public.profiles SET approval_status = 'suscripcion_vencida' WHERE role = 'driver' AND approval_status = 'aprobado' AND subscription_end_date IS NOT NULL AND subscription_end_date < NOW();$$
+);
 
 -- Función administrativa segura para eliminar usuarios de auth.users y profiles
 CREATE OR REPLACE FUNCTION public.delete_user_by_admin(target_user_id UUID)
