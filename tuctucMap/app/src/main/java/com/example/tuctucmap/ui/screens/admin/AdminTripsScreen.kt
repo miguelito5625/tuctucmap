@@ -3,28 +3,24 @@ package com.example.tuctucmap.ui.screens.admin
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
-
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -32,8 +28,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import androidx.core.content.FileProvider
+import com.example.tuctucmap.data.model.AdminDriver
 import com.example.tuctucmap.data.model.AdminTrip
+import com.example.tuctucmap.data.model.parseIsoTimestamp
 import com.example.tuctucmap.data.repository.AdminRepository
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.ui.util.AppTileSource
@@ -46,6 +51,69 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+enum class AdminTripPeriodFilter(val label: String) {
+    TODAY("Hoy"),
+    LAST_3_DAYS("3 días"),
+    LAST_5_DAYS("5 días"),
+    LAST_7_DAYS("7 días"),
+    CUSTOM("Personalizado")
+}
+
+private fun getPeriodRangeIso(
+    filter: AdminTripPeriodFilter,
+    customStartUtcMillis: Long? = null,
+    customEndUtcMillis: Long? = null
+): Pair<String, String> {
+    val isoSdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }
+
+    if (filter == AdminTripPeriodFilter.CUSTOM && customStartUtcMillis != null && customEndUtcMillis != null) {
+        val startCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            timeInMillis = minOf(customStartUtcMillis, customEndUtcMillis)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val endCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            timeInMillis = maxOf(customStartUtcMillis, customEndUtcMillis)
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }
+        return Pair(isoSdf.format(startCal.time), isoSdf.format(endCal.time))
+    }
+
+    val daysBack = when (filter) {
+        AdminTripPeriodFilter.TODAY -> 0
+        AdminTripPeriodFilter.LAST_3_DAYS -> 2
+        AdminTripPeriodFilter.LAST_5_DAYS -> 4
+        AdminTripPeriodFilter.LAST_7_DAYS -> 6
+        AdminTripPeriodFilter.CUSTOM -> 0
+    }
+
+    val startCal = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+        if (daysBack > 0) {
+            add(Calendar.DAY_OF_YEAR, -daysBack)
+        }
+    }
+
+    val endCal = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 23)
+        set(Calendar.MINUTE, 59)
+        set(Calendar.SECOND, 59)
+        set(Calendar.MILLISECOND, 999)
+    }
+
+    return Pair(isoSdf.format(startCal.time), isoSdf.format(endCal.time))
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminTripsScreen(
@@ -57,16 +125,105 @@ fun AdminTripsScreen(
     val scope = rememberCoroutineScope()
 
     var trips by remember { mutableStateOf<List<AdminTrip>>(emptyList()) }
+    var drivers by remember { mutableStateOf<List<AdminDriver>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedTripForRoute by remember { mutableStateOf<AdminTrip?>(null) }
 
+    // Estados de Filtros
+    var currentPeriodFilter by remember { mutableStateOf(AdminTripPeriodFilter.TODAY) }
+    var customRangeStartUtcMillis by remember { mutableStateOf<Long?>(null) }
+    var customRangeEndUtcMillis by remember { mutableStateOf<Long?>(null) }
+    var showDateRangePickerDialog by remember { mutableStateOf(false) }
+
+    // Filtro de Conductores (emptySet = todos los conductores)
+    var selectedDriverIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var showDriverFilterDialog by remember { mutableStateOf(false) }
+
+    // Límites de fechas desde la base de datos (del viaje más antiguo al más reciente)
+    var minTripDateEpoch by remember { mutableStateOf(System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000) }
+    var maxTripDateEpoch by remember { mutableStateOf(System.currentTimeMillis()) }
+
+    // Carga de conductores y límites de fecha
+    LaunchedEffect(Unit) {
+        val boundsRes = adminRepo.getTripDateBounds()
+        if (boundsRes.isSuccess) {
+            val bounds = boundsRes.getOrNull()
+            if (bounds != null) {
+                minTripDateEpoch = bounds.minEpochMs
+                maxTripDateEpoch = bounds.maxEpochMs
+            }
+        }
+
+        val driversRes = adminRepo.fetchDrivers()
+        if (driversRes.isSuccess) {
+            drivers = driversRes.getOrDefault(emptyList())
+        }
+    }
+
+    // Configuración de SelectableDates para el DateRangePicker
+    val minAllowedUtcMidnight = remember(minTripDateEpoch) {
+        Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            timeInMillis = minTripDateEpoch
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
+
+    val maxAllowedUtcMidnight = remember(maxTripDateEpoch) {
+        val nowUtc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }.timeInMillis
+        maxOf(maxTripDateEpoch, nowUtc)
+    }
+
+    val selectableDates = remember(minAllowedUtcMidnight, maxAllowedUtcMidnight) {
+        object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis in minAllowedUtcMidnight..maxAllowedUtcMidnight
+            }
+            override fun isSelectableYear(year: Int): Boolean {
+                val minYear = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                    timeInMillis = minAllowedUtcMidnight
+                }.get(Calendar.YEAR)
+                val maxYear = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                    timeInMillis = maxAllowedUtcMidnight
+                }.get(Calendar.YEAR)
+                return year in minYear..maxYear
+            }
+        }
+    }
+
+    // Función de consulta a la base de datos aplicando los filtros directamente en Supabase
     fun loadTrips() {
         scope.launch {
             isLoading = true
             errorMessage = null
-            val res = adminRepo.getCompletedTrips(limit = 120)
+            val (startIso, endIso) = getPeriodRangeIso(
+                filter = currentPeriodFilter,
+                customStartUtcMillis = customRangeStartUtcMillis,
+                customEndUtcMillis = customRangeEndUtcMillis
+            )
+
+            val driverFilterList = if (selectedDriverIds.isEmpty() || (drivers.isNotEmpty() && selectedDriverIds.size == drivers.size)) {
+                null
+            } else {
+                selectedDriverIds.toList()
+            }
+
+            val res = adminRepo.getCompletedTrips(
+                startDateIso = startIso,
+                endDateIso = endIso,
+                driverIds = driverFilterList,
+                limit = 500
+            )
+
             if (res.isSuccess) {
                 trips = res.getOrDefault(emptyList())
             } else {
@@ -78,10 +235,12 @@ fun AdminTripsScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
+    // Recargar cada vez que cambien los filtros de servidor
+    LaunchedEffect(currentPeriodFilter, customRangeStartUtcMillis, customRangeEndUtcMillis, selectedDriverIds) {
         loadTrips()
     }
 
+    // Filtrado de búsqueda de texto local en tiempo real sobre los resultados obtenidos
     val filteredTrips = remember(trips, searchQuery) {
         val q = searchQuery.trim().lowercase()
         if (q.isEmpty()) trips
@@ -95,18 +254,34 @@ fun AdminTripsScreen(
         }
     }
 
+    // Texto descriptivo del filtro de conductores
+    val driverFilterSummaryText = remember(selectedDriverIds, drivers) {
+        when {
+            selectedDriverIds.isEmpty() || (drivers.isNotEmpty() && selectedDriverIds.size == drivers.size) -> {
+                "Todos los conductores"
+            }
+            selectedDriverIds.size == 1 -> {
+                val d = drivers.firstOrNull { it.id in selectedDriverIds }
+                d?.nombre?.ifBlank { "1 conductor" } ?: "1 conductor"
+            }
+            else -> {
+                "${selectedDriverIds.size} conductores"
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Auditoría de Viajes", fontWeight = FontWeight.Bold, color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
                     }
                 },
                 actions = {
                     IconButton(onClick = {
-                        exportTripsCsv(context, trips)
+                        exportTripsCsv(context, filteredTrips)
                     }) {
                         Icon(Icons.Default.Share, contentDescription = "Exportar CSV", tint = Color(0xFFF59E0B))
                     }
@@ -121,8 +296,8 @@ fun AdminTripsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Buscador
-            Box(modifier = Modifier.padding(16.dp)) {
+            // 1. Buscador de Texto
+            Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 6.dp)) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
@@ -149,9 +324,233 @@ fun AdminTripsScreen(
                 )
             }
 
+            // 2. Fila de Filtros de Período / Fecha (Hoy por defecto, 3d, 5d, 7d, Personalizado)
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Opción 1: Hoy (Predeterminado)
+                item {
+                    FilterChip(
+                        selected = currentPeriodFilter == AdminTripPeriodFilter.TODAY,
+                        onClick = { currentPeriodFilter = AdminTripPeriodFilter.TODAY },
+                        label = { Text("Hoy") },
+                        leadingIcon = if (currentPeriodFilter == AdminTripPeriodFilter.TODAY) {
+                            { Icon(Icons.Default.Today, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                        } else null,
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color(0xFFF59E0B),
+                            selectedLabelColor = Color(0xFF0F172A),
+                            selectedLeadingIconColor = Color(0xFF0F172A),
+                            containerColor = Color(0xFF1E293B),
+                            labelColor = Color(0xFF94A3B8)
+                        )
+                    )
+                }
+
+                // Opción 2: 3 días
+                item {
+                    FilterChip(
+                        selected = currentPeriodFilter == AdminTripPeriodFilter.LAST_3_DAYS,
+                        onClick = { currentPeriodFilter = AdminTripPeriodFilter.LAST_3_DAYS },
+                        label = { Text("3 días") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color(0xFFF59E0B),
+                            selectedLabelColor = Color(0xFF0F172A),
+                            containerColor = Color(0xFF1E293B),
+                            labelColor = Color(0xFF94A3B8)
+                        )
+                    )
+                }
+
+                // Opción 3: 5 días
+                item {
+                    FilterChip(
+                        selected = currentPeriodFilter == AdminTripPeriodFilter.LAST_5_DAYS,
+                        onClick = { currentPeriodFilter = AdminTripPeriodFilter.LAST_5_DAYS },
+                        label = { Text("5 días") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color(0xFFF59E0B),
+                            selectedLabelColor = Color(0xFF0F172A),
+                            containerColor = Color(0xFF1E293B),
+                            labelColor = Color(0xFF94A3B8)
+                        )
+                    )
+                }
+
+                // Opción 4: 7 días
+                item {
+                    FilterChip(
+                        selected = currentPeriodFilter == AdminTripPeriodFilter.LAST_7_DAYS,
+                        onClick = { currentPeriodFilter = AdminTripPeriodFilter.LAST_7_DAYS },
+                        label = { Text("7 días") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color(0xFFF59E0B),
+                            selectedLabelColor = Color(0xFF0F172A),
+                            containerColor = Color(0xFF1E293B),
+                            labelColor = Color(0xFF94A3B8)
+                        )
+                    )
+                }
+
+                // Opción 5: Personalizado (DatePicker)
+                item {
+                    FilterChip(
+                        selected = currentPeriodFilter == AdminTripPeriodFilter.CUSTOM,
+                        onClick = { showDateRangePickerDialog = true },
+                        label = {
+                            Text(
+                                if (currentPeriodFilter == AdminTripPeriodFilter.CUSTOM && customRangeStartUtcMillis != null && customRangeEndUtcMillis != null) {
+                                    val sdf = SimpleDateFormat("dd/MM", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }
+                                    "${sdf.format(Date(customRangeStartUtcMillis!!))} - ${sdf.format(Date(customRangeEndUtcMillis!!))}"
+                                } else {
+                                    "Personalizado"
+                                }
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(16.dp))
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color(0xFFF59E0B),
+                            selectedLabelColor = Color(0xFF0F172A),
+                            selectedLeadingIconColor = Color(0xFF0F172A),
+                            containerColor = Color(0xFF1E293B),
+                            labelColor = Color(0xFF94A3B8)
+                        )
+                    )
+                }
+            }
+
+            // 3. Fila de Filtro de Conductores
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val isFilteredDrivers = selectedDriverIds.isNotEmpty() && (drivers.isEmpty() || selectedDriverIds.size < drivers.size)
+                FilterChip(
+                    selected = isFilteredDrivers,
+                    onClick = { showDriverFilterDialog = true },
+                    label = {
+                        val text = when {
+                            selectedDriverIds.isEmpty() || (drivers.isNotEmpty() && selectedDriverIds.size == drivers.size) -> {
+                                if (drivers.isNotEmpty()) "Conductores: Todos (${drivers.size})" else "Conductores: Todos"
+                            }
+                            selectedDriverIds.size == 1 -> {
+                                val d = drivers.firstOrNull { it.id in selectedDriverIds }
+                                "Conductor: ${d?.nombre ?: "1 selec."}"
+                            }
+                            else -> {
+                                "Conductores: ${selectedDriverIds.size} de ${drivers.size}"
+                            }
+                        }
+                        Text(text, fontSize = 12.sp)
+                    },
+                    leadingIcon = {
+                        Icon(Icons.Default.People, contentDescription = null, modifier = Modifier.size(16.dp))
+                    },
+                    trailingIcon = {
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(18.dp))
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Color(0xFF38BDF8),
+                        selectedLabelColor = Color(0xFF0F172A),
+                        selectedLeadingIconColor = Color(0xFF0F172A),
+                        selectedTrailingIconColor = Color(0xFF0F172A),
+                        containerColor = Color(0xFF1E293B),
+                        labelColor = Color(0xFFCBD5E1)
+                    )
+                )
+
+                if (isFilteredDrivers) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
+                        onClick = { selectedDriverIds = emptySet() },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text("Ver todos", color = Color(0xFF38BDF8), fontSize = 11.sp)
+                    }
+                }
+            }
+
+            // 4. Barra de Resumen y Contador de Viajes con el filtro actual
+            val totalFares = remember(filteredTrips) { filteredTrips.sumOf { it.fare ?: 0.0 } }
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                border = BorderStroke(1.dp, Color(0xFF334155))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
+                                contentDescription = null,
+                                tint = Color(0xFFF59E0B),
+                                modifier = Modifier.size(17.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (searchQuery.isBlank()) {
+                                    "Mostrando ${filteredTrips.size} ${if (filteredTrips.size == 1) "viaje" else "viajes"}"
+                                } else {
+                                    "Mostrando ${filteredTrips.size} de ${trips.size} viajes"
+                                },
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Filtro: ${currentPeriodFilter.label} • $driverFilterSummaryText",
+                            fontSize = 11.sp,
+                            color = Color(0xFF94A3B8),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "TOTAL RECAUDADO",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF64748B)
+                        )
+                        Text(
+                            text = "Q ${String.format(Locale.US, "%.2f", totalFares)}",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFF9D423)
+                        )
+                    }
+                }
+            }
+
+            // 5. Lista de Viajes / Estados
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color(0xFFF59E0B))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(color = Color(0xFFF59E0B))
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text("Cargando viajes desde la base de datos...", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                    }
                 }
             } else if (errorMessage != null) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -167,7 +566,7 @@ fun AdminTripsScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "Error al cargar la auditoría",
+                            text = "Error al consultar viajes",
                             color = Color.White,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
@@ -196,7 +595,46 @@ fun AdminTripsScreen(
                 }
             } else if (filteredTrips.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No se encontraron registros de viajes", color = Color(0xFF94A3B8), fontSize = 14.sp)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.SearchOff,
+                            contentDescription = null,
+                            tint = Color(0xFF64748B),
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = if (searchQuery.isNotBlank()) "Sin coincidencias de búsqueda" else "No se encontraron viajes",
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = if (searchQuery.isNotBlank()) {
+                                "Ningún viaje coincide con '$searchQuery' dentro del período seleccionado."
+                            } else {
+                                "No hay viajes registrados para el filtro de fecha y conductores seleccionado."
+                            },
+                            color = Color(0xFF94A3B8),
+                            fontSize = 12.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        if (currentPeriodFilter != AdminTripPeriodFilter.LAST_7_DAYS) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            OutlinedButton(
+                                onClick = { currentPeriodFilter = AdminTripPeriodFilter.LAST_7_DAYS },
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFF59E0B)),
+                                border = BorderStroke(1.dp, Color(0xFFF59E0B))
+                            ) {
+                                Text("Ver últimos 7 días", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
+                        }
+                    }
                 }
             } else {
                 LazyColumn(
@@ -217,6 +655,98 @@ fun AdminTripsScreen(
         }
     }
 
+    // Modal DatePickerDialog con DateRangePicker
+    if (showDateRangePickerDialog) {
+        val initialStart = customRangeStartUtcMillis ?: minOf(System.currentTimeMillis(), maxAllowedUtcMidnight)
+        val initialEnd = customRangeEndUtcMillis ?: maxAllowedUtcMidnight
+        val dateRangePickerState = rememberDateRangePickerState(
+            initialSelectedStartDateMillis = initialStart,
+            initialSelectedEndDateMillis = initialEnd,
+            selectableDates = selectableDates
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showDateRangePickerDialog = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val start = dateRangePickerState.selectedStartDateMillis
+                        val end = dateRangePickerState.selectedEndDateMillis ?: start
+                        if (start != null && end != null) {
+                            customRangeStartUtcMillis = minOf(start, end)
+                            customRangeEndUtcMillis = maxOf(start, end)
+                            currentPeriodFilter = AdminTripPeriodFilter.CUSTOM
+                            showDateRangePickerDialog = false
+                        }
+                    },
+                    enabled = dateRangePickerState.selectedStartDateMillis != null
+                ) {
+                    Text("Aplicar", color = Color(0xFFF59E0B), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDateRangePickerDialog = false }) {
+                    Text("Cancelar", color = Color.White)
+                }
+            },
+            colors = DatePickerDefaults.colors(
+                containerColor = Color(0xFF1E293B)
+            )
+        ) {
+            DateRangePicker(
+                state = dateRangePickerState,
+                title = {
+                    Text(
+                        text = "Seleccionar Rango de Fechas",
+                        modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp),
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                headline = {
+                    Text(
+                        text = "Límite: Del primer al último viaje registrado",
+                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
+                        color = Color(0xFF94A3B8),
+                        fontSize = 12.sp
+                    )
+                },
+                showModeToggle = false,
+                colors = DatePickerDefaults.colors(
+                    containerColor = Color(0xFF1E293B),
+                    titleContentColor = Color.White,
+                    headlineContentColor = Color.White,
+                    weekdayContentColor = Color(0xFF94A3B8),
+                    subheadContentColor = Color(0xFFCBD5E1),
+                    navigationContentColor = Color.White,
+                    yearContentColor = Color.White,
+                    currentYearContentColor = Color(0xFFF59E0B),
+                    selectedYearContentColor = Color(0xFF0F172A),
+                    selectedYearContainerColor = Color(0xFFF59E0B),
+                    dayContentColor = Color.White,
+                    disabledDayContentColor = Color(0xFF475569),
+                    selectedDayContentColor = Color(0xFF0F172A),
+                    selectedDayContainerColor = Color(0xFFF59E0B),
+                    dayInSelectionRangeContentColor = Color(0xFF0F172A),
+                    dayInSelectionRangeContainerColor = Color(0x66F59E0B)
+                )
+            )
+        }
+    }
+
+    // Modal de Filtro por Conductor (Selección Múltiple)
+    if (showDriverFilterDialog) {
+        DriverFilterDialog(
+            drivers = drivers,
+            selectedIds = selectedDriverIds,
+            onDismiss = { showDriverFilterDialog = false },
+            onApply = { newSelected ->
+                selectedDriverIds = newSelected
+            }
+        )
+    }
+
     // Modal de Visor de Ruta GPS
     selectedTripForRoute?.let { trip ->
         TripRouteModal(
@@ -226,6 +756,7 @@ fun AdminTripsScreen(
         )
     }
 }
+
 
 @Composable
 private fun AdminTripCard(
@@ -832,6 +1363,226 @@ private fun formatTripDate(epochMs: Long): String {
     val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.US)
     return sdf.format(Date(epochMs))
 }
+
+@Composable
+private fun DriverFilterDialog(
+    drivers: List<AdminDriver>,
+    selectedIds: Set<String>,
+    onDismiss: () -> Unit,
+    onApply: (Set<String>) -> Unit
+) {
+    var tempSelected by remember { mutableStateOf(selectedIds) }
+    var driverSearch by remember { mutableStateOf("") }
+
+    val filteredDrivers = remember(drivers, driverSearch) {
+        val q = driverSearch.trim().lowercase()
+        if (q.isBlank()) drivers
+        else drivers.filter {
+            it.nombre.lowercase().contains(q) ||
+                    it.numeroUnidad.lowercase().contains(q) ||
+                    it.placas.lowercase().contains(q)
+        }
+    }
+
+    val isAllSelected = tempSelected.isEmpty() || (drivers.isNotEmpty() && tempSelected.size == drivers.size)
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.78f),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+            border = BorderStroke(1.dp, Color(0xFF334155))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                // Cabecera
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Filtrar por Conductor",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "Selecciona uno, varios o todos",
+                            fontSize = 11.sp,
+                            color = Color(0xFF94A3B8)
+                        )
+                    }
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color(0xFF94A3B8))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Buscador de conductores
+                OutlinedTextField(
+                    value = driverSearch,
+                    onValueChange = { driverSearch = it },
+                    placeholder = { Text("Buscar por nombre, unidad...", color = Color(0xFF94A3B8), fontSize = 12.sp) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFF59E0B), modifier = Modifier.size(18.dp)) },
+                    trailingIcon = {
+                        if (driverSearch.isNotEmpty()) {
+                            IconButton(onClick = { driverSearch = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = "Limpiar", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFF1E293B),
+                        unfocusedContainerColor = Color(0xFF1E293B),
+                        focusedBorderColor = Color(0xFFF59E0B),
+                        unfocusedBorderColor = Color(0xFF334155),
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Opción Todos los conductores
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable {
+                            tempSelected = emptySet()
+                        }
+                        .padding(horizontal = 4.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = isAllSelected,
+                        onCheckedChange = { checked ->
+                            tempSelected = emptySet()
+                        },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = Color(0xFFF59E0B),
+                            uncheckedColor = Color(0xFF64748B)
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Todos los conductores (${drivers.size})",
+                        color = if (isAllSelected) Color(0xFFF59E0B) else Color.White,
+                        fontWeight = if (isAllSelected) FontWeight.Bold else FontWeight.Medium,
+                        fontSize = 13.sp
+                    )
+                }
+
+                HorizontalDivider(color = Color(0xFF334155), thickness = 0.8.dp)
+
+                // Lista de conductores con Checkbox
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    items(filteredDrivers, key = { it.id }) { driver ->
+                        val isChecked = !isAllSelected && driver.id in tempSelected
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable {
+                                    val current = if (isAllSelected) {
+                                        setOf(driver.id)
+                                    } else {
+                                        if (driver.id in tempSelected) {
+                                            tempSelected - driver.id
+                                        } else {
+                                            tempSelected + driver.id
+                                        }
+                                    }
+                                    tempSelected = current
+                                }
+                                .padding(horizontal = 4.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = isChecked,
+                                onCheckedChange = { checked ->
+                                    val current = if (isAllSelected) {
+                                        if (checked) setOf(driver.id) else emptySet()
+                                    } else {
+                                        if (checked) tempSelected + driver.id else tempSelected - driver.id
+                                    }
+                                    tempSelected = current
+                                },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = Color(0xFFF59E0B),
+                                    uncheckedColor = Color(0xFF64748B)
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = driver.nombre.ifBlank { "Conductor sin nombre" },
+                                    color = Color.White,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                val details = listOfNotNull(
+                                    driver.numeroUnidad.takeIf { it.isNotBlank() }?.let { "Unidad: $it" },
+                                    driver.placas.takeIf { it.isNotBlank() }?.let { "Placas: $it" }
+                                ).joinToString(" • ")
+                                if (details.isNotBlank()) {
+                                    Text(
+                                        text = details,
+                                        color = Color(0xFF94A3B8),
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Botones Cancelar y Aplicar
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancelar", color = Color(0xFF94A3B8))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            onApply(tempSelected)
+                            onDismiss()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFF59E0B),
+                            contentColor = Color(0xFF0F172A)
+                        ),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Aplicar Filtro", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 private fun exportTripsCsv(context: Context, trips: List<AdminTrip>) {
     try {

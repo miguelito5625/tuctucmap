@@ -313,7 +313,43 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
         }
     }
 
-    suspend fun getCompletedTrips(limit: Long = 100): Result<List<AdminTrip>> = withContext(Dispatchers.IO) {
+    data class TripDateBounds(
+        val minEpochMs: Long,
+        val maxEpochMs: Long
+    )
+
+    suspend fun getTripDateBounds(): Result<TripDateBounds> = withContext(Dispatchers.IO) {
+        try {
+            @kotlinx.serialization.Serializable
+            data class CreatedAtDto(@SerialName("created_at") val createdAt: String? = null)
+
+            val oldest = supabase.postgrest["trips"].select(Columns.list("created_at")) {
+                order("created_at", Order.ASCENDING)
+                limit(1)
+            }.decodeList<CreatedAtDto>().firstOrNull()
+
+            val newest = supabase.postgrest["trips"].select(Columns.list("created_at")) {
+                order("created_at", Order.DESCENDING)
+                limit(1)
+            }.decodeList<CreatedAtDto>().firstOrNull()
+
+            val now = System.currentTimeMillis()
+            val minEpoch = oldest?.createdAt?.let { parseIsoTimestamp(it) } ?: now
+            val maxEpoch = newest?.createdAt?.let { parseIsoTimestamp(it) } ?: now
+
+            Result.success(TripDateBounds(minEpochMs = minEpoch, maxEpochMs = maxEpoch.coerceAtLeast(now)))
+        } catch (e: Exception) {
+            android.util.Log.e("AdminRepository", "Error getting trip date bounds: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getCompletedTrips(
+        startDateIso: String? = null,
+        endDateIso: String? = null,
+        driverIds: List<String>? = null,
+        limit: Long = 500
+    ): Result<List<AdminTrip>> = withContext(Dispatchers.IO) {
         try {
             val tripCols = Columns.list(
                 "id", "passenger_id", "passenger_name", "passenger_phone",
@@ -322,6 +358,17 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
             )
 
             val trips = supabase.postgrest["trips"].select(columns = tripCols) {
+                filter {
+                    if (!startDateIso.isNullOrBlank()) {
+                        gte("created_at", startDateIso)
+                    }
+                    if (!endDateIso.isNullOrBlank()) {
+                        lte("created_at", endDateIso)
+                    }
+                    if (!driverIds.isNullOrEmpty()) {
+                        isIn("driver_id", driverIds)
+                    }
+                }
                 order("created_at", Order.DESCENDING)
                 limit(limit)
             }.decodeList<AdminTrip>()

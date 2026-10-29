@@ -1,7 +1,7 @@
 # Graph Report - tuctucmap  (2026-10-29)
 
 ## Corpus Check
-- 114 files · ~121,445 words
+- 114 files · ~121,516 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e2cec959`
+- Built from commit: `a89ec70e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -19,6 +19,7 @@
 - @supabase/supabase-js
 - PassengerMapScreen.kt
 - tuctucMapDashboard
+- @angular/common
 - Intent
 - Informe Técnico y Financiero: Análisis de Costos Cloud (Supabase vs. Firebase) y Rentabilidad de TucTuc Map
 - Política de Privacidad y Deslinde de Responsabilidad de TucTuc Map
@@ -71,7 +72,6 @@
 - @angular/platform-browser
 - rxjs
 - tslib
-- @angular/material
 - 2. El Flujo de Trabajo en 3 Fases (El Ciclo Consultivo)
 
 ## God Nodes (most connected - your core abstractions)
@@ -137,7 +137,7 @@ Nodes (29): Configuración del Proyecto y Dependencias, Manifiesto de Android y 
 
 ### Community 10 - "dependencies"
 Cohesion: 0.13
-Nodes (15): @angular/animations, @angular/common, @angular/compiler, @angular/forms, @angular/router, leaflet, dependencies, @angular/animations (+7 more)
+Nodes (15): @angular/animations, @angular/compiler, @angular/forms, @angular/material, @angular/router, leaflet, dependencies, @angular/animations (+7 more)
 
 ### Community 11 - "devDependencies"
 Cohesion: 0.13

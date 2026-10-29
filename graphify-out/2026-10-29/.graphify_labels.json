@@ -3,6 +3,7 @@
   "1": "@supabase/supabase-js",
   "2": "PassengerMapScreen.kt",
   "3": "tuctucMapDashboard",
+  "4": "@angular/common",
   "5": "Intent",
   "6": "Informe Técnico y Financiero: Análisis de Costos Cloud (Supabase vs. Firebase) y Rentabilidad de TucTuc Map",
   "7": "Política de Privacidad y Deslinde de Responsabilidad de TucTuc Map",
@@ -63,6 +64,5 @@
   "70": "@angular/platform-browser",
   "71": "rxjs",
   "72": "tslib",
-  "73": "@angular/material",
   "79": "2. El Flujo de Trabajo en 3 Fases (El Ciclo Consultivo)"
 }
