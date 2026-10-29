@@ -81,20 +81,19 @@ fun DriverRouteToPassengerScreen(
     var routeCasingPolyline by remember { mutableStateOf<Polyline?>(null) }
 
     val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner, mapViewInstance) {
-        val map = mapViewInstance
+    DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             when (event) {
-                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> map?.onResume()
-                androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> map?.onPause()
+                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> mapViewInstance?.onResume()
+                androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> mapViewInstance?.onPause()
                 else -> {}
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            map?.onPause()
-            map?.onDetach()
+            mapViewInstance?.onPause()
+            mapViewInstance?.onDetach()
         }
     }
 

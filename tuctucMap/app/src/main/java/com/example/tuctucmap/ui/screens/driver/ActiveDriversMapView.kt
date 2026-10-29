@@ -122,19 +122,18 @@ fun DriverMapFullscreenScreen(
     val activeAnimators = remember { mutableMapOf<String, ValueAnimator>() }
 
     // Gestión estricta de ciclo de vida del MapView y liberación de GPS/tiles al salir
-    DisposableEffect(lifecycleOwner, mapViewInstance, myLocationOverlayInstance, hasLocationPermission) {
-        val map = mapViewInstance
+    DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
-                    map?.onResume()
+                    mapViewInstance?.onResume()
                     if (hasLocationPermission) {
                         myLocationOverlayInstance?.enableMyLocation()
                     }
                 }
                 Lifecycle.Event.ON_PAUSE -> {
                     myLocationOverlayInstance?.disableMyLocation()
-                    map?.onPause()
+                    mapViewInstance?.onPause()
                 }
                 else -> {}
             }
@@ -144,9 +143,10 @@ fun DriverMapFullscreenScreen(
             lifecycleOwner.lifecycle.removeObserver(observer)
             activeAnimators.values.forEach { it.cancel() }
             activeAnimators.clear()
+            driverMarkers.clear()
             myLocationOverlayInstance?.disableMyLocation()
-            map?.onPause()
-            map?.onDetach()
+            mapViewInstance?.onPause()
+            mapViewInstance?.onDetach()
         }
     }
 

@@ -199,19 +199,18 @@ fun PassengerMapScreen(
     var lastMapRenderSignature by remember { mutableStateOf<Any?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
-    DisposableEffect(lifecycleOwner, mapViewInstance, myLocationOverlayInstance, hasLocationPermission) {
-        val map = mapViewInstance
+    DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
-                    map?.onResume()
+                    mapViewInstance?.onResume()
                     if (hasLocationPermission) {
                         myLocationOverlayInstance?.enableMyLocation()
                     }
                 }
                 Lifecycle.Event.ON_PAUSE -> {
                     myLocationOverlayInstance?.disableMyLocation()
-                    map?.onPause()
+                    mapViewInstance?.onPause()
                 }
                 else -> {}
             }
@@ -223,8 +222,8 @@ fun PassengerMapScreen(
             driverAnimators.clear()
             driverMarkers.clear()
             myLocationOverlayInstance?.disableMyLocation()
-            map?.onPause()
-            map?.onDetach()
+            mapViewInstance?.onPause()
+            mapViewInstance?.onDetach()
         }
     }
 
@@ -603,7 +602,9 @@ fun PassengerMapScreen(
                             routePointsToPassenger,
                             Triple(activeTrip?.tripId, activeTrip?.status, activeTrip?.driverId)
                         )
-                        if (currentSignature == lastMapRenderSignature) return@AndroidView
+                        val shouldSkip = (currentSignature == lastMapRenderSignature) &&
+                            (rawDriverLocations.isEmpty() || driverMarkers.isNotEmpty())
+                        if (shouldSkip) return@AndroidView
                         lastMapRenderSignature = currentSignature
 
                         // Sincronizar trazado de ruta por calles con doble contorno de alto contraste

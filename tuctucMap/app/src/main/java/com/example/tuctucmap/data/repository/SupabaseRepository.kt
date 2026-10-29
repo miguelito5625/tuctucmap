@@ -1289,19 +1289,32 @@ class SupabaseRepository {
         val channel = supabase.channel(uniqueChannelId)
         val flow = channel.postgresChangeFlow<PostgresAction>("public") {
             table = "profiles"
-            filter("id", FilterOperator.EQ, uid)
         }
 
         launch {
-            syncServerTimeAndExpire()
-            getAppConfig()
-            channel.subscribe()
+            // 1. Emitir de inmediato el perfil actual mediante PostgREST REST sin esperar WebSocket
             try {
                 val initialProfile = supabase.postgrest["profiles"].select {
                     filter { eq("id", uid) }
                 }.decodeSingleOrNull<Driver>()
-                trySend(initialProfile)
+                if (initialProfile != null) {
+                    trySend(initialProfile)
+                }
             } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            // 2. Sincronizar servidor y configuración en segundo plano
+            try {
+                syncServerTimeAndExpire()
+                getAppConfig()
+            } catch (_: Exception) {}
+
+            // 3. Suscribirse a cambios en tiempo real de forma segura
+            try {
+                channel.subscribe()
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
 
             flow.collect {
@@ -1309,7 +1322,9 @@ class SupabaseRepository {
                     val profile = supabase.postgrest["profiles"].select {
                         filter { eq("id", uid) }
                     }.decodeSingleOrNull<Driver>()
-                    trySend(profile)
+                    if (profile != null) {
+                        trySend(profile)
+                    }
                 } catch (e: Exception) {
                 }
             }
@@ -1323,18 +1338,29 @@ class SupabaseRepository {
         val channel = supabase.channel(uniqueChannelId)
         val flow = channel.postgresChangeFlow<PostgresAction>("public") {
             table = "profiles"
-            filter("id", FilterOperator.EQ, uid)
         }
 
         launch {
-            getAppConfig()
-            channel.subscribe()
+            // 1. Emitir de inmediato el perfil inicial sin esperar WebSocket
             try {
                 val initialProfile = supabase.postgrest["profiles"].select {
                     filter { eq("id", uid) }
                 }.decodeSingleOrNull<Passenger>()
-                trySend(initialProfile)
+                if (initialProfile != null) {
+                    trySend(initialProfile)
+                }
             } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            try {
+                getAppConfig()
+            } catch (_: Exception) {}
+
+            try {
+                channel.subscribe()
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
 
             flow.collect {
@@ -1342,7 +1368,9 @@ class SupabaseRepository {
                     val profile = supabase.postgrest["profiles"].select {
                         filter { eq("id", uid) }
                     }.decodeSingleOrNull<Passenger>()
-                    trySend(profile)
+                    if (profile != null) {
+                        trySend(profile)
+                    }
                 } catch (e: Exception) {
                 }
             }

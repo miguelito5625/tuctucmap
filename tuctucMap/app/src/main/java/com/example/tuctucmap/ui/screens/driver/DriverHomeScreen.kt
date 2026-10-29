@@ -250,9 +250,22 @@ fun DriverHomeScreen(
             var subscriptionExpiredHandled = false
             var statusRevokedHandled = false
 
+            // Consulta REST inmediata como respaldo instantáneo
+            repository.getDriverProfileOnce(uid) { freshDriver ->
+                if (freshDriver != null) {
+                    driverProfile = freshDriver
+                    if (isServiceRunning || LocationTrackingService.isRunning) {
+                        toggleService(context, uid, freshDriver, true)
+                    }
+                }
+            }
+
             repository.observeDriverProfile(uid).collectLatest { driver ->
                 if (driver == null) return@collectLatest
                 driverProfile = driver
+                if (isServiceRunning || LocationTrackingService.isRunning) {
+                    toggleService(context, uid, driver, true)
+                }
                 com.example.tuctucmap.data.SecurePrefs.saveDriverSubscriptionCache(
                     context,
                     driver.estadoAprobacion,
@@ -264,7 +277,7 @@ fun DriverHomeScreen(
                         if (!statusRevokedHandled) {
                             statusRevokedHandled = true
                             if (LocationTrackingService.isRunning) {
-                                toggleService(context, driver, false)
+                                toggleService(context, uid, driver, false)
                             }
                             onApprovalRevoked()
                         }
@@ -274,7 +287,7 @@ fun DriverHomeScreen(
                         if (!subscriptionExpiredHandled) {
                             subscriptionExpiredHandled = true
                             if (LocationTrackingService.isRunning) {
-                                toggleService(context, driver, false)
+                                toggleService(context, uid, driver, false)
                             }
                             onSubscriptionExpired()
                         }
@@ -299,7 +312,7 @@ fun DriverHomeScreen(
         val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
         if (fineGranted || coarseGranted) {
             showPermissionError = false
-            toggleService(context, driverProfile, true)
+            toggleService(context, uid, driverProfile, true)
             isServiceRunning = true
         } else {
             showPermissionError = true
@@ -313,7 +326,7 @@ fun DriverHomeScreen(
             context, Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
         if (fineLocationGranted) {
-            toggleService(context, driverProfile, true)
+            toggleService(context, uid, driverProfile, true)
             isServiceRunning = true
         } else {
             permissionLauncher.launch(locationPermissions)
@@ -333,7 +346,7 @@ fun DriverHomeScreen(
 
     val onConnectToggle: () -> Unit = {
         if (isServiceRunning) {
-            toggleService(context, driverProfile, false)
+            toggleService(context, uid, driverProfile, false)
             isServiceRunning = false
         } else {
             val fineLocationGranted = ContextCompat.checkSelfPermission(
@@ -349,7 +362,7 @@ fun DriverHomeScreen(
             }
 
             if (fineLocationGranted && postNotificationsGranted) {
-                toggleService(context, driverProfile, true)
+                toggleService(context, uid, driverProfile, true)
                 isServiceRunning = true
             } else if (!postNotificationsGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -393,7 +406,7 @@ fun DriverHomeScreen(
                 onLogout = {
                     coroutineScope.launch {
                         drawerState.close()
-                        if (isServiceRunning) toggleService(context, driverProfile, false)
+                        if (isServiceRunning) toggleService(context, uid, driverProfile, false)
                         onLogout()
                     }
                 }
@@ -2371,14 +2384,15 @@ fun DriverHomeScreen(
 }
 
 // ── Iniciar/Detener el Foreground Service del Conductor ───────────────────────
-private fun toggleService(context: Context, driver: Driver?, start: Boolean) {
+private fun toggleService(context: Context, uid: String, driver: Driver?, start: Boolean) {
     val intent = Intent(context, LocationTrackingService::class.java)
-    if (start && driver != null) {
-        intent.putExtra("DRIVER_UID", driver.id)
-        intent.putExtra("DRIVER_NOMBRE", driver.nombre)
-        intent.putExtra("DRIVER_TELEFONO", driver.telefono)
-        intent.putExtra("DRIVER_PLACAS", driver.placas)
-        intent.putExtra("DRIVER_UNIDAD", driver.numeroUnidad)
+    val effectiveUid = driver?.id?.ifBlank { uid } ?: uid
+    if (start && effectiveUid.isNotBlank()) {
+        intent.putExtra("DRIVER_UID", effectiveUid)
+        intent.putExtra("DRIVER_NOMBRE", driver?.nombre ?: "Conductor")
+        intent.putExtra("DRIVER_TELEFONO", driver?.telefono ?: "")
+        intent.putExtra("DRIVER_PLACAS", driver?.placas ?: "")
+        intent.putExtra("DRIVER_UNIDAD", driver?.numeroUnidad ?: "")
         ContextCompat.startForegroundService(context, intent)
     } else {
         context.stopService(intent)
