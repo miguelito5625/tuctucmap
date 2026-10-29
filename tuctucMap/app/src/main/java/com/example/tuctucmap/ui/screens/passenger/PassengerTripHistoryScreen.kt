@@ -65,7 +65,11 @@ fun PassengerTripHistoryScreen(
                 title = { Text("Mi Historial de Viajes", color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF0F2027))
@@ -85,7 +89,12 @@ fun PassengerTripHistoryScreen(
                     modifier = Modifier.align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(imageVector = Icons.Default.History, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(64.dp))
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = null,
+                        tint = Color.LightGray,
+                        modifier = Modifier.size(64.dp)
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text("No tienes viajes completados", color = Color.White, fontSize = 18.sp)
                 }
@@ -117,9 +126,19 @@ fun PassengerTripHistoryScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(16.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = null,
+                                        tint = Color.LightGray,
+                                        modifier = Modifier.size(16.dp)
+                                    )
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(trip.driver_name, color = Color(0xFFF9D423), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                    Text(
+                                        trip.driver_name,
+                                        color = Color(0xFFF9D423),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text("Mensaje: ${trip.message}", color = Color.White, fontSize = 15.sp)
@@ -147,7 +166,12 @@ fun PassengerTripHistoryScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.Center
                                 ) {
-                                    Text("Toca para contactar por WhatsApp", color = Color(0xFF25D366), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        "Toca para contactar por WhatsApp",
+                                        color = Color(0xFF25D366),
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                             }
                         }
