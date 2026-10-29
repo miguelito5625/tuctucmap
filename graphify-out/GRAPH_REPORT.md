@@ -1,7 +1,7 @@
 # Graph Report - tuctucmap  (2026-10-29)
 
 ## Corpus Check
-- 114 files · ~119,675 words
+- 114 files · ~119,692 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `98a09ad1`
+- Built from commit: `53be8c1b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

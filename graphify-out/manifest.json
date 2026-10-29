@@ -522,8 +522,8 @@
     "semantic_hash": "a0e4d192b9e2e17256124dbfc8e24e6a"
   },
   ".agents/skills/tuctuc-android/SKILL.md": {
-    "mtime": 1793286651.2833166,
-    "seen": 1793286662.849966,
+    "mtime": 1793286880.8771565,
+    "seen": 1793287215.6661499,
     "ast_hash": "af6f4665e248de33f9a4a35bf35006f2",
     "semantic_hash": ""
   },
@@ -690,8 +690,8 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt": {
-    "mtime": 1793286423.2510378,
-    "seen": 1793286662.84989,
+    "mtime": 1793286880.4524846,
+    "seen": 1793287215.6660793,
     "ast_hash": "75f38b504309ee05ddb70ed9148e1702",
     "semantic_hash": ""
   },
@@ -708,9 +708,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminFleetMapTab.kt": {
-    "mtime": 1793286589.20579,
-    "seen": 1793286662.8499055,
-    "ast_hash": "23a7b9ad37fc425d40b554ec6e9db060",
+    "mtime": 1793287169.4743469,
+    "seen": 1793287215.666095,
+    "ast_hash": "acaf1112feeae9b56bca74ae7f5e9e20",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminMainScreen.kt": {

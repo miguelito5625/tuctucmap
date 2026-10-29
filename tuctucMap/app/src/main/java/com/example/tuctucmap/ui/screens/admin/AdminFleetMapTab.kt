@@ -53,9 +53,10 @@ fun AdminFleetMapTab(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    val liveDrivers = remember { mutableStateListOf<DriverLocation>() }
+    var liveDrivers by remember { mutableStateOf<List<DriverLocation>>(emptyList()) }
     var selectedDriver by remember { mutableStateOf<DriverLocation?>(null) }
     var showDriversSheet by remember { mutableStateOf(false) }
+    var hasCenteredInitialCamera by remember { mutableStateOf(false) }
 
     var mapViewInstance by remember { mutableStateOf<MapView?>(null) }
     val driverMarkers = remember { mutableMapOf<String, Marker>() }
@@ -76,8 +77,7 @@ fun AdminFleetMapTab(
                         list.add(loc)
                     }
                 }
-                liveDrivers.clear()
-                liveDrivers.addAll(list)
+                liveDrivers = list
             }
 
             override fun onCancelled(error: DatabaseError) {}
@@ -106,8 +106,17 @@ fun AdminFleetMapTab(
         }
     }
 
-    val availableCount = remember(liveDrivers) { liveDrivers.count { it.status == "disponible" } }
-    val occupiedCount = remember(liveDrivers) { liveDrivers.count { it.status != "disponible" } }
+    val availableCount = remember(liveDrivers) { liveDrivers.count { it.isAvailable } }
+    val occupiedCount = remember(liveDrivers) { liveDrivers.count { !it.isAvailable } }
+
+    LaunchedEffect(liveDrivers) {
+        if (!hasCenteredInitialCamera && liveDrivers.isNotEmpty()) {
+            val first = liveDrivers.first()
+            mapViewInstance?.controller?.animateTo(GeoPoint(first.lat, first.lon))
+            mapViewInstance?.controller?.setZoom(15.0)
+            hasCenteredInitialCamera = true
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         // ── MapView OSMDroid ─────────────────────────────────────────────────
@@ -137,7 +146,7 @@ fun AdminFleetMapTab(
                 // Actualizar o crear marcadores para conductores activos
                 for (driver in liveDrivers) {
                     val geoPoint = GeoPoint(driver.lat, driver.lon)
-                    val isAvailable = driver.status == "disponible"
+                    val isAvailable = driver.isAvailable
                     val icon = if (isAvailable) tucTucIcon else pausedTucTucIcon
 
                     var marker = driverMarkers[driver.uid]
@@ -247,7 +256,7 @@ fun AdminFleetMapTab(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            val isAvail = driver.status == "disponible"
+                            val isAvail = driver.isAvailable
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
                                 color = if (isAvail) Color(0x2210B981) else Color(0x22F59E0B)
@@ -344,7 +353,7 @@ fun AdminFleetMapTab(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(liveDrivers, key = { it.uid }) { driver ->
-                            val isAvail = driver.status == "disponible"
+                            val isAvail = driver.isAvailable
                             Card(
                                 shape = RoundedCornerShape(12.dp),
                                 colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
