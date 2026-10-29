@@ -63,6 +63,8 @@ fun PassengerDrawerSheet(
     onLogout: () -> Unit,
     onNavigateToLogin: () -> Unit = {},
     onNavigateToDriver: () -> Unit = {},
+    onNavigateToAdmin: () -> Unit = {},
+    isAdmin: Boolean = false,
     isGuest: Boolean = false,
     modifier: Modifier = Modifier
 ) {
@@ -316,6 +318,16 @@ fun PassengerDrawerSheet(
                     isSelected = false,
                     onClick = onNavigateToDriver
                 )
+
+                if (isAdmin) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    DrawerNavigationItem(
+                        label = "Panel Administrador",
+                        icon = Icons.Default.AdminPanelSettings,
+                        isSelected = false,
+                        onClick = onNavigateToAdmin
+                    )
+                }
             }
 
             // ── Footer / Cerrar Sesión ──────────────────────────────────────

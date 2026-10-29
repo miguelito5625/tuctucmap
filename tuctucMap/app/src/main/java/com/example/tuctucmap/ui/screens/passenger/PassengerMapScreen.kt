@@ -95,7 +95,8 @@ fun PassengerMapScreen(
     onNavigateToDriverRegister: () -> Unit = {},
     onNavigateToPassengerProfile: () -> Unit = {},
     onNavigateToPassengerHistory: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    onNavigateToAdmin: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
@@ -429,11 +430,17 @@ fun PassengerMapScreen(
         drawerState = drawerState,
         gesturesEnabled = drawerState.isOpen,
         drawerContent = {
+            val isAdminUser = remember(sharedPrefs) { sharedPrefs.getString("user_role", null) == "admin" }
             PassengerDrawerSheet(
                 passenger = passengerProfile,
                 currentEmail = repository.currentUserEmail ?: "",
                 selectedItem = PassengerDrawerItem.MAP,
                 isGuest = !isUserLoggedIn,
+                isAdmin = isAdminUser,
+                onNavigateToAdmin = {
+                    coroutineScope.launch { drawerState.close() }
+                    onNavigateToAdmin()
+                },
                 onSelectItem = { item ->
                     coroutineScope.launch { drawerState.close() }
                     when (item) {

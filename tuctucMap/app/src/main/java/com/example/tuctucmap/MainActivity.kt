@@ -109,15 +109,17 @@ class MainActivity : ComponentActivity() {
                     }
 
                     val sharedPrefs = getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
-                    val savedRole = sharedPrefs.getString("user_role", null)
+                    var savedRole = sharedPrefs.getString("user_role", null)
+                    val hasStoredSession = SecurePrefs.loadUserSession(this@MainActivity) != null
 
-                    if (savedRole.isNullOrBlank()) {
-                        // Usuario sin sesión previa iniciada: acceso público directo al mapa como invitado
+                    // Si no hay ninguna sesión persistida en SecurePrefs ni rol guardado:
+                    // usuario nuevo o invitado, acceso público directo al mapa como invitado.
+                    if (!hasStoredSession && savedRole.isNullOrBlank()) {
                         initialScreen = Screen.PassengerMap
                         return@LaunchedEffect
                     }
 
-                    // Esperar a que Supabase resuelva la sesión persistida desde almacenamiento seguro
+                    // Esperar a que Supabase resuelva o restaure la sesión persistida desde almacenamiento seguro
                     val status = try {
                         withTimeoutOrNull(3000L) {
                             supabase.auth.sessionStatus
@@ -126,23 +128,50 @@ class MainActivity : ComponentActivity() {
                         }
                     } catch (_: Exception) { null }
 
+                    val uid = repository.currentUserUid
+                        ?: (status as? SessionStatus.Authenticated)?.session?.user?.id
+                        ?: SecurePrefs.loadUserSession(this@MainActivity)?.user?.id
+                        ?: ""
+
                     val isAuthed = status is SessionStatus.Authenticated ||
                             status is SessionStatus.RefreshFailure ||
-                            repository.isUserLoggedIn
+                            repository.isUserLoggedIn ||
+                            (hasStoredSession && uid.isNotBlank())
 
                     if (isAuthed) {
-                        when (savedRole) {
-                            "admin" -> {
-                                initialScreen = Screen.AdminHome
-                            }
+                        // 1. Si el rol guardado ya es "admin", entrar directamente a AdminHome
+                        if (savedRole == "admin") {
+                            initialScreen = Screen.AdminHome
+                            return@LaunchedEffect
+                        }
+
+                        // 2. Verificar rol real en Supabase profiles por si savedRole estaba desactualizado o era driver/passenger
+                        val verifiedRole = if (uid.isNotBlank()) {
+                            try {
+                                withTimeoutOrNull(2500L) {
+                                    repository.getUserRole(uid)
+                                }
+                            } catch (_: Exception) { null }
+                        } else null
+
+                        val effectiveRole = verifiedRole ?: savedRole
+
+                        if (effectiveRole == "admin") {
+                            sharedPrefs.edit().putString("user_role", "admin").commit()
+                            initialScreen = Screen.AdminHome
+                            return@LaunchedEffect
+                        }
+
+                        if (!verifiedRole.isNullOrBlank() && verifiedRole != savedRole) {
+                            sharedPrefs.edit().putString("user_role", verifiedRole).commit()
+                            savedRole = verifiedRole
+                        }
+
+                        when (effectiveRole) {
                             "passenger" -> {
                                 initialScreen = Screen.PassengerMap
                             }
                             "driver" -> {
-                                val uid = repository.currentUserUid
-                                    ?: (status as? SessionStatus.Authenticated)?.session?.user?.id
-                                    ?: ""
-
                                 val cachedApproval = SecurePrefs.getDriverApprovalStatusCache(this@MainActivity)
                                 val cachedSubEnd = SecurePrefs.getDriverSubEndCache(this@MainActivity)
 
@@ -188,6 +217,7 @@ class MainActivity : ComponentActivity() {
                     } else {
                         // Sesión explícitamente no autenticada en Supabase (expirada definitivamente o revocada)
                         when (savedRole) {
+                            "admin" -> initialScreen = Screen.PassengerLogin
                             "driver" -> initialScreen = Screen.DriverLogin
                             else -> initialScreen = Screen.PassengerMap
                         }
