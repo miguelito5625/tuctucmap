@@ -55,6 +55,11 @@ Para optimizar el uso de tokens y mantener procedimientos estandarizados, este p
    - Consultas con token-budget reducido (`python -m graphify query "<pregunta>"`), trazabilidad de rutas entre conceptos (`python -m graphify path "A" "B"`) y análisis de impacto (`python -m graphify affected "X"`).
    - Sincronización incremental sin costo de API (`python -m graphify update .`).
 
+7. **[`prompt-engineer`](./skills/prompt-engineer/SKILL.md):**
+   - Protocolo consultivo y de ingeniería de prompts para estructurar requerimientos del usuario en especificaciones técnicas de alta precisión.
+   - Detección activa de lagunas y formulación de dudas críticas (edge cases, arquitectura, UI/UX, persistencia).
+   - Asesoramiento y recomendación experta: presentación de opciones ponderadas destacando la solución técnica óptima con `(Recomendado)` justificado.
+
 ---
 
 ## 3. Reglas Obligatorias del Agente (AI Rules)

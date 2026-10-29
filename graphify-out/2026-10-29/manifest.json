@@ -1,0 +1,680 @@
+{
+  "databaseTuctucApp/apply_improvements_sql.js": {
+    "mtime": 1792259530.9182723,
+    "seen": 1793227673.0430052,
+    "ast_hash": "7daf02761977558e589ecb5a5cb7835c",
+    "semantic_hash": "7daf02761977558e589ecb5a5cb7835c"
+  },
+  "databaseTuctucApp/db.sql": {
+    "mtime": 1793239345.2720523,
+    "seen": 1793239351.4033165,
+    "ast_hash": "b599c36a5015ee556b4929d5946cc13f",
+    "semantic_hash": ""
+  },
+  "databaseTuctucApp/db_config.js": {
+    "mtime": 1792259528.1058426,
+    "seen": 1793227673.0430114,
+    "ast_hash": "d3c3ca46f893a843fd9770247647aec0",
+    "semantic_hash": "d3c3ca46f893a843fd9770247647aec0"
+  },
+  "databaseTuctucApp/migration_app_config.sql": {
+    "mtime": 1792285903.9753234,
+    "seen": 1793227673.0430124,
+    "ast_hash": "61305e36e67156bae981605f828580c8",
+    "semantic_hash": "61305e36e67156bae981605f828580c8"
+  },
+  "databaseTuctucApp/migration_renewal.sql": {
+    "mtime": 1792281530.9347813,
+    "seen": 1793227673.043013,
+    "ast_hash": "c54b69c90caabdc27688d7e902db266c",
+    "semantic_hash": "c54b69c90caabdc27688d7e902db266c"
+  },
+  "databaseTuctucApp/package.json": {
+    "mtime": 1790739456.0836847,
+    "seen": 1793227673.0430138,
+    "ast_hash": "ece3368000980e1053a665872603e64f",
+    "semantic_hash": "ece3368000980e1053a665872603e64f"
+  },
+  "databaseTuctucApp/run_migration.js": {
+    "mtime": 1792281537.2489624,
+    "seen": 1793227673.0430148,
+    "ast_hash": "7949d5f27852a166dbe8001dcbb4b25c",
+    "semantic_hash": "7949d5f27852a166dbe8001dcbb4b25c"
+  },
+  "databaseTuctucApp/run_sql.js": {
+    "mtime": 1792259529.0097375,
+    "seen": 1793227673.0430155,
+    "ast_hash": "c95ad4420e66bbcc73f933b2fe7369d2",
+    "semantic_hash": "c95ad4420e66bbcc73f933b2fe7369d2"
+  },
+  "databaseTuctucApp/update_trips_rls.js": {
+    "mtime": 1792259532.368247,
+    "seen": 1793227673.043016,
+    "ast_hash": "0f16bb4e870cae48dcefa21bb52bc7da",
+    "semantic_hash": "0f16bb4e870cae48dcefa21bb52bc7da"
+  },
+  "tuctucMapDashboard/.vscode/extensions.json": {
+    "mtime": 1790739456.1358638,
+    "seen": 1793227673.0430167,
+    "ast_hash": "66fd9e60d4633b6099fe02e06a7075ea",
+    "semantic_hash": "66fd9e60d4633b6099fe02e06a7075ea"
+  },
+  "tuctucMapDashboard/.vscode/launch.json": {
+    "mtime": 1790739456.136861,
+    "seen": 1793227673.0430174,
+    "ast_hash": "430386a2f03e9d559664c196344c121b",
+    "semantic_hash": "430386a2f03e9d559664c196344c121b"
+  },
+  "tuctucMapDashboard/.vscode/tasks.json": {
+    "mtime": 1790739456.136861,
+    "seen": 1793227673.0430183,
+    "ast_hash": "cb7ed9a56930402d9059ea5a9773d60e",
+    "semantic_hash": "cb7ed9a56930402d9059ea5a9773d60e"
+  },
+  "tuctucMapDashboard/angular.json": {
+    "mtime": 1791849863.592874,
+    "seen": 1793227673.043019,
+    "ast_hash": "a8cf7eda720bc420648d1ccf7fa9ef31",
+    "semantic_hash": "a8cf7eda720bc420648d1ccf7fa9ef31"
+  },
+  "tuctucMapDashboard/package.json": {
+    "mtime": 1791849372.0794947,
+    "seen": 1793227673.0430198,
+    "ast_hash": "614eb8a2be214da2a7350cafef61e652",
+    "semantic_hash": "614eb8a2be214da2a7350cafef61e652"
+  },
+  "tuctucMapDashboard/src/app/app.config.ts": {
+    "mtime": 1790739456.1414943,
+    "seen": 1793227673.0430205,
+    "ast_hash": "783ee369d2c101bcd462a6210b469a75",
+    "semantic_hash": "783ee369d2c101bcd462a6210b469a75"
+  },
+  "tuctucMapDashboard/src/app/app.routes.ts": {
+    "mtime": 1792286166.636616,
+    "seen": 1793227673.043021,
+    "ast_hash": "a58e49c75b454669e122fc7e0f02ed25",
+    "semantic_hash": "a58e49c75b454669e122fc7e0f02ed25"
+  },
+  "tuctucMapDashboard/src/app/app.spec.ts": {
+    "mtime": 1790739456.1434982,
+    "seen": 1793227673.043022,
+    "ast_hash": "e68aee53cb28138d3fafdd34601f3bae",
+    "semantic_hash": "e68aee53cb28138d3fafdd34601f3bae"
+  },
+  "tuctucMapDashboard/src/app/app.ts": {
+    "mtime": 1790739456.1434982,
+    "seen": 1793227673.0430224,
+    "ast_hash": "bf6848f769fe5110d705015102029f27",
+    "semantic_hash": "bf6848f769fe5110d705015102029f27"
+  },
+  "tuctucMapDashboard/src/app/core/guards/auth.guard.ts": {
+    "mtime": 1791777169.864882,
+    "seen": 1793227673.043023,
+    "ast_hash": "bb25fd81aa7efc41b5d86e5db7754651",
+    "semantic_hash": "bb25fd81aa7efc41b5d86e5db7754651"
+  },
+  "tuctucMapDashboard/src/app/core/models/driver.model.ts": {
+    "mtime": 1792285941.414747,
+    "seen": 1793227673.0430236,
+    "ast_hash": "ead31c97ef69f631aa338192498a3bec",
+    "semantic_hash": "ead31c97ef69f631aa338192498a3bec"
+  },
+  "tuctucMapDashboard/src/app/features/business-config/business-config.component.ts": {
+    "mtime": 1792286113.1788242,
+    "seen": 1793227673.0430243,
+    "ast_hash": "7112f58673e7175d2eaeb7b78d37d5f3",
+    "semantic_hash": "7112f58673e7175d2eaeb7b78d37d5f3"
+  },
+  "tuctucMapDashboard/src/app/features/drivers/driver-history-dialog.component.ts": {
+    "mtime": 1792112054.0559077,
+    "seen": 1793227673.0430248,
+    "ast_hash": "042c667d3558d9bf4f6a5e48cdee16a1",
+    "semantic_hash": "042c667d3558d9bf4f6a5e48cdee16a1"
+  },
+  "tuctucMapDashboard/src/app/features/drivers/drivers.component.ts": {
+    "mtime": 1792347988.6613774,
+    "seen": 1793227673.0430262,
+    "ast_hash": "7ed75abfbbe3cb72e60e074543b8bed3",
+    "semantic_hash": "7ed75abfbbe3cb72e60e074543b8bed3"
+  },
+  "tuctucMapDashboard/src/app/features/fleet-map/fleet-map.component.ts": {
+    "mtime": 1793239348.3280673,
+    "seen": 1793239351.4033797,
+    "ast_hash": "fa00ce88b94ecce9b55cbf3a281d4129",
+    "semantic_hash": ""
+  },
+  "tuctucMapDashboard/src/app/features/login/login.component.ts": {
+    "mtime": 1792112020.2648106,
+    "seen": 1793227673.0430272,
+    "ast_hash": "aeb33c6f69c3b6e8f78aff6f780bcf5b",
+    "semantic_hash": "aeb33c6f69c3b6e8f78aff6f780bcf5b"
+  },
+  "tuctucMapDashboard/src/app/features/passengers/passengers.component.ts": {
+    "mtime": 1792111918.9924846,
+    "seen": 1793227673.0430279,
+    "ast_hash": "c4aaa018abe76f11661aa96c94afebbb",
+    "semantic_hash": "c4aaa018abe76f11661aa96c94afebbb"
+  },
+  "tuctucMapDashboard/src/app/features/subscriptions/subscriptions.component.ts": {
+    "mtime": 1793226136.8762555,
+    "seen": 1793227673.0430286,
+    "ast_hash": "53e23b8a06fb8ac348c3a28ab2f78cfa",
+    "semantic_hash": "53e23b8a06fb8ac348c3a28ab2f78cfa"
+  },
+  "tuctucMapDashboard/src/app/features/trips/trips.component.ts": {
+    "mtime": 1792424568.9185271,
+    "seen": 1793227673.0430293,
+    "ast_hash": "dc85cee68e6c755a477689a993863529",
+    "semantic_hash": "dc85cee68e6c755a477689a993863529"
+  },
+  "tuctucMapDashboard/src/app/services/supabase.service.ts": {
+    "mtime": 1793226061.1431973,
+    "seen": 1793227673.0430303,
+    "ast_hash": "5d90b32afbaeec9fe00db93ca861c679",
+    "semantic_hash": "5d90b32afbaeec9fe00db93ca861c679"
+  },
+  "tuctucMapDashboard/src/app/shared/dialogs/change-name-dialog.component.ts": {
+    "mtime": 1792112027.891974,
+    "seen": 1793227673.0430307,
+    "ast_hash": "ccace462b0a770e52917342b6392f71a",
+    "semantic_hash": "ccace462b0a770e52917342b6392f71a"
+  },
+  "tuctucMapDashboard/src/app/shared/dialogs/change-password-dialog.component.ts": {
+    "mtime": 1792112042.9307556,
+    "seen": 1793227673.0430312,
+    "ast_hash": "ec42b8f0b2978493425d8aea6723038c",
+    "semantic_hash": "ec42b8f0b2978493425d8aea6723038c"
+  },
+  "tuctucMapDashboard/src/app/shared/layout/shell.component.ts": {
+    "mtime": 1793226088.1057403,
+    "seen": 1793227673.0430322,
+    "ast_hash": "368bb0e7ac880f9abfdb53da0379dafa",
+    "semantic_hash": "368bb0e7ac880f9abfdb53da0379dafa"
+  },
+  "tuctucMapDashboard/src/environments/environment.example.ts": {
+    "mtime": 1792259502.2549865,
+    "seen": 1793227673.0430326,
+    "ast_hash": "8ab2c57b8999720c12d76c0cd48c6972",
+    "semantic_hash": "8ab2c57b8999720c12d76c0cd48c6972"
+  },
+  "tuctucMapDashboard/src/main.ts": {
+    "mtime": 1790739456.1535194,
+    "seen": 1793227673.0430334,
+    "ast_hash": "1289536d6d8f94242a4ffc598d094633",
+    "semantic_hash": "1289536d6d8f94242a4ffc598d094633"
+  },
+  "tuctucMapDashboard/tsconfig.app.json": {
+    "mtime": 1790739456.1554952,
+    "seen": 1793227673.043034,
+    "ast_hash": "f0ed6c81d0a374939052cff4567f713f",
+    "semantic_hash": "f0ed6c81d0a374939052cff4567f713f"
+  },
+  "tuctucMapDashboard/tsconfig.json": {
+    "mtime": 1790739456.1554952,
+    "seen": 1793227673.0430348,
+    "ast_hash": "53bc94dc8fdca030fe291132353484a9",
+    "semantic_hash": "53bc94dc8fdca030fe291132353484a9"
+  },
+  "tuctucMapDashboard/tsconfig.spec.json": {
+    "mtime": 1790739456.1554952,
+    "seen": 1793227673.0430355,
+    "ast_hash": "bd7d8d4dcf7261c37c6a35a892af2f35",
+    "semantic_hash": "bd7d8d4dcf7261c37c6a35a892af2f35"
+  },
+  "tuctucMap/app/build.gradle.kts": {
+    "mtime": 1793246388.1511724,
+    "seen": 1793246500.2522192,
+    "ast_hash": "addfe56d0e8867a94374515424fa6b2a",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/google-services.json": {
+    "mtime": 1792037366.9368203,
+    "seen": 1793227673.0430367,
+    "ast_hash": "7b0f4513af3f72ff89ed5a5f7aad3a79",
+    "semantic_hash": "7b0f4513af3f72ff89ed5a5f7aad3a79"
+  },
+  "tuctucMap/app/src/androidTest/java/com/example/tuctucmap/ExampleInstrumentedTest.kt": {
+    "mtime": 1790739456.0876606,
+    "seen": 1793227673.0430372,
+    "ast_hash": "32bba5bbafd3eab275ba6829c495243d",
+    "semantic_hash": "32bba5bbafd3eab275ba6829c495243d"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/MainActivity.kt": {
+    "mtime": 1793242925.963629,
+    "seen": 1793243458.5302591,
+    "ast_hash": "60b8fbbe1f7724d8d1248c10055a61ba",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/TucTucApplication.kt": {
+    "mtime": 1792031182.2946248,
+    "seen": 1793227673.0430384,
+    "ast_hash": "16074bfdcab5f489c98971140787710c",
+    "semantic_hash": "16074bfdcab5f489c98971140787710c"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/data/DriverFarePreferences.kt": {
+    "mtime": 1792105066.931021,
+    "seen": 1793227673.043039,
+    "ast_hash": "bcf4d79a0f1379b813132c6f75b9a136",
+    "semantic_hash": "bcf4d79a0f1379b813132c6f75b9a136"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/data/PassengerDestinationPreferences.kt": {
+    "mtime": 1793239345.6731012,
+    "seen": 1793239351.4034266,
+    "ast_hash": "acc32be54dc633910d527c683f50b411",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/data/SecurePrefs.kt": {
+    "mtime": 1793242926.0821846,
+    "seen": 1793243458.5302682,
+    "ast_hash": "3f867dcb3adf188cfd35b70725e64a75",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/data/SupabaseClient.kt": {
+    "mtime": 1793245379.347967,
+    "seen": 1793245458.71801,
+    "ast_hash": "fac4859d89bce0d85be7675f8ef600fa",
+    "semantic_hash": "fac4859d89bce0d85be7675f8ef600fa"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt": {
+    "mtime": 1793242926.2397418,
+    "seen": 1793243458.5302722,
+    "ast_hash": "0d783ce73d737b8f4684e96f1f0d78d7",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/DriverLocation.kt": {
+    "mtime": 1792428763.8672295,
+    "seen": 1793227673.0430431,
+    "ast_hash": "02173ba2b567a87722d3a7cc531b9df7",
+    "semantic_hash": "02173ba2b567a87722d3a7cc531b9df7"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Passenger.kt": {
+    "mtime": 1790739456.094178,
+    "seen": 1793227673.0430439,
+    "ast_hash": "25a59d33cee61cb7205f10a5621a3523",
+    "semantic_hash": "25a59d33cee61cb7205f10a5621a3523"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt": {
+    "mtime": 1793245397.5357497,
+    "seen": 1793245458.7180147,
+    "ast_hash": "37ab891df31785e44a0b2b5523d5c229",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/data/service/OsrmRoutingService.kt": {
+    "mtime": 1793242926.7518792,
+    "seen": 1793243458.5302806,
+    "ast_hash": "c9c0c98345afad0adcd758be0beca477",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt": {
+    "mtime": 1793242926.956798,
+    "seen": 1793243458.5302825,
+    "ast_hash": "c6644eaa01e7f1f06e0647a6e87d3505",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/Navigation.kt": {
+    "mtime": 1792361029.9777472,
+    "seen": 1793227673.0430465,
+    "ast_hash": "c2dd850b7f0e8589779b272d0ede3776",
+    "semantic_hash": "c2dd850b7f0e8589779b272d0ede3776"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/AppDrawer.kt": {
+    "mtime": 1792361011.4746768,
+    "seen": 1793227673.043047,
+    "ast_hash": "a5929c1f47020ec583d2e295ce464842",
+    "semantic_hash": "a5929c1f47020ec583d2e295ce464842"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/AnimatedSplashScreen.kt": {
+    "mtime": 1793242927.1498618,
+    "seen": 1793243458.5302885,
+    "ast_hash": "1b32f11c4b4c82170eaff955451d929c",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/OnboardingScreen.kt": {
+    "mtime": 1792348035.8728693,
+    "seen": 1793227673.0430481,
+    "ast_hash": "789bdc31a57bae0f2f6f4c1047fa1d7f",
+    "semantic_hash": "789bdc31a57bae0f2f6f4c1047fa1d7f"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/ActiveDriversMapView.kt": {
+    "mtime": 1793244808.9289806,
+    "seen": 1793245458.7180223,
+    "ast_hash": "fe44ac92461265f4ff6da74f7db10a9b",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverHomeScreen.kt": {
+    "mtime": 1793244809.6193416,
+    "seen": 1793245458.7180235,
+    "ast_hash": "b6deaa05d4d80dee9c39ded282f8c4ee",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverLoginScreen.kt": {
+    "mtime": 1793245562.314413,
+    "seen": 1793246500.2522633,
+    "ast_hash": "d3df3f9629e0302249d6a08dab4bb721",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverPendingScreen.kt": {
+    "mtime": 1792260880.1888382,
+    "seen": 1793227673.043051,
+    "ast_hash": "a57856471ddd72da4f027f07f1c0283a",
+    "semantic_hash": "a57856471ddd72da4f027f07f1c0283a"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverProfileScreen.kt": {
+    "mtime": 1792348131.0501125,
+    "seen": 1793227673.0430515,
+    "ast_hash": "b5f6de23b1c9c895268c85aa42fd4572",
+    "semantic_hash": "b5f6de23b1c9c895268c85aa42fd4572"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverRegisterScreen.kt": {
+    "mtime": 1792348102.8360226,
+    "seen": 1793227673.0430522,
+    "ast_hash": "034fc6b3525c1a1dd6b11fd7991a64f8",
+    "semantic_hash": "034fc6b3525c1a1dd6b11fd7991a64f8"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverReportsScreen.kt": {
+    "mtime": 1793242928.273949,
+    "seen": 1793243458.5303035,
+    "ast_hash": "b0abd2e35b0322cdf5e8734383149e61",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverRouteToPassengerScreen.kt": {
+    "mtime": 1793244700.4281423,
+    "seen": 1793244767.1857243,
+    "ast_hash": "a3bd6496bfa77fa58538b5670581647f",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverSubscriptionExpiredScreen.kt": {
+    "mtime": 1793239347.6795523,
+    "seen": 1793239351.4034765,
+    "ast_hash": "d9189040f05a0121b4a84a4a3df1d12a",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverSubscriptionScreen.kt": {
+    "mtime": 1793239348.0498133,
+    "seen": 1793239351.4034789,
+    "ast_hash": "24cf02f3bf89ad2bbd148a0d879a627c",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverTripHistoryScreen.kt": {
+    "mtime": 1792431639.11165,
+    "seen": 1793227673.0430553,
+    "ast_hash": "681ecad8650ac3c99dc5f5ee657b1812",
+    "semantic_hash": "681ecad8650ac3c99dc5f5ee657b1812"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerHomeScreen.kt": {
+    "mtime": 1791949193.9193158,
+    "seen": 1793227673.0430558,
+    "ast_hash": "e3509832627ca3f7c3e38210fc353e0d",
+    "semantic_hash": "e3509832627ca3f7c3e38210fc353e0d"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerLoginScreen.kt": {
+    "mtime": 1793245562.4703836,
+    "seen": 1793246500.2522817,
+    "ast_hash": "6e42f25d02de6cdc28fce5678c56222e",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerMapScreen.kt": {
+    "mtime": 1793244811.375589,
+    "seen": 1793245458.7180355,
+    "ast_hash": "2428674a4f3d2ca8d4ffe3bf483983bc",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerProfileScreen.kt": {
+    "mtime": 1791821446.6381097,
+    "seen": 1793227673.0430577,
+    "ast_hash": "c7a50b8b5d0283c681f97dcdd76c538f",
+    "semantic_hash": "c7a50b8b5d0283c681f97dcdd76c538f"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerRegisterScreen.kt": {
+    "mtime": 1791944142.607751,
+    "seen": 1793227673.0430582,
+    "ast_hash": "b758c8b8a5be2891c73089f81bfb5422",
+    "semantic_hash": "b758c8b8a5be2891c73089f81bfb5422"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerTripHistoryScreen.kt": {
+    "mtime": 1793242930.120682,
+    "seen": 1793243458.530322,
+    "ast_hash": "0a3af0af6f998d51652b72e4effb86df",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/theme/Color.kt": {
+    "mtime": 1790739456.1047425,
+    "seen": 1793227673.0430593,
+    "ast_hash": "1c316cd7aba319fd2fb369dd6115f290",
+    "semantic_hash": "1c316cd7aba319fd2fb369dd6115f290"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/theme/Theme.kt": {
+    "mtime": 1790739456.1047425,
+    "seen": 1793227673.0430624,
+    "ast_hash": "e7f9f80dd20aedf2ee129abac9bd584d",
+    "semantic_hash": "e7f9f80dd20aedf2ee129abac9bd584d"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/theme/Type.kt": {
+    "mtime": 1790739456.1047425,
+    "seen": 1793227673.0430634,
+    "ast_hash": "65fba4076bf982a6693b0226ebc93504",
+    "semantic_hash": "65fba4076bf982a6693b0226ebc93504"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExternalNavigationUtils.kt": {
+    "mtime": 1792357617.4260747,
+    "seen": 1793227673.0430639,
+    "ast_hash": "88e6a238add57cf5016789ff5d8bbcde",
+    "semantic_hash": "88e6a238add57cf5016789ff5d8bbcde"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/MapTileUtils.kt": {
+    "mtime": 1791781667.2914755,
+    "seen": 1793227673.0430644,
+    "ast_hash": "7e491e587988460748e051875dde07e6",
+    "semantic_hash": "7e491e587988460748e051875dde07e6"
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/MarkerIconUtils.kt": {
+    "mtime": 1793242930.238588,
+    "seen": 1793243458.5303357,
+    "ast_hash": "1ae6100477dd479e8f257d0152d20f03",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/PassengerLocationUtils.kt": {
+    "mtime": 1793242930.4046018,
+    "seen": 1793243458.530338,
+    "ast_hash": "3a136d3777d49f9bccd3a28f65d2ea44",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/test/java/com/example/tuctucmap/ExampleUnitTest.kt": {
+    "mtime": 1790739456.1252968,
+    "seen": 1793227673.0430667,
+    "ast_hash": "af50326b69e41d57196e20801cf1ac2c",
+    "semantic_hash": "af50326b69e41d57196e20801cf1ac2c"
+  },
+  "tuctucMap/build.gradle.kts": {
+    "mtime": 1790739456.1263137,
+    "seen": 1793227673.0430675,
+    "ast_hash": "3a2e1b98e05cf5571e37558b55174cc5",
+    "semantic_hash": "3a2e1b98e05cf5571e37558b55174cc5"
+  },
+  "tuctucMap/firebase_rules.json": {
+    "mtime": 1793232695.1934714,
+    "seen": 1793235447.3879423,
+    "ast_hash": "1f1a838ddf38bf2cc73441347f959fd3",
+    "semantic_hash": ""
+  },
+  "tuctucMap/gradlew": {
+    "mtime": 1790739456.131829,
+    "seen": 1793227673.0430686,
+    "ast_hash": "4f7a8a3a765f6f751d47568dc3bb913f",
+    "semantic_hash": "4f7a8a3a765f6f751d47568dc3bb913f"
+  },
+  "tuctucMap/settings.gradle.kts": {
+    "mtime": 1790739456.1328442,
+    "seen": 1793227673.0430691,
+    "ast_hash": "7feb4e4b4c4b05593c15b372340f3b0f",
+    "semantic_hash": "7feb4e4b4c4b05593c15b372340f3b0f"
+  },
+  ".agents/AGENTS.md": {
+    "mtime": 1793227700.7072947,
+    "seen": 1793232678.2098992,
+    "ast_hash": "eaa25a3655311b9c74cd940de8d015de",
+    "semantic_hash": ""
+  },
+  ".agents/rules/graphify.md": {
+    "mtime": 1793227543.1557057,
+    "seen": 1793227673.0430715,
+    "ast_hash": "a0e4d192b9e2e17256124dbfc8e24e6a",
+    "semantic_hash": "a0e4d192b9e2e17256124dbfc8e24e6a"
+  },
+  ".agents/skills/tuctuc-android/SKILL.md": {
+    "mtime": 1793242925.6491697,
+    "seen": 1793243458.530359,
+    "ast_hash": "fd368193022234950508ddf556596f2d",
+    "semantic_hash": ""
+  },
+  ".agents/skills/tuctuc-dashboard/SKILL.md": {
+    "mtime": 1793239273.5735621,
+    "seen": 1793239351.4035344,
+    "ast_hash": "0289e619a0858ae24ea0c263fa434889",
+    "semantic_hash": ""
+  },
+  ".agents/skills/tuctuc-database/SKILL.md": {
+    "mtime": 1792282516.6062045,
+    "seen": 1793227673.0430737,
+    "ast_hash": "be79e333931fe2b5cad09b481b00fb53",
+    "semantic_hash": "be79e333931fe2b5cad09b481b00fb53"
+  },
+  ".agents/skills/tuctuc-git-sync/SKILL.md": {
+    "mtime": 1792285499.3710904,
+    "seen": 1793227673.0430744,
+    "ast_hash": "400f6a04a62ebe6d60e9fa901920b4c0",
+    "semantic_hash": "400f6a04a62ebe6d60e9fa901920b4c0"
+  },
+  ".agents/skills/tuctuc-playstore-release/SKILL.md": {
+    "mtime": 1792362525.9205673,
+    "seen": 1793227673.0430748,
+    "ast_hash": "6b949e118cafe3adc7cb7b86244479f8",
+    "semantic_hash": "6b949e118cafe3adc7cb7b86244479f8"
+  },
+  ".agents/workflows/graphify.md": {
+    "mtime": 1793227543.1567101,
+    "seen": 1793227673.0430756,
+    "ast_hash": "a831cf3669f1e6ab85d8a80ebe655f99",
+    "semantic_hash": "a831cf3669f1e6ab85d8a80ebe655f99"
+  },
+  "tuctucMapDashboard/ImplementationsPlans/first/implementation_plan.md": {
+    "mtime": 1790739456.1378644,
+    "seen": 1793227673.0430794,
+    "ast_hash": "7792e0ac61f7498c526b4d632d4439c2",
+    "semantic_hash": "7792e0ac61f7498c526b4d632d4439c2"
+  },
+  "tuctucMapDashboard/ImplementationsPlans/first/task.md": {
+    "mtime": 1790739456.1378644,
+    "seen": 1793227673.0430799,
+    "ast_hash": "966da33362ac84eb6a30d5312d5b1e8c",
+    "semantic_hash": "966da33362ac84eb6a30d5312d5b1e8c"
+  },
+  "tuctucMapDashboard/README.md": {
+    "mtime": 1790739456.1378644,
+    "seen": 1793227673.0430803,
+    "ast_hash": "138dab753153b40cc04dd364f5912022",
+    "semantic_hash": "138dab753153b40cc04dd364f5912022"
+  },
+  "tuctucMap/implementation_plan.md": {
+    "mtime": 1792348329.4693494,
+    "seen": 1793227673.0430813,
+    "ast_hash": "dc85813b93cff908c1ef825702130b1a",
+    "semantic_hash": "dc85813b93cff908c1ef825702130b1a"
+  },
+  "tuctucMap/monetization_plan.md": {
+    "mtime": 1790739456.1328442,
+    "seen": 1793227673.0430818,
+    "ast_hash": "ca282a0fba242f15736c1ca66f82e2bf",
+    "semantic_hash": "ca282a0fba242f15736c1ca66f82e2bf"
+  },
+  "Reportes/CONFIGURACION_Y_SECRETOS_REQUERIDOS.md": {
+    "mtime": 1792286406.313417,
+    "seen": 1793232678.2099123,
+    "ast_hash": "2e204f1637e1bbff4b634469cbc6c8f5",
+    "semantic_hash": ""
+  },
+  "Reportes/GUIA_PUBLICACION_PLAY_STORE.md": {
+    "mtime": 1792037452.8148198,
+    "seen": 1793232678.2099135,
+    "ast_hash": "bea3978710ffb48824fac1e234df189f",
+    "semantic_hash": ""
+  },
+  "Reportes/POLITICA_PRIVACIDAD.md": {
+    "mtime": 1792037754.5154314,
+    "seen": 1793232678.2099159,
+    "ast_hash": "f8e4a901544702b2b5aa32066bc4848a",
+    "semantic_hash": ""
+  },
+  "privacy.html": {
+    "mtime": 1792038435.4302197,
+    "seen": 1793232678.2099168,
+    "ast_hash": "7929aebea1cb526f821cf7891dd885af",
+    "semantic_hash": ""
+  },
+  "tuctucMapDashboard/src/app/features/business-config/business-config.component.html": {
+    "mtime": 1792347997.6459966,
+    "seen": 1793232678.2099235,
+    "ast_hash": "215e88c2b81872871a3513240cc77d90",
+    "semantic_hash": ""
+  },
+  "tuctucMapDashboard/src/app/features/drivers/drivers.component.html": {
+    "mtime": 1792347982.6336386,
+    "seen": 1793232678.2099247,
+    "ast_hash": "3b94d21e926913839f9dca9b3f256436",
+    "semantic_hash": ""
+  },
+  "tuctucMapDashboard/src/app/features/trips/trips.component.html": {
+    "mtime": 1792111056.7009292,
+    "seen": 1793232678.2099257,
+    "ast_hash": "c6386a42268f6340257a963fc9e2e8e3",
+    "semantic_hash": ""
+  },
+  "tuctucMapDashboard/src/app/shared/layout/shell.component.html": {
+    "mtime": 1793226104.1547244,
+    "seen": 1793232678.2099266,
+    "ast_hash": "1d65637bd72a6cae7e48a93bffdd3e37",
+    "semantic_hash": ""
+  },
+  "tuctucMapDashboard/src/index.html": {
+    "mtime": 1790739456.1535194,
+    "seen": 1793232678.2099278,
+    "ast_hash": "c4dddd427572a147f16a241b81ab2503",
+    "semantic_hash": ""
+  },
+  "tuctucMap/firebase_rules copy.json": {
+    "mtime": 1793232869.128028,
+    "seen": 1793235447.3879392,
+    "ast_hash": "667b65082e34bd5f5e7be227ffac436c",
+    "semantic_hash": ""
+  },
+  "reportes/ANALISIS_COSTOS_Y_RENTABILIDAD.md": {
+    "mtime": 1793239345.3451712,
+    "seen": 1793239351.4035478,
+    "ast_hash": "a5600da6fd1a581c70d3a608ed4b2d37",
+    "semantic_hash": ""
+  },
+  "reportes/CONFIGURACION_Y_SECRETOS_REQUERIDOS.md": {
+    "mtime": 1792286406.313417,
+    "seen": 1793239351.4035494,
+    "ast_hash": "2e204f1637e1bbff4b634469cbc6c8f5",
+    "semantic_hash": ""
+  },
+  "reportes/GUIA_PUBLICACION_PLAY_STORE.md": {
+    "mtime": 1792037452.8148198,
+    "seen": 1793239351.4035509,
+    "ast_hash": "bea3978710ffb48824fac1e234df189f",
+    "semantic_hash": ""
+  },
+  "reportes/POLITICA_PRIVACIDAD.md": {
+    "mtime": 1792037754.5154314,
+    "seen": 1793239351.4035523,
+    "ast_hash": "f8e4a901544702b2b5aa32066bc4848a",
+    "semantic_hash": ""
+  },
+  "reportes/AUDITORIA_RENDIMIENTO_APP.md": {
+    "mtime": 1793242307.784173,
+    "seen": 1793242327.8751554,
+    "ast_hash": "ea56abf31e8ef9873204a6c79429e678",
+    "semantic_hash": ""
+  }
+}
