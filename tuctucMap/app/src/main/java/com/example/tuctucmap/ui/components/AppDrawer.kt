@@ -3,6 +3,8 @@ package com.example.tuctucmap.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,6 +43,15 @@ enum class DriverDrawerItem {
     REPORTS,
     SUBSCRIPTIONS,
     PROFILE
+}
+
+enum class AdminDrawerItem {
+    DRIVERS,
+    SUBSCRIPTIONS,
+    FLEET_MAP,
+    TRIPS,
+    PASSENGERS,
+    CONFIG
 }
 
 @Composable
@@ -644,6 +655,200 @@ fun DriverDrawerSheet(
 
                 Text(
                     text = "TucTuc Map • v1.0",
+                    fontSize = 11.sp,
+                    color = Color.White.copy(alpha = 0.4f),
+                    modifier = Modifier.padding(start = 12.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AdminDrawerSheet(
+    currentEmail: String,
+    selectedItem: AdminDrawerItem,
+    onSelectItem: (AdminDrawerItem) -> Unit,
+    onLogout: () -> Unit,
+    onExploreMap: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    ModalDrawerSheet(
+        modifier = modifier.width(320.dp),
+        drawerContainerColor = Color(0xFF0F2027),
+        drawerContentColor = Color.White,
+        drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF0F2027),
+                            Color(0xFF1B323D),
+                            Color(0xFF2C5364)
+                        )
+                    )
+                )
+        ) {
+            // Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(Color(0xFF1E3A47), Color(0xFF2C5364))
+                        )
+                    )
+                    .padding(horizontal = 20.dp, vertical = 26.dp)
+            ) {
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(60.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(Color(0xFFF59E0B), Color(0xFFD97706))
+                                    )
+                                )
+                                .border(2.dp, Color.White.copy(alpha = 0.6f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AdminPanelSettings,
+                                contentDescription = "Admin",
+                                tint = Color(0xFF0F2027),
+                                modifier = Modifier.size(34.dp)
+                            )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Panel Admin",
+                                fontSize = 19.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFFF59E0B)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Security,
+                                        contentDescription = null,
+                                        tint = Color(0xFF0F2027),
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Administrador",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF0F2027)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (currentEmail.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = currentEmail,
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.7f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+
+            HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp, vertical = 12.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                DrawerNavigationItem(
+                    label = "Conductores",
+                    icon = Icons.Default.People,
+                    isSelected = selectedItem == AdminDrawerItem.DRIVERS,
+                    onClick = { onSelectItem(AdminDrawerItem.DRIVERS) }
+                )
+
+                DrawerNavigationItem(
+                    label = "Suscripciones y Pagos",
+                    icon = Icons.Default.AccountBalanceWallet,
+                    isSelected = selectedItem == AdminDrawerItem.SUBSCRIPTIONS,
+                    onClick = { onSelectItem(AdminDrawerItem.SUBSCRIPTIONS) }
+                )
+
+                DrawerNavigationItem(
+                    label = "Mapa de Flota en Vivo",
+                    icon = Icons.Default.Map,
+                    isSelected = selectedItem == AdminDrawerItem.FLEET_MAP,
+                    onClick = { onSelectItem(AdminDrawerItem.FLEET_MAP) }
+                )
+
+                DrawerNavigationItem(
+                    label = "Auditoría de Viajes",
+                    icon = Icons.Default.ReceiptLong,
+                    isSelected = selectedItem == AdminDrawerItem.TRIPS,
+                    onClick = { onSelectItem(AdminDrawerItem.TRIPS) }
+                )
+
+                DrawerNavigationItem(
+                    label = "Directorio de Pasajeros",
+                    icon = Icons.Default.Group,
+                    isSelected = selectedItem == AdminDrawerItem.PASSENGERS,
+                    onClick = { onSelectItem(AdminDrawerItem.PASSENGERS) }
+                )
+
+                DrawerNavigationItem(
+                    label = "Configuración Comercial",
+                    icon = Icons.Default.Settings,
+                    isSelected = selectedItem == AdminDrawerItem.CONFIG,
+                    onClick = { onSelectItem(AdminDrawerItem.CONFIG) }
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                Spacer(modifier = Modifier.height(8.dp))
+
+                DrawerNavigationItem(
+                    label = "Ver Mapa como Pasajero",
+                    icon = Icons.Default.Explore,
+                    isSelected = false,
+                    onClick = onExploreMap
+                )
+
+                DrawerNavigationItem(
+                    label = "Cerrar Sesión",
+                    icon = Icons.AutoMirrored.Filled.Logout,
+                    isSelected = false,
+                    onClick = onLogout
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "TucTuc Map Admin • Móvil",
                     fontSize = 11.sp,
                     color = Color.White.copy(alpha = 0.4f),
                     modifier = Modifier.padding(start = 12.dp)

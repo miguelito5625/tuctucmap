@@ -132,6 +132,9 @@ class MainActivity : ComponentActivity() {
 
                     if (isAuthed) {
                         when (savedRole) {
+                            "admin" -> {
+                                initialScreen = Screen.AdminHome
+                            }
                             "passenger" -> {
                                 initialScreen = Screen.PassengerMap
                             }

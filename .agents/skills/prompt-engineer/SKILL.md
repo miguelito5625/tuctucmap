@@ -153,3 +153,4 @@ Para <objetivo del usuario>, la mejor estrategia técnica en <tuctucMap / tuctuc
 2. **Priorizar siempre la opción (Recomendada):** Cada vez que se planteen opciones, señalar cuál es la recomendada y por qué.
 3. **Mantener el idioma español latinoamericano (`es-419`):** Al interactuar con el usuario, mantener la redacción amigable, técnica y clara en español.
 4. **Cumplir con las Reglas de Oro de TucTuc Map:** Tras cualquier ejecución confirmada por el usuario, aplicar siempre compilación obligatoria (`.\gradlew.bat assembleDebug` o `npm run build`) y sincronización automática (`tuctuc-git-sync`).
+

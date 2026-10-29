@@ -361,6 +361,19 @@ class SupabaseRepository {
         }
     }
 
+    val adminRepository: AdminRepository by lazy { AdminRepository(this) }
+
+    suspend fun getUserRole(uid: String): String? {
+        return try {
+            val res = supabase.postgrest["profiles"].select {
+                filter { eq("id", uid) }
+            }.decodeSingleOrNull<com.example.tuctucmap.data.model.UserRoleDto>()
+            res?.role
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     fun getDriverProfileOnce(uid: String, onResult: (Driver?) -> Unit) {
         repositoryIoScope.launch {
             try {
@@ -1158,7 +1171,7 @@ class SupabaseRepository {
         }
     }
 
-    private fun parseDriverLocationSnapshot(child: DataSnapshot): DriverLocation? {
+    fun parseDriverLocationSnapshot(child: DataSnapshot): DriverLocation? {
         return try {
             val activeVal = child.child("active").value
             val active = when (activeVal) {

@@ -25,6 +25,8 @@ data class DriverLocation(
 
     val isAvailable: Boolean get() = status.equals("disponible", ignoreCase = true)
     val isBusyOrPaused: Boolean get() = !isAvailable
+    val active: Boolean get() = activo
+    val displayIdentifier: String get() = if (numeroUnidad.isNotBlank()) "$numeroUnidad • $placas" else placas
 
     /**
      * Convierte el timestamp de actualización a milisegundos de época.

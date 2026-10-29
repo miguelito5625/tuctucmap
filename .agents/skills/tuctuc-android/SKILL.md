@@ -103,7 +103,21 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
 
 ---
 
-## 6. Secretos (`BuildConfig`), Persistencia de Sesión y Ofuscación R8
+## 6. Módulo Administrativo Móvil Nativo (Admin Dashboard Integrado)
+1. **Detección y Activación Automática por Rol (`role = 'admin'`):**
+   - Al iniciar sesión en `PassengerLoginScreen` o `DriverLoginScreen`, `SupabaseRepository.getUserRole(uid)` consulta `profiles.role`. Si es `'admin'`, almacena `user_role = "admin"` y navega directamente a `Screen.AdminHome` (`AdminMainScreen.kt`).
+   - `MainActivity.kt` resuelve en frío directamente hacia `Screen.AdminHome` cuando `user_role == "admin"`.
+2. **Arquitectura y Vistas del Panel Administrativo (`ui/screens/admin/`):**
+   - **`AdminMainScreen.kt`:** Contenedor con `ModalNavigationDrawer` (`AdminDrawerSheet.kt`), `TopAppBar` y `NavigationBar` de 4 pestañas con insignias dinámicas reactivas para conductores y pagos pendientes (`adminRepo.observePendingCounts`).
+   - **`AdminDriversTab.kt`:** KPIs financieros en tiempo real (Mes, Total, Flota Activa, Por Vencer), buscador, chips de estado, aprobación/rechazo de conductores, renovación acumulativa manual con `ModalBottomSheet`, recordatorio a WhatsApp con cuentas de `AppConfig` y eliminación con confirmación.
+   - **`AdminSubscriptionsTab.kt`:** Pestaña 1 (Aprobación acumulativa con RPC `approve_subscription_payment_request` o rechazo con RPC `reject_subscription_payment_request`) y Pestaña 2 (Historial global y exportación/compartir de CSV vía `FileProvider`).
+   - **`AdminFleetMapTab.kt`:** Monitoreo en vivo de toda la flota conectada vía Firebase RTDB (`driver_locations`) sobre OSMDroid (`AppTileSource`), pines verde/naranja y panel deslizable inferior para centrado dinámico de cámara.
+   - **`AdminBusinessConfigTab.kt`:** Edición y sincronización en vivo de `public.app_config` (WhatsApp admin, cuentas bancarias, titular, tarifas y geocerca) con soporte `.imePadding()` y `.verticalScroll()`.
+   - **`AdminTripsScreen.kt` & `AdminPassengersScreen.kt`:** Auditoría de viajes con visor interactivo de polilínea GPS de ruta y directorio completo de pasajeros.
+
+---
+
+## 7. Secretos (`BuildConfig`), Persistencia de Sesión y Ofuscación R8
 1. **Inyección de Secretos desde `.env`:**
    - `tuctucMap/app/build.gradle.kts` lee las credenciales desde el archivo raíz `../.env` (o `local.properties`) e inyecta `BuildConfig.SUPABASE_URL`, `BuildConfig.SUPABASE_KEY` y `BuildConfig.FIREBASE_RTDB_URL`. Nunca hardcodear llaves en `SupabaseClient.kt`.
    - El build `release` tiene habilitado `isMinifyEnabled = true` y `isShrinkResources = true` con reglas para Kotlin Serialization, Supabase y OSMDroid en `proguard-rules.pro`, además de `android:allowBackup="false"` en `AndroidManifest.xml`.
