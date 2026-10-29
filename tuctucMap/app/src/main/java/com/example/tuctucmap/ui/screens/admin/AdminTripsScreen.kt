@@ -687,7 +687,6 @@ private fun TripRouteModal(
                                                 snippet = "Aceptación del viaje"
                                             }
                                             overlays.add(startMarker)
-                                            startMarker.showInfoWindow()
 
                                             // Marcador de Fin (TucTuc al finalizar - Rojo)
                                             if (geoPoints.size > 1) {
@@ -728,12 +727,10 @@ private fun TripRouteModal(
                                             }
                                             overlays.add(passengerMarker)
 
-                                            if (!hasPoints) {
-                                                passengerMarker.showInfoWindow()
-                                            }
+
                                         }
 
-                                        // 3. Ajuste de zoom y encuadre (Auto-fit Bounds)
+                                        // 3. Ajuste de zoom y encuadre simétrico centrado (Auto-fit Bounds)
                                         if (allBoundsPoints.isNotEmpty()) {
                                             var minLat = allBoundsPoints.first().latitude
                                             var maxLat = allBoundsPoints.first().latitude
@@ -747,20 +744,37 @@ private fun TripRouteModal(
                                                 if (pt.longitude > maxLon) maxLon = pt.longitude
                                             }
 
+                                            val centerLat = (minLat + maxLat) / 2.0
+                                            val centerLon = (minLon + maxLon) / 2.0
+                                            val centerPoint = GeoPoint(centerLat, centerLon)
+                                            controller.setCenter(centerPoint)
+
                                             if (minLat == maxLat && minLon == maxLon) {
-                                                controller.setZoom(15.5)
-                                                controller.setCenter(GeoPoint(minLat, minLon))
+                                                controller.setZoom(16.0)
                                             } else {
-                                                val latMargin = (maxLat - minLat).coerceAtLeast(0.001) * 0.25
-                                                val lonMargin = (maxLon - minLon).coerceAtLeast(0.001) * 0.25
+                                                val latDiff = maxLat - minLat
+                                                val lonDiff = maxLon - minLon
+                                                val minSpan = 0.0055 // Proporciona margen para visualizar ambos puntos centrados y con calles de referencia
+                                                val latSpan = latDiff.coerceAtLeast(minSpan)
+                                                val lonSpan = lonDiff.coerceAtLeast(minSpan)
+
+                                                val paddingFactor = 0.50
+                                                val halfLat = (latSpan * (1.0 + paddingFactor)) / 2.0
+                                                val halfLon = (lonSpan * (1.0 + paddingFactor)) / 2.0
+
                                                 val boundingBox = org.osmdroid.util.BoundingBox(
-                                                    maxLat + latMargin,
-                                                    maxLon + lonMargin,
-                                                    minLat - latMargin,
-                                                    minLon - lonMargin
+                                                    centerLat + halfLat,
+                                                    centerLon + halfLon,
+                                                    centerLat - halfLat,
+                                                    centerLon - halfLon
                                                 )
                                                 post {
-                                                    zoomToBoundingBox(boundingBox, true, 80)
+                                                    try {
+                                                        zoomToBoundingBox(boundingBox, false, 60)
+                                                    } catch (_: Exception) {
+                                                        controller.setZoom(15.5)
+                                                        controller.setCenter(centerPoint)
+                                                    }
                                                 }
                                             }
                                         }
