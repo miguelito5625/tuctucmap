@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.json.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -374,24 +375,78 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
     suspend fun getTripRoutePoints(tripId: String): Result<List<SupabaseRepository.RoutePoint>> = withContext(Dispatchers.IO) {
         try {
             @kotlinx.serialization.Serializable
-            data class TripRouteDto(val route_points: String? = null)
+            data class TripRouteDto(
+                @SerialName("route_points")
+                val routePoints: JsonElement? = null
+            )
 
-            val data = supabase.postgrest["trips"].select {
+            val data = supabase.postgrest["trips"].select(Columns.list("route_points")) {
                 filter { eq("id", tripId) }
             }.decodeSingleOrNull<TripRouteDto>()
 
-            val raw = data?.route_points
-            if (raw.isNullOrBlank()) {
+            val raw = data?.routePoints
+            if (raw == null || raw is JsonNull) {
                 return@withContext Result.success(emptyList())
             }
 
-            val points = try {
-                json.decodeFromString<List<SupabaseRepository.RoutePoint>>(raw)
-            } catch (_: Exception) {
-                emptyList()
+            val list = mutableListOf<SupabaseRepository.RoutePoint>()
+            when (raw) {
+                is JsonArray -> {
+                    for (elem in raw) {
+                        try {
+                            val pt = json.decodeFromJsonElement<SupabaseRepository.RoutePoint>(elem)
+                            if (pt.lat != 0.0 && pt.lon != 0.0) {
+                                list.add(pt)
+                            }
+                        } catch (_: Exception) {
+                            if (elem is JsonObject) {
+                                val lat = elem["lat"]?.jsonPrimitive?.doubleOrNull ?: 0.0
+                                val lon = elem["lon"]?.jsonPrimitive?.doubleOrNull ?: 0.0
+                                val ts = elem["timestamp"]?.jsonPrimitive?.longOrNull ?: 0L
+                                if (lat != 0.0 && lon != 0.0) {
+                                    list.add(SupabaseRepository.RoutePoint(lat, lon, ts))
+                                }
+                            }
+                        }
+                    }
+                }
+                is JsonPrimitive -> {
+                    val str = raw.content.trim()
+                    if (str.isNotBlank()) {
+                        try {
+                            val parsed = json.decodeFromString<List<SupabaseRepository.RoutePoint>>(str)
+                            list.addAll(parsed.filter { it.lat != 0.0 && it.lon != 0.0 })
+                        } catch (_: Exception) {
+                            try {
+                                val element = json.parseToJsonElement(str)
+                                if (element is JsonArray) {
+                                    for (elem in element) {
+                                        try {
+                                            val pt = json.decodeFromJsonElement<SupabaseRepository.RoutePoint>(elem)
+                                            if (pt.lat != 0.0 && pt.lon != 0.0) {
+                                                list.add(pt)
+                                            }
+                                        } catch (_: Exception) {
+                                            if (elem is JsonObject) {
+                                                val lat = elem["lat"]?.jsonPrimitive?.doubleOrNull ?: 0.0
+                                                val lon = elem["lon"]?.jsonPrimitive?.doubleOrNull ?: 0.0
+                                                val ts = elem["timestamp"]?.jsonPrimitive?.longOrNull ?: 0L
+                                                if (lat != 0.0 && lon != 0.0) {
+                                                    list.add(SupabaseRepository.RoutePoint(lat, lon, ts))
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch (_: Exception) {}
+                        }
+                    }
+                }
+                else -> {}
             }
-            Result.success(points)
+            Result.success(list)
         } catch (e: Exception) {
+            android.util.Log.e("AdminRepository", "Error in getTripRoutePoints: ${e.message}", e)
             Result.failure(e)
         }
     }

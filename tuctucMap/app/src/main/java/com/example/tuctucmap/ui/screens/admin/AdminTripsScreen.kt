@@ -12,6 +12,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
+
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -330,15 +340,34 @@ private fun AdminTripCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+private fun createCircleMarkerDrawable(context: Context, fillColor: Int, strokeColor: Int, sizeDp: Int = 16): Drawable {
+    val density = context.resources.displayMetrics.density
+    val sizePx = (sizeDp * density).toInt().coerceAtLeast(16)
+    val strokePx = (2 * density).toInt().coerceAtLeast(2)
+    val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    paint.color = strokeColor
+    paint.style = Paint.Style.FILL
+    canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx / 2f, paint)
+
+    paint.color = fillColor
+    paint.style = Paint.Style.FILL
+    val innerRadius = (sizePx / 2f) - strokePx
+    canvas.drawCircle(sizePx / 2f, sizePx / 2f, innerRadius, paint)
+
+    return BitmapDrawable(context.resources, bitmap)
+}
+
 @Composable
 private fun TripRouteModal(
     trip: AdminTrip,
     adminRepo: AdminRepository,
     onDismiss: () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-    var routePoints by remember { mutableStateOf<List<com.example.tuctucmap.data.repository.SupabaseRepository.RoutePoint>>(emptyList()) }
+    val context = LocalContext.current
+    var routePoints by remember { mutableStateOf<List<SupabaseRepository.RoutePoint>>(emptyList()) }
     var isLoadingRoute by remember { mutableStateOf(true) }
 
     LaunchedEffect(trip.id) {
@@ -350,118 +379,437 @@ private fun TripRouteModal(
         isLoadingRoute = false
     }
 
-    ModalBottomSheet(
+    Dialog(
         onDismissRequest = onDismiss,
-        containerColor = Color(0xFF1E293B)
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Column(
+        Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 20.dp)
+                .fillMaxWidth(0.96f)
+                .fillMaxHeight(0.90f),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+            border = BorderStroke(1.dp, Color(0xFF334155))
         ) {
-            Row(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                Column {
-                    Text(
-                        text = "Trayectoria GPS del Viaje",
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "${trip.resolvedPassengerName} ➔ ${trip.resolvedDriverName}",
-                        fontSize = 12.sp,
-                        color = Color(0xFF94A3B8)
-                    )
-                }
-                IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.White)
-                }
-            }
-
-            if (isLoadingRoute) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp),
-                    contentAlignment = Alignment.Center
+                // Cabecera: Icono de ruta, Título y Botón Cerrar
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    CircularProgressIndicator(color = Color(0xFF38BDF8))
-                }
-            } else if (routePoints.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(240.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Este viaje no tiene puntos GPS de ruta registrados",
-                        color = Color(0xFF94A3B8),
-                        fontSize = 13.sp
-                    )
-                }
-            } else {
-                AndroidView(
-                    factory = { ctx ->
-                        MapView(ctx).apply {
-                            setTileSource(AppTileSource)
-                            setMultiTouchControls(true)
-                            isTilesScaledToDpi = true
-
-                            val geoPoints = routePoints.map { GeoPoint(it.lat, it.lon) }
-                            val polyline = Polyline().apply {
-                                outlinePaint.color = android.graphics.Color.parseColor("#38BDF8")
-                                outlinePaint.strokeWidth = 10f
-                                setPoints(geoPoints)
-                            }
-                            overlays.add(polyline)
-
-                            // Marcador Inicio
-                            val startPt = geoPoints.first()
-                            val startMarker = Marker(this).apply {
-                                position = startPt
-                                title = "Inicio del Viaje"
-                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            }
-                            overlays.add(startMarker)
-
-                            // Marcador Fin
-                            val endPt = geoPoints.last()
-                            val endMarker = Marker(this).apply {
-                                position = endPt
-                                title = "Fin del Viaje"
-                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            }
-                            overlays.add(endMarker)
-
-                            controller.setZoom(15.5)
-                            controller.setCenter(startPt)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFFFEF3C7).copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Route,
+                                contentDescription = null,
+                                tint = Color(0xFFF59E0B),
+                                modifier = Modifier.size(22.dp)
+                            )
                         }
-                    },
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Recorrido GPS del Conductor",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Trayectoria trazada desde aceptación hasta finalización del viaje",
+                                fontSize = 11.sp,
+                                color = Color(0xFF94A3B8),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Cerrar",
+                            tint = Color(0xFF94A3B8)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Panel de Métricas / KPIs del Viaje (Replicando la barra de KPIs de Angular)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                    border = BorderStroke(1.dp, Color(0xFF334155))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                    ) {
+                        // Fila 1: Pasajero y Conductor
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            // Pasajero
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "PASAJERO",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF64748B)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text(
+                                        text = trip.resolvedPassengerName.ifBlank { "Pasajero" },
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(
+                                                if (trip.isRegisteredPassenger) Color(0xFF064E3B)
+                                                else Color(0xFF1E3A8A)
+                                            )
+                                            .padding(horizontal = 5.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = if (trip.isRegisteredPassenger) "Cuenta Registrada" else "Sin cuenta (Invitado)",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = if (trip.isRegisteredPassenger) Color(0xFF34D399) else Color(0xFF93C5FD)
+                                        )
+                                    }
+                                }
+                                if (trip.resolvedPassengerPhone.isNotBlank()) {
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "📞 ${trip.resolvedPassengerPhone}",
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF38BDF8)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            // Conductor
+                            Column(modifier = Modifier.weight(0.9f)) {
+                                Text(
+                                    text = "CONDUCTOR",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF64748B)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = trip.resolvedDriverName.ifBlank { "TucTuc" },
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider(color = Color(0xFF334155), thickness = 0.8.dp)
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Fila 2: Tarifa Cobrada, Distancia Recorrida y Puntos Telemetría
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            // Tarifa Cobrada
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "TARIFA COBRADA",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF64748B)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                val fareStr = trip.fare?.let { "Q" + String.format(Locale.US, "%.2f", it) } ?: "No especificado"
+                                Text(
+                                    text = fareStr,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFF9D423)
+                                )
+                            }
+
+                            // Distancia Recorrida
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "DISTANCIA RECORRIDA",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF64748B)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                val distStr = trip.distanceKm?.let { String.format(Locale.US, "%.2f km", it) } ?: "No registrada"
+                                Text(
+                                    text = distStr,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF38BDF8)
+                                )
+                            }
+
+                            // Puntos Telemetría
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "PUNTOS TELEMETRÍA",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF64748B)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "${routePoints.size} waypoints",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF34D399)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Área del Mapa Interactivo OSMDroid
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(350.dp)
-                )
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF1E293B)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isLoadingRoute) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = Color(0xFF38BDF8),
+                                strokeWidth = 3.dp,
+                                modifier = Modifier.size(36.dp)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "Cargando telemetría del viaje...",
+                                color = Color(0xFF94A3B8),
+                                fontSize = 12.sp
+                            )
+                        }
+                    } else {
+                        val hasPoints = routePoints.isNotEmpty()
+                        val hasPassengerLocation = trip.passengerLat != null && trip.passengerLon != null && trip.passengerLat != 0.0
+
+                        if (!hasPoints && !hasPassengerLocation) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier.padding(20.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOff,
+                                    contentDescription = null,
+                                    tint = Color(0xFF64748B),
+                                    modifier = Modifier.size(40.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Este viaje no tiene coordenadas GPS de ruta registradas",
+                                    color = Color(0xFF94A3B8),
+                                    fontSize = 13.sp
+                                )
+                            }
+                        } else {
+                            AndroidView(
+                                factory = { ctx ->
+                                    MapView(ctx).apply {
+                                        setTileSource(AppTileSource)
+                                        setMultiTouchControls(true)
+                                        isTilesScaledToDpi = true
+
+                                        val allBoundsPoints = mutableListOf<GeoPoint>()
+
+                                        // 1. Trazado de Polyline (Dorado TucTuc #F9D423)
+                                        if (hasPoints) {
+                                            val geoPoints = routePoints.map { GeoPoint(it.lat, it.lon) }
+                                            allBoundsPoints.addAll(geoPoints)
+
+                                            val polyline = Polyline().apply {
+                                                outlinePaint.color = android.graphics.Color.parseColor("#F9D423")
+                                                outlinePaint.strokeWidth = 10f
+                                                setPoints(geoPoints)
+                                            }
+                                            overlays.add(polyline)
+
+                                            // Marcador de Inicio (TucTuc al aceptar - Verde)
+                                            val startPt = geoPoints.first()
+                                            val startMarker = Marker(this).apply {
+                                                position = startPt
+                                                icon = createCircleMarkerDrawable(
+                                                    ctx,
+                                                    android.graphics.Color.parseColor("#22C55E"),
+                                                    android.graphics.Color.WHITE,
+                                                    16
+                                                )
+                                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                                                title = "Punto de inicio del TucTuc"
+                                                snippet = "Aceptación del viaje"
+                                            }
+                                            overlays.add(startMarker)
+                                            startMarker.showInfoWindow()
+
+                                            // Marcador de Fin (TucTuc al finalizar - Rojo)
+                                            if (geoPoints.size > 1) {
+                                                val endPt = geoPoints.last()
+                                                val endFare = trip.fare?.let { "Q" + String.format(Locale.US, "%.2f", it) } ?: "-"
+                                                val endMarker = Marker(this).apply {
+                                                    position = endPt
+                                                    icon = createCircleMarkerDrawable(
+                                                        ctx,
+                                                        android.graphics.Color.parseColor("#EF4444"),
+                                                        android.graphics.Color.WHITE,
+                                                        16
+                                                    )
+                                                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                                                    title = "Fin del viaje"
+                                                    snippet = "Cobro: $endFare"
+                                                }
+                                                overlays.add(endMarker)
+                                            }
+                                        }
+
+                                        // 2. Marcador de Recogida del Pasajero (Amarillo con borde oscuro)
+                                        if (hasPassengerLocation) {
+                                            val pPt = GeoPoint(trip.passengerLat!!, trip.passengerLon!!)
+                                            allBoundsPoints.add(pPt)
+
+                                            val passengerMarker = Marker(this).apply {
+                                                position = pPt
+                                                icon = createCircleMarkerDrawable(
+                                                    ctx,
+                                                    android.graphics.Color.parseColor("#F9D423"),
+                                                    android.graphics.Color.parseColor("#0F172A"),
+                                                    18
+                                                )
+                                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                                                title = "Punto de recogida"
+                                                snippet = trip.resolvedPassengerName.ifBlank { "Pasajero" }
+                                            }
+                                            overlays.add(passengerMarker)
+
+                                            if (!hasPoints) {
+                                                passengerMarker.showInfoWindow()
+                                            }
+                                        }
+
+                                        // 3. Ajuste de zoom y encuadre (Auto-fit Bounds)
+                                        if (allBoundsPoints.isNotEmpty()) {
+                                            var minLat = allBoundsPoints.first().latitude
+                                            var maxLat = allBoundsPoints.first().latitude
+                                            var minLon = allBoundsPoints.first().longitude
+                                            var maxLon = allBoundsPoints.first().longitude
+
+                                            for (pt in allBoundsPoints) {
+                                                if (pt.latitude < minLat) minLat = pt.latitude
+                                                if (pt.latitude > maxLat) maxLat = pt.latitude
+                                                if (pt.longitude < minLon) minLon = pt.longitude
+                                                if (pt.longitude > maxLon) maxLon = pt.longitude
+                                            }
+
+                                            if (minLat == maxLat && minLon == maxLon) {
+                                                controller.setZoom(15.5)
+                                                controller.setCenter(GeoPoint(minLat, minLon))
+                                            } else {
+                                                val latMargin = (maxLat - minLat).coerceAtLeast(0.001) * 0.25
+                                                val lonMargin = (maxLon - minLon).coerceAtLeast(0.001) * 0.25
+                                                val boundingBox = org.osmdroid.util.BoundingBox(
+                                                    maxLat + latMargin,
+                                                    maxLon + lonMargin,
+                                                    minLat - latMargin,
+                                                    minLon - lonMargin
+                                                )
+                                                post {
+                                                    zoomToBoundingBox(boundingBox, true, 80)
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(10.dp))
+
+                // Barra de Leyenda de Marcadores (Identica al footer explicativo del dashboard)
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "${routePoints.size} Puntos GPS registrados", color = Color(0xFF94A3B8), fontSize = 12.sp)
-                    val fare = trip.fare?.let { "Q ${String.format(Locale.US, "%.0f", it)}" } ?: ""
-                    Text(text = "Tarifa: $fare", color = Color(0xFFF59E0B), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    LegendItem(color = Color(0xFF22C55E), text = "Inicio")
+                    LegendItem(color = Color(0xFFEF4444), text = "Fin")
+                    LegendItem(color = Color(0xFFF9D423), text = "Recogida")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .width(14.dp)
+                                .height(3.dp)
+                                .background(Color(0xFFF9D423), RoundedCornerShape(2.dp))
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(text = "Ruta GPS", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun LegendItem(color: Color, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(9.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(text = text, fontSize = 11.sp, color = Color(0xFF94A3B8))
     }
 }
 

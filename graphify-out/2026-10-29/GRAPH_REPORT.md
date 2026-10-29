@@ -1,16 +1,16 @@
 # Graph Report - tuctucmap  (2026-10-29)
 
 ## Corpus Check
-- 114 files · ~119,955 words
+- 114 files · ~120,265 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1064 nodes · 1757 edges · 86 communities (64 shown, 22 thin omitted)
+- 1064 nodes · 1757 edges · 86 communities (62 shown, 24 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `35f5e575`
+- Built from commit: `c659a396`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -47,7 +47,7 @@
 - TucTucMap Dashboard — Plan de Implementación
 - ShellComponent
 - BusinessConfigComponent
-- Flow
+- .observeDriverProfile
 - TucTucMap Dashboard — Tasks
 - TuctucMapDashboard
 - AGENTS.md
@@ -63,13 +63,13 @@
 - gradlew
 - ExampleInstrumentedTest
 - ExampleUnitTest
-- DataSnapshot
+- DatabaseError
 - rules/graphify.md
 - environment.example.ts
 - public.app_config
 - public.subscription_payment_requests
 - workflows/graphify.md
-- Result
+- DataSnapshot
 - scripts
 - Intent
 - tuctucMapDashboard/package.json
@@ -80,7 +80,7 @@
 - @angular/platform-browser
 - rxjs
 - tslib
-- @supabase/supabase-js
+- @angular/material
 - AdminTripsScreen.kt
 - DriverHomeScreen
 - MainActivity.kt
@@ -121,7 +121,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (86 total, 22 thin omitted)
+## Communities (86 total, 24 thin omitted)
 
 ### Community 0 - "SupabaseService"
 Cohesion: 0.05
@@ -165,7 +165,7 @@ Nodes (29): Configuración del Proyecto y Dependencias, Manifiesto de Android y 
 
 ### Community 10 - "dependencies"
 Cohesion: 0.13
-Nodes (15): @angular/animations, @angular/compiler, @angular/forms, @angular/material, @angular/router, leaflet, dependencies, @angular/animations (+7 more)
+Nodes (15): @angular/animations, @angular/compiler, @angular/forms, @angular/router, leaflet, dependencies, @angular/animations, @angular/compiler (+7 more)
 
 ### Community 11 - "devDependencies"
 Cohesion: 0.13
@@ -196,8 +196,8 @@ Cohesion: 0.11
 Nodes (18): AdminHome, AdminPassengers, AdminTrips, DriverHome, DriverLogin, DriverPending, DriverProfile, DriverRegister (+10 more)
 
 ### Community 18 - "SupabaseRepository"
-Cohesion: 0.10
-Nodes (10): kotlinx, PaymentRequestInsertDto, SupabaseRepository, TripSummaryDto, UpdateDriverProfileDto, UpdatePassengerProfileDto, DriverLoginScreen(), DriverPendingScreen() (+2 more)
+Cohesion: 0.09
+Nodes (13): kotlinx, CompletedTripResponseDto, DriverTodaySummary, Result, PaymentRequestInsertDto, SupabaseRepository, TripSummaryDto, UpdateDriverProfileDto (+5 more)
 
 ### Community 19 - "db.sql"
 Cohesion: 0.14
@@ -243,10 +243,6 @@ Nodes (9): 1. Stack Tecnológico & Dependencias, 2. Convenciones Críticas de UI
 Cohesion: 0.25
 Nodes (7): Decisiones Técnicas, Estructura de Archivos a Crear/Modificar, Flujo de Datos, Módulos de Angular Material a Importar, Objetivo, TucTucMap Dashboard — Plan de Implementación, Verificación
 
-### Community 32 - "Flow"
-Cohesion: 0.33
-Nodes (3): AppConfig, Driver, Flow
-
 ### Community 33 - "TucTucMap Dashboard — Tasks"
 Cohesion: 0.25
 Nodes (7): App Wiring, Core & Config, Drivers Feature, Layout Shell, Styles, TucTucMap Dashboard — Tasks, Verification
@@ -272,8 +268,8 @@ Cohesion: 0.19
 Nodes (10): DriverHistoryPeriodFilter, CUSTOM_RANGE, TODAY, YESTERDAY, DriverTripCard(), DriverTripHistoryScreen(), SelectableDates, Context (+2 more)
 
 ### Community 39 - "TripInfo"
-Cohesion: 0.22
-Nodes (4): CompletedTripDto, RoutePoint, ValueEventListener, TripInfo
+Cohesion: 0.39
+Nodes (3): CompletedTripDto, RoutePoint, TripInfo
 
 ### Community 41 - "Skill: Angular Dashboard (TucTuc Map)"
 Cohesion: 0.33
@@ -295,13 +291,9 @@ Nodes (5): 1. Estructura del Monorepo y Límites de Subsistemas, 2. Skills de Tr
 Cohesion: 0.83
 Nodes (3): gradlew script, die(), warn()
 
-### Community 49 - "DataSnapshot"
+### Community 49 - "DatabaseError"
 Cohesion: 0.13
-Nodes (7): DatabaseError, DataSnapshot, ValueEventListener, ValueEventListener, ValueEventListener, com, ValueEventListener
-
-### Community 62 - "Result"
-Cohesion: 0.16
-Nodes (3): CompletedTripResponseDto, DriverTodaySummary, Result
+Nodes (7): DatabaseError, Flow, ValueEventListener, ValueEventListener, ValueEventListener, ValueEventListener, ValueEventListener
 
 ### Community 63 - "scripts"
 Cohesion: 0.33
@@ -350,12 +342,12 @@ Nodes (4): Driver, parseIsoTimestamp(), DriverProfileScreen(), formatExpiryDate(
 ## Knowledge Gaps
 - **308 isolated node(s):** `{ Client }`, `{ dbConfig }`, `public.app_config`, `fs`, `path` (+303 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **22 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **24 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `SupabaseRepository` connect `SupabaseRepository` to `DriverReportsScreen.kt`, `PassengerMapScreen.kt`, `SupabaseRepository.kt`, `LocationTrackingService`, `AppDrawer.kt`, `Flow`, `DriverTripHistoryScreen.kt`, `TripInfo`, `AppNavigation`, `AdminRepository`, `DataSnapshot`, `Result`, `Intent`, `AdminFleetMapTab.kt`, `MapView`, `AdminTripsScreen.kt`, `DriverHomeScreen`, `MainActivity.kt`, `DriverLocation`, `Color`, `parseIsoTimestamp`?**
+- **Why does `SupabaseRepository` connect `SupabaseRepository` to `DriverReportsScreen.kt`, `PassengerMapScreen.kt`, `SupabaseRepository.kt`, `LocationTrackingService`, `AppDrawer.kt`, `.observeDriverProfile`, `DriverTripHistoryScreen.kt`, `TripInfo`, `AppNavigation`, `AdminRepository`, `DatabaseError`, `DataSnapshot`, `Intent`, `AdminFleetMapTab.kt`, `MapView`, `AdminTripsScreen.kt`, `DriverHomeScreen`, `MainActivity.kt`, `DriverLocation`, `Color`, `parseIsoTimestamp`?**
   _High betweenness centrality (0.111) - this node is a cross-community bridge._
 - **Why does `LocationTrackingService` connect `LocationTrackingService` to `Intent`, `SupabaseRepository`, `MapView`?**
   _High betweenness centrality (0.031) - this node is a cross-community bridge._
