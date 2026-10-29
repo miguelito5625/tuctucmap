@@ -54,10 +54,12 @@ class SupabaseRepository {
                             val offset = snapshot.getValue(Long::class.java) ?: 0L
                             ServerClock.offsetMillis = offset
                         }
+
                         override fun onCancelled(error: DatabaseError) {}
                     })
                     firebaseClockListenerInitialized = true
-                } catch (_: Exception) {}
+                } catch (_: Exception) {
+                }
             }
         }
 
@@ -199,7 +201,7 @@ class SupabaseRepository {
                 this.email = email
                 this.password = contrasena
             }
-            
+
             var uid = currentUserUid
             if (uid == null) {
                 try {
@@ -208,11 +210,12 @@ class SupabaseRepository {
                         this.password = contrasena
                     }
                     uid = currentUserUid
-                } catch (e: Exception) { }
+                } catch (e: Exception) {
+                }
             }
-            
+
             if (uid == null) return Result.failure(Exception("Por favor desactiva 'Confirm email' en Supabase (Authentication -> Providers -> Email)"))
-            
+
             // El trigger trg_profile_insert_security asigna los 7 días de prueba con la hora real del servidor
             // y el trigger trg_create_initial_driver_trial crea automáticamente el registro en driver_subscriptions.
             val profile = mutableMapOf(
@@ -272,7 +275,7 @@ class SupabaseRepository {
                 this.email = email
                 this.password = contrasena
             }
-            
+
             var uid = currentUserUid
             if (uid == null) {
                 try {
@@ -281,11 +284,12 @@ class SupabaseRepository {
                         this.password = contrasena
                     }
                     uid = currentUserUid
-                } catch (e: Exception) { }
+                } catch (e: Exception) {
+                }
             }
-            
+
             if (uid == null) return Result.failure(Exception("Por favor desactiva 'Confirm email' en Supabase (Authentication -> Providers -> Email)"))
-            
+
             val profile = mapOf(
                 "id" to uid,
                 "email" to email,
@@ -386,7 +390,8 @@ class SupabaseRepository {
                     "numeroUnidad" to unitNumber.trim()
                 )
                 locationRef.updateChildren(updates)
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -409,7 +414,8 @@ class SupabaseRepository {
         if (uid.isBlank()) return
         try {
             Firebase.database.getReference("driver_locations").child(uid).onDisconnect().removeValue()
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+        }
     }
 
     suspend fun updateLocation(
@@ -899,7 +905,7 @@ class SupabaseRepository {
             val tripsRef = Firebase.database.getReference("trips")
             val newTripRef = tripsRef.push()
             val tripId = newTripRef.key ?: java.util.UUID.randomUUID().toString()
-            
+
             val trip = TripInfo(
                 tripId = tripId,
                 passengerId = uid,
@@ -986,16 +992,17 @@ class SupabaseRepository {
                             // TTL de 60 segundos usando hora sincronizada del servidor
                             if (now - trip.timestamp <= 60000L) {
                                 // Geocerca: filtrar solicitudes broadcast lejanas (> maxSearchRadiusKm)
-                                val withinRadius = if (isDirectForMe || driverCoord == null || (driverCoord.first == 0.0 && driverCoord.second == 0.0)) {
-                                    true
-                                } else {
-                                    haversineMeters(
-                                        driverCoord.first,
-                                        driverCoord.second,
-                                        trip.passengerLat,
-                                        trip.passengerLon
-                                    ) <= maxRadiusMeters
-                                }
+                                val withinRadius =
+                                    if (isDirectForMe || driverCoord == null || (driverCoord.first == 0.0 && driverCoord.second == 0.0)) {
+                                        true
+                                    } else {
+                                        haversineMeters(
+                                            driverCoord.first,
+                                            driverCoord.second,
+                                            trip.passengerLat,
+                                            trip.passengerLon
+                                        ) <= maxRadiusMeters
+                                    }
                                 if (withinRadius) {
                                     pendingTrips.add(trip)
                                 }
@@ -1010,6 +1017,7 @@ class SupabaseRepository {
                 pendingTrips.sortByDescending { it.timestamp }
                 trySend(pendingTrips)
             }
+
             override fun onCancelled(error: DatabaseError) {
                 error.toException().printStackTrace()
             }
@@ -1026,6 +1034,7 @@ class SupabaseRepository {
                 val trip = snapshot.getValue(TripInfo::class.java)
                 trySend(trip)
             }
+
             override fun onCancelled(error: DatabaseError) {
                 error.toException().printStackTrace()
             }
@@ -1048,6 +1057,7 @@ class SupabaseRepository {
                 }
                 trySend(active)
             }
+
             override fun onCancelled(error: DatabaseError) {
                 error.toException().printStackTrace()
             }
@@ -1217,10 +1227,10 @@ class SupabaseRepository {
         // Usar un nombre de canal único para evitar que devuelva un canal cerrado/desuscrito al cambiar de pantalla
         val uniqueChannelId = "profile_${uid}_${java.util.UUID.randomUUID()}"
         val channel = supabase.channel(uniqueChannelId)
-        val flow = channel.postgresChangeFlow<PostgresAction>("public") { 
+        val flow = channel.postgresChangeFlow<PostgresAction>("public") {
             table = "profiles"
         }
-        
+
         launch {
             syncServerTimeAndExpire()
             getAppConfig()
@@ -1230,28 +1240,30 @@ class SupabaseRepository {
                     filter { eq("id", uid) }
                 }.decodeSingleOrNull<Driver>()
                 trySend(initialProfile)
-            } catch (e: Exception) { }
-            
+            } catch (e: Exception) {
+            }
+
             flow.collect {
                 try {
                     val profile = supabase.postgrest["profiles"].select {
                         filter { eq("id", uid) }
                     }.decodeSingleOrNull<Driver>()
                     trySend(profile)
-                } catch(e: Exception) { }
+                } catch (e: Exception) {
+                }
             }
         }
-        
+
         awaitClose { launch { channel.unsubscribe() } }
     }
 
     fun observePassengerProfile(uid: String): Flow<Passenger?> = callbackFlow {
         val uniqueChannelId = "passenger_profile_${uid}_${java.util.UUID.randomUUID()}"
         val channel = supabase.channel(uniqueChannelId)
-        val flow = channel.postgresChangeFlow<PostgresAction>("public") { 
+        val flow = channel.postgresChangeFlow<PostgresAction>("public") {
             table = "profiles"
         }
-        
+
         launch {
             getAppConfig()
             channel.subscribe()
@@ -1260,18 +1272,20 @@ class SupabaseRepository {
                     filter { eq("id", uid) }
                 }.decodeSingleOrNull<Passenger>()
                 trySend(initialProfile)
-            } catch (e: Exception) { }
-            
+            } catch (e: Exception) {
+            }
+
             flow.collect {
                 try {
                     val profile = supabase.postgrest["profiles"].select {
                         filter { eq("id", uid) }
                     }.decodeSingleOrNull<Passenger>()
                     trySend(profile)
-                } catch(e: Exception) { }
+                } catch (e: Exception) {
+                }
             }
         }
-        
+
         awaitClose { launch { channel.unsubscribe() } }
     }
 }
