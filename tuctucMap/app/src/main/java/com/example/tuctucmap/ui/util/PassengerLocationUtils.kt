@@ -16,9 +16,14 @@ import kotlin.math.sin
  */
 enum class PassengerAvatarType {
     /**
-     * Avatar Quetzal (Activo por defecto): Ave nacional de Guatemala en versión animada,
-     * moviendo alegremente su alita en saludo continuo 👋 al usuario con ondas de saludo
-     * cian y pulso de radar GPS en sus patitas.
+     * Avatar Quetzal Animado por IA (Activo por defecto): Extraído del video gemini_generated_video_b5b10505.mp4
+     * con ciclo completo de 5 segundos (0-2s standby/respiración/parpadeo, 2-5s saludo alegre con el ala y sonrisa),
+     * optimizado en Sprite Sheet ultraligero a 8 FPS con cero consumo de batería y máxima nitidez.
+     */
+    QUETZAL_AI,
+
+    /**
+     * Avatar Quetzal Procedural: Ilustración fija con balanceo continuo y ondas de saludo cian.
      */
     QUETZAL,
 
@@ -32,11 +37,13 @@ enum class PassengerAvatarType {
 /**
  * ─────────────────────────────────────────────────────────────────────────────
  * CONFIGURACIÓN RÁPIDA DE AVATAR:
- * Para revertir o cambiar fácilmente al avatar anterior, simplemente cambia este
- * valor a [PassengerAvatarType.CLASSIC_HUMAN].
+ * Para cambiar entre los diferentes avatares (todos preservados y disponibles):
+ * - [PassengerAvatarType.QUETZAL_AI]       -> Animación de video IA (Standby + Saludo)
+ * - [PassengerAvatarType.QUETZAL]          -> Quetzal procedural con balanceo
+ * - [PassengerAvatarType.CLASSIC_HUMAN]    -> Humano clásico azul y amarillo
  * ─────────────────────────────────────────────────────────────────────────────
  */
-var ACTIVE_PASSENGER_AVATAR: PassengerAvatarType = PassengerAvatarType.QUETZAL
+var ACTIVE_PASSENGER_AVATAR: PassengerAvatarType = PassengerAvatarType.QUETZAL_AI
 
 /**
  * Overlay de ubicación del pasajero con icono animado saludando continuamente.
@@ -55,6 +62,7 @@ class PassengerLocationOverlay(
 
     // Carga de fotogramas según el avatar configurado
     private val frames: List<Bitmap> = when (avatarType) {
+        PassengerAvatarType.QUETZAL_AI -> QuetzalAiCharacterRenderer.generateFrames(context, sizeDp = 72)
         PassengerAvatarType.QUETZAL -> QuetzalCharacterRenderer.generateWavingFrames(context, frameCount = 8, sizeDp = 72)
         PassengerAvatarType.CLASSIC_HUMAN -> PassengerCharacterRenderer.generateWavingFrames(context, frameCount = 8, sizeDp = 66)
     }
@@ -91,8 +99,9 @@ class PassengerLocationOverlay(
             ripplePaint
         )
 
-        // 3. Seleccionar frame según el tiempo actual (8 frames a ~100ms = ciclo de 800ms)
-        val frameIndex = ((now / 100L) % frames.size).toInt()
+        // 3. Seleccionar frame según el tiempo actual (8 FPS = 125ms por frame para ciclo de 5s en IA)
+        val frameInterval = if (avatarType == PassengerAvatarType.QUETZAL_AI) 125L else 100L
+        val frameIndex = ((now / frameInterval) % frames.size).toInt()
         val frameBitmap = frames[frameIndex]
 
         if (!frameBitmap.isRecycled) {
@@ -118,6 +127,70 @@ class PassengerLocationOverlay(
         super.onDetach(mapView)
         // Nota: Los fotogramas se mantienen en la caché en memoria del objeto Renderer
         // para evitar bloqueos del RenderThread o excepciones por uso de bitmaps reciclados.
+    }
+}
+
+/**
+ * Generador de fotogramas para el Quetzal Animado por IA (a partir de gemini_generated_video_b5b10505.mp4).
+ * Carga el Sprite Sheet ultraligero (ic_quetzal_ai_sheet.webp), extrae y escala los 40 fotogramas
+ * directamente a la resolución nativa del dispositivo (sizeDp) y libera el atlas original.
+ * Incluye caché estática en memoria para cero impacto en la UI durante recomposiciones.
+ */
+object QuetzalAiCharacterRenderer {
+
+    @Volatile
+    private var cachedFrames: List<Bitmap>? = null
+
+    fun generateFrames(context: Context, sizeDp: Int = 72): List<Bitmap> {
+        cachedFrames?.let { return it }
+
+        synchronized(this) {
+            cachedFrames?.let { return it }
+
+            val density = context.resources.displayMetrics.density
+            val sizePx = (sizeDp * density).toInt()
+
+            val decodeOptions = BitmapFactory.Options().apply {
+                inScaled = false
+                inPreferredConfig = Bitmap.Config.ARGB_8888
+            }
+            val sheetBitmap = BitmapFactory.decodeResource(
+                context.resources,
+                R.drawable.ic_quetzal_ai_sheet,
+                decodeOptions
+            ) ?: return QuetzalCharacterRenderer.generateWavingFrames(context, frameCount = 8, sizeDp = sizeDp)
+
+            val cols = 5
+            val rows = 8
+            val totalFrames = 40
+            val cellW = sheetBitmap.width / cols
+            val cellH = sheetBitmap.height / rows
+
+            val frames = (0 until totalFrames).map { i ->
+                val col = i % cols
+                val row = i / cols
+                val srcX = col * cellW
+                val srcY = row * cellH
+
+                val cellBitmap = Bitmap.createBitmap(sheetBitmap, srcX, srcY, cellW, cellH)
+                if (cellW != sizePx || cellH != sizePx) {
+                    val scaled = Bitmap.createScaledBitmap(cellBitmap, sizePx, sizePx, true)
+                    if (scaled != cellBitmap) {
+                        cellBitmap.recycle()
+                    }
+                    scaled
+                } else {
+                    cellBitmap
+                }
+            }
+
+            if (!sheetBitmap.isRecycled) {
+                sheetBitmap.recycle()
+            }
+
+            cachedFrames = frames
+            return frames
+        }
     }
 }
 
