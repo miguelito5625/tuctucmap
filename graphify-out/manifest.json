@@ -474,9 +474,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/PassengerLocationUtils.kt": {
-    "mtime": 1793669590.4806116,
-    "seen": 1793669641.4273758,
-    "ast_hash": "a1d534527fb6cfd726de12b0a7667d36",
+    "mtime": 1793670144.2909796,
+    "seen": 1793670214.1189117,
+    "ast_hash": "fdce754fd8b81ad9c920e4cc413b4fb8",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/test/java/com/example/tuctucmap/ExampleUnitTest.kt": {
@@ -741,12 +741,6 @@
     "mtime": 1793641672.4629996,
     "seen": 1793669641.427401,
     "ast_hash": "e3eaa4e7ae201655f9bd20bbb301f387",
-    "semantic_hash": ""
-  },
-  "screenshots/descripcion_ASO_Play_Console.md": {
-    "mtime": 1793667472.662649,
-    "seen": 1793669641.4274023,
-    "ast_hash": "853753c08126d98971ca327c899298c2",
     "semantic_hash": ""
   }
 }

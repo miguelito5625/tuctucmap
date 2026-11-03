@@ -60,11 +60,11 @@ class PassengerLocationOverlay(
 
     private val density = context.resources.displayMetrics.density
 
-    // Carga de fotogramas según el avatar configurado
+    // Carga de fotogramas según el avatar configurado (proporcionado y equilibrado con el marcador de TucTuc de 48dp)
     private val frames: List<Bitmap> = when (avatarType) {
-        PassengerAvatarType.QUETZAL_AI -> QuetzalAiCharacterRenderer.generateFrames(context, sizeDp = 72)
-        PassengerAvatarType.QUETZAL -> QuetzalCharacterRenderer.generateWavingFrames(context, frameCount = 8, sizeDp = 72)
-        PassengerAvatarType.CLASSIC_HUMAN -> PassengerCharacterRenderer.generateWavingFrames(context, frameCount = 8, sizeDp = 66)
+        PassengerAvatarType.QUETZAL_AI -> QuetzalAiCharacterRenderer.generateFrames(context, sizeDp = 46)
+        PassengerAvatarType.QUETZAL -> QuetzalCharacterRenderer.generateWavingFrames(context, frameCount = 8, sizeDp = 48)
+        PassengerAvatarType.CLASSIC_HUMAN -> PassengerCharacterRenderer.generateWavingFrames(context, frameCount = 8, sizeDp = 46)
     }
 
     private val screenPoint = Point()
@@ -85,10 +85,10 @@ class PassengerLocationOverlay(
         val px = screenPoint.x.toFloat()
         val py = screenPoint.y.toFloat()
 
-        // 2. Onda expansiva de pulso bajo los pies (efecto señal GPS)
+        // 2. Onda expansiva de pulso bajo los pies (efecto señal GPS proporcional al avatar)
         val now = SystemClock.uptimeMillis()
         val rippleProgress = (now % 1500L) / 1500f
-        val rippleRadius = (10f + rippleProgress * 26f) * density
+        val rippleRadius = (8f + rippleProgress * 18f) * density
         val rippleAlpha = ((1f - rippleProgress) * 130).toInt().coerceIn(0, 255)
         ripplePaint.color = Color.argb(rippleAlpha, 0, 229, 255) // Cian brillante
         canvas.drawOval(
@@ -140,12 +140,20 @@ object QuetzalAiCharacterRenderer {
 
     @Volatile
     private var cachedFrames: List<Bitmap>? = null
+    @Volatile
+    private var cachedSizeDp: Int = 0
 
-    fun generateFrames(context: Context, sizeDp: Int = 72): List<Bitmap> {
-        cachedFrames?.let { return it }
+    fun generateFrames(context: Context, sizeDp: Int = 46): List<Bitmap> {
+        val currentFrames = cachedFrames
+        if (currentFrames != null && cachedSizeDp == sizeDp) {
+            return currentFrames
+        }
 
         synchronized(this) {
-            cachedFrames?.let { return it }
+            val synchedFrames = cachedFrames
+            if (synchedFrames != null && cachedSizeDp == sizeDp) {
+                return synchedFrames
+            }
 
             val density = context.resources.displayMetrics.density
             val sizePx = (sizeDp * density).toInt()
@@ -188,6 +196,7 @@ object QuetzalAiCharacterRenderer {
                 sheetBitmap.recycle()
             }
 
+            cachedSizeDp = sizeDp
             cachedFrames = frames
             return frames
         }
