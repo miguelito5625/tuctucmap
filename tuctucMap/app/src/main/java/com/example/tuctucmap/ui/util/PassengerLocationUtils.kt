@@ -60,11 +60,11 @@ class PassengerLocationOverlay(
 
     private val density = context.resources.displayMetrics.density
 
-    // Carga de fotogramas según el avatar configurado (proporcionado y equilibrado con el marcador de TucTuc de 48dp)
+    // Carga de fotogramas según el avatar configurado (+20% tamaño balanceado con marcador de conductores)
     private val frames: List<Bitmap> = when (avatarType) {
-        PassengerAvatarType.QUETZAL_AI -> QuetzalAiCharacterRenderer.generateFrames(context, sizeDp = 46)
-        PassengerAvatarType.QUETZAL -> QuetzalCharacterRenderer.generateWavingFrames(context, frameCount = 8, sizeDp = 48)
-        PassengerAvatarType.CLASSIC_HUMAN -> PassengerCharacterRenderer.generateWavingFrames(context, frameCount = 8, sizeDp = 46)
+        PassengerAvatarType.QUETZAL_AI -> QuetzalAiCharacterRenderer.generateFrames(context, sizeDp = 55)
+        PassengerAvatarType.QUETZAL -> QuetzalCharacterRenderer.generateWavingFrames(context, frameCount = 8, sizeDp = 58)
+        PassengerAvatarType.CLASSIC_HUMAN -> PassengerCharacterRenderer.generateWavingFrames(context, frameCount = 8, sizeDp = 55)
     }
 
     private val screenPoint = Point()
@@ -73,7 +73,7 @@ class PassengerLocationOverlay(
     // Pintura para el pulso de radar bajo los pies
     private val ripplePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 2.2f * density
+        strokeWidth = 2.4f * density
     }
 
     override fun drawMyLocation(canvas: Canvas, pj: org.osmdroid.views.Projection, lastFix: android.location.Location) {
@@ -88,7 +88,7 @@ class PassengerLocationOverlay(
         // 2. Onda expansiva de pulso bajo los pies (efecto señal GPS proporcional al avatar)
         val now = SystemClock.uptimeMillis()
         val rippleProgress = (now % 1500L) / 1500f
-        val rippleRadius = (8f + rippleProgress * 18f) * density
+        val rippleRadius = (10f + rippleProgress * 22f) * density
         val rippleAlpha = ((1f - rippleProgress) * 130).toInt().coerceIn(0, 255)
         ripplePaint.color = Color.argb(rippleAlpha, 0, 229, 255) // Cian brillante
         canvas.drawOval(
@@ -143,7 +143,7 @@ object QuetzalAiCharacterRenderer {
     @Volatile
     private var cachedSizeDp: Int = 0
 
-    fun generateFrames(context: Context, sizeDp: Int = 46): List<Bitmap> {
+    fun generateFrames(context: Context, sizeDp: Int = 55): List<Bitmap> {
         val currentFrames = cachedFrames
         if (currentFrames != null && cachedSizeDp == sizeDp) {
             return currentFrames

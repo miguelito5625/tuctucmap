@@ -46,7 +46,7 @@ object MarkerIconUtils {
         synchronized(this) {
             cachedActiveBitmap?.let { if (!it.isRecycled) return it }
             val density = context.resources.displayMetrics.density
-            val targetSizePx = (48f * density).roundToInt().coerceIn(64, 192)
+            val targetSizePx = (58f * density).roundToInt().coerceIn(70, 230)
             val options = BitmapFactory.Options().apply {
                 inScaled = false
                 inPreferredConfig = Bitmap.Config.ARGB_8888
@@ -115,8 +115,8 @@ object MarkerIconUtils {
         val pickupBmp = cachedPassengerPickupBitmap?.takeIf { !it.isRecycled } ?: synchronized(this) {
             cachedPassengerPickupBitmap?.takeIf { !it.isRecycled } ?: run {
                 val density = context.resources.displayMetrics.density
-                val width = (48 * density).toInt().coerceAtLeast(48)
-                val height = (58 * density).toInt().coerceAtLeast(58)
+                val width = (58 * density).toInt().coerceAtLeast(58)
+                val height = (70 * density).toInt().coerceAtLeast(70)
                 val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
                 val canvas = Canvas(bitmap)
 
