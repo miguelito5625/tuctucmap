@@ -452,14 +452,14 @@ fun AppNavigation(
         }
         is Screen.Settings, is Screen.Information -> {
             SettingsScreen(
+                repository = repository,
                 onBack = {
                     if (backStack.size > 1) {
                         backStack.removeAt(backStack.lastIndex)
                     } else {
                         navigate(Screen.PassengerMap, clearStack = true)
                     }
-                },
-                adminWhatsappPhone = SupabaseRepository.cachedAppConfig.adminWhatsappPhone
+                }
             )
         }
         is Screen.AdminHome -> {

@@ -24,9 +24,9 @@ object ServerClock {
 data class AppConfig(
     val id: String = "default",
     @SerialName("admin_whatsapp_phone")
-    val adminWhatsappPhone: String = "50230000000",
+    val adminWhatsappPhone: String = "50255801894",
     @SerialName("admin_whatsapp")
-    val adminWhatsapp: String = "50230000000",
+    val adminWhatsapp: String = "50255801894",
     @SerialName("banrural_account")
     val banruralAccount: String = "3402-0987-65",
     @SerialName("bank_1_name")

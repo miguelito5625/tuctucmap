@@ -18,8 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,16 +28,28 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.ui.util.AppShareUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    repository: SupabaseRepository,
     onBack: () -> Unit,
-    adminWhatsappPhone: String = "50230000000",
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var appConfig by remember { mutableStateOf(SupabaseRepository.cachedAppConfig) }
+
+    // Sincronizar dinámicamente la configuración oficial de la empresa desde la base de datos Supabase
+    LaunchedEffect(Unit) {
+        try {
+            val fetchedConfig = repository.getAppConfig(force = true)
+            appConfig = fetchedConfig
+        } catch (e: Exception) {
+            android.util.Log.e("SettingsScreen", "Error al cargar appConfig desde Supabase: ${e.message}")
+        }
+    }
     val versionName = remember(context) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -370,7 +381,8 @@ fun SettingsScreen(
 
                         OutlinedButton(
                             onClick = {
-                                openWhatsAppSupport(context, adminWhatsappPhone)
+                                val targetPhone = appConfig.adminWhatsappPhone.ifBlank { appConfig.adminWhatsapp }
+                                openWhatsAppSupport(context, targetPhone)
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -425,7 +437,7 @@ fun SettingsScreen(
 
 private fun openWhatsAppSupport(context: Context, rawPhone: String) {
     val cleanPhone = rawPhone.replace(Regex("[^0-9]"), "")
-    val defaultPhone = if (cleanPhone.isNotBlank()) cleanPhone else "50230000000"
+    val defaultPhone = if (cleanPhone.isNotBlank()) cleanPhone else "50255801894"
     val message = "¡Hola! Me comunico desde la app TucTuc Map para solicitar soporte o enviar una sugerencia."
     val waUrl = "https://api.whatsapp.com/send?phone=$defaultPhone&text=${Uri.encode(message)}"
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(waUrl)).apply {
