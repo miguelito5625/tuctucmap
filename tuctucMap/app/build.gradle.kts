@@ -122,6 +122,7 @@ dependencies {
     // OpenStreetMap & Location
     implementation(libs.osmdroid)
     implementation(libs.play.services.location)
+    implementation(libs.play.review.ktx)
 
     // Google Sign-In (Credential Manager)
     implementation(libs.play.services.auth)

@@ -773,6 +773,7 @@ fun DriverRouteToPassengerScreen(
                             isSubmittingFinish = false
                             showFinishTripDialog = false
                             Toast.makeText(context, "¡Viaje finalizado y registrado con éxito!", Toast.LENGTH_LONG).show()
+                            com.example.tuctucmap.ui.util.InAppReviewHelper.recordSuccessfulTripAndRequestReview(context)
                             onTripCompleted()
                         }
                     },

@@ -485,7 +485,7 @@ fun PassengerProfileScreen(
                         }
                     }
 
-                    // ── Card 3: Ajustes y Aplicación ─────────────────────────
+                    // ── Card 3: Información y Aplicación ─────────────────────
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(20.dp),
@@ -498,14 +498,14 @@ fun PassengerProfileScreen(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    imageVector = Icons.Default.Settings,
+                                    imageVector = Icons.Default.Info,
                                     contentDescription = null,
                                     tint = Color(0xFFF9D423),
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Ajustes de la Aplicación",
+                                    text = "Información de la Aplicación",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White

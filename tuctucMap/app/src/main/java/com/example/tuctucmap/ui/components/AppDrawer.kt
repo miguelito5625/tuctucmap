@@ -34,7 +34,7 @@ enum class PassengerDrawerItem {
     MAP,
     HISTORY,
     PROFILE,
-    SETTINGS
+    INFORMATION
 }
 
 enum class DriverDrawerItem {
@@ -44,7 +44,7 @@ enum class DriverDrawerItem {
     REPORTS,
     SUBSCRIPTIONS,
     PROFILE,
-    SETTINGS
+    INFORMATION
 }
 
 enum class AdminDrawerItem {
@@ -313,10 +313,10 @@ fun PassengerDrawerSheet(
                 }
 
                 DrawerNavigationItem(
-                    label = "Ajustes",
-                    icon = Icons.Default.Settings,
-                    isSelected = selectedItem == PassengerDrawerItem.SETTINGS,
-                    onClick = { onSelectItem(PassengerDrawerItem.SETTINGS) }
+                    label = "Información",
+                    icon = Icons.Default.Info,
+                    isSelected = selectedItem == PassengerDrawerItem.INFORMATION,
+                    onClick = { onSelectItem(PassengerDrawerItem.INFORMATION) }
                 )
 
                 DrawerNavigationItem(
@@ -655,10 +655,10 @@ fun DriverDrawerSheet(
                 )
 
                 DrawerNavigationItem(
-                    label = "Ajustes",
-                    icon = Icons.Default.Settings,
-                    isSelected = selectedItem == DriverDrawerItem.SETTINGS,
-                    onClick = { onSelectItem(DriverDrawerItem.SETTINGS) }
+                    label = "Información",
+                    icon = Icons.Default.Info,
+                    isSelected = selectedItem == DriverDrawerItem.INFORMATION,
+                    onClick = { onSelectItem(DriverDrawerItem.INFORMATION) }
                 )
 
                 DrawerNavigationItem(

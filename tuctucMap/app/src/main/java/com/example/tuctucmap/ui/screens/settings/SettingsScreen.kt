@@ -57,7 +57,7 @@ fun SettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Ajustes",
+                        text = "Información",
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )

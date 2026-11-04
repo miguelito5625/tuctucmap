@@ -402,7 +402,7 @@ fun DriverHomeScreen(
                         DriverDrawerItem.REPORTS -> onViewReports()
                         DriverDrawerItem.SUBSCRIPTIONS -> onViewSubscription()
                         DriverDrawerItem.PROFILE -> onViewProfile()
-                        DriverDrawerItem.SETTINGS -> onNavigateToSettings()
+                        DriverDrawerItem.INFORMATION -> onNavigateToSettings()
                     }
                 },
                 onShareApp = {
@@ -1835,6 +1835,7 @@ fun DriverHomeScreen(
                                             )
                                         }
                                         repository.deleteTrip(tid)
+                                        com.example.tuctucmap.ui.util.InAppReviewHelper.recordSuccessfulTripAndRequestReview(context)
                                     }
 
                                     LocationTrackingService.driverStatus.value = "disponible"

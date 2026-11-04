@@ -42,6 +42,7 @@ sealed class Screen {
     object DriverProfile : Screen()
     object DriverSubscription : Screen()
     object Settings : Screen()
+    object Information : Screen()
     // Admin
     object AdminHome : Screen()
     object AdminTrips : Screen()
@@ -449,7 +450,7 @@ fun AppNavigation(
                 }
             )
         }
-        is Screen.Settings -> {
+        is Screen.Settings, is Screen.Information -> {
             SettingsScreen(
                 onBack = {
                     if (backStack.size > 1) {

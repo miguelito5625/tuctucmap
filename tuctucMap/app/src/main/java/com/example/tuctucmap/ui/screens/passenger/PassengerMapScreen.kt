@@ -242,6 +242,9 @@ fun PassengerMapScreen(
         activeTripId?.let { tid ->
             repository.observeTrip(tid).collect { trip ->
                 if (trip == null || trip.status in listOf("completed", "cancelled", "timeout")) {
+                    if (trip?.status == "completed") {
+                        com.example.tuctucmap.ui.util.InAppReviewHelper.recordSuccessfulTripAndRequestReview(context)
+                    }
                     activeTrip = null
                     activeTripId = null
                     sharedPrefs.edit().remove("active_passenger_trip_id").apply()
@@ -448,7 +451,7 @@ fun PassengerMapScreen(
                         PassengerDrawerItem.HOME, PassengerDrawerItem.MAP -> { /* Ya en mapa */ }
                         PassengerDrawerItem.HISTORY -> onNavigateToPassengerHistory()
                         PassengerDrawerItem.PROFILE -> onNavigateToPassengerProfile()
-                        PassengerDrawerItem.SETTINGS -> onNavigateToSettings()
+                        PassengerDrawerItem.INFORMATION -> onNavigateToSettings()
                     }
                 },
                 onShareApp = {
