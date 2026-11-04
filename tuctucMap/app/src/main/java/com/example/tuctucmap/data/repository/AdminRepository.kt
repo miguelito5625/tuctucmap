@@ -1,5 +1,6 @@
 package com.example.tuctucmap.data.repository
 
+import android.util.Log
 import com.example.tuctucmap.data.model.*
 import com.example.tuctucmap.data.supabase
 import io.github.jan.supabase.auth.auth
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -526,34 +528,75 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
         }
     }
 
+    @Serializable
+    private data class UpdateAppConfigDto(
+        @SerialName("admin_whatsapp")
+        val adminWhatsapp: String,
+        @SerialName("admin_whatsapp_phone")
+        val adminWhatsappPhone: String,
+        @SerialName("bank_1_name")
+        val bank1Name: String,
+        @SerialName("bank_1_account")
+        val bank1Account: String,
+        @SerialName("banrural_account")
+        val banruralAccount: String,
+        @SerialName("bank_2_name")
+        val bank2Name: String,
+        @SerialName("bank_2_account")
+        val bank2Account: String,
+        @SerialName("bi_account")
+        val biAccount: String,
+        @SerialName("account_holder_name")
+        val accountHolderName: String,
+        @SerialName("currency_symbol")
+        val currencySymbol: String,
+        @SerialName("price_daily")
+        val priceDaily: Double,
+        @SerialName("price_weekly")
+        val priceWeekly: Double,
+        @SerialName("price_semanal")
+        val priceSemanal: Double,
+        @SerialName("price_quincenal")
+        val priceQuincenal: Double,
+        @SerialName("price_monthly")
+        val priceMonthly: Double,
+        @SerialName("price_mensual")
+        val priceMensual: Double,
+        @SerialName("search_radius_km")
+        val searchRadiusKm: Double,
+        @SerialName("max_search_radius_km")
+        val maxSearchRadiusKm: Double
+    )
+
     suspend fun updateAppConfig(config: AppConfig): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val payload = mapOf(
-                "admin_whatsapp" to config.adminWhatsapp,
-                "admin_whatsapp_phone" to config.adminWhatsapp,
-                "bank_1_name" to config.bank1Name,
-                "bank_1_account" to config.bank1Account,
-                "banrural_account" to config.bank1Account,
-                "bank_2_name" to config.bank2Name,
-                "bank_2_account" to config.bank2Account,
-                "bi_account" to config.bank2Account,
-                "account_holder_name" to config.accountHolderName,
-                "currency_symbol" to config.currencySymbol,
-                "price_daily" to config.priceDaily,
-                "price_weekly" to config.priceWeekly,
-                "price_semanal" to config.priceWeekly,
-                "price_quincenal" to config.priceQuincenal,
-                "price_monthly" to config.priceMonthly,
-                "price_mensual" to config.priceMonthly,
-                "search_radius_km" to config.searchRadiusKm,
-                "max_search_radius_km" to config.searchRadiusKm
+            val dto = UpdateAppConfigDto(
+                adminWhatsapp = config.adminWhatsapp,
+                adminWhatsappPhone = config.adminWhatsapp,
+                bank1Name = config.bank1Name,
+                bank1Account = config.bank1Account,
+                banruralAccount = config.bank1Account,
+                bank2Name = config.bank2Name,
+                bank2Account = config.bank2Account,
+                biAccount = config.bank2Account,
+                accountHolderName = config.accountHolderName,
+                currencySymbol = config.currencySymbol,
+                priceDaily = config.priceDaily,
+                priceWeekly = config.priceWeekly,
+                priceSemanal = config.priceWeekly,
+                priceQuincenal = config.priceQuincenal,
+                priceMonthly = config.priceMonthly,
+                priceMensual = config.priceMonthly,
+                searchRadiusKm = config.searchRadiusKm,
+                maxSearchRadiusKm = config.searchRadiusKm
             )
-            supabase.postgrest["app_config"].update(payload) {
+            supabase.postgrest["app_config"].update(dto) {
                 filter { eq("id", "default") }
             }
             supabaseRepo.getAppConfig(force = true)
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("AdminRepository", "Error actualizando app_config", e)
             Result.failure(e)
         }
     }

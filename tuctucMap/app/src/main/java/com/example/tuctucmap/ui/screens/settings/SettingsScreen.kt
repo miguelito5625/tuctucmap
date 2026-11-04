@@ -53,7 +53,10 @@ fun SettingsScreen(
     val versionName = remember(context) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0)).versionName ?: "1.1.0"
+                context.packageManager.getPackageInfo(
+                    context.packageName,
+                    PackageManager.PackageInfoFlags.of(0)
+                ).versionName ?: "1.1.0"
             } else {
                 @Suppress("DEPRECATION")
                 context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.1.0"
@@ -393,7 +396,11 @@ fun SettingsScreen(
                                 contentColor = Color(0xFF4CAF50)
                             )
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(
+                                Icons.AutoMirrored.Filled.Chat,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Contactar Soporte por WhatsApp",
@@ -437,7 +444,7 @@ fun SettingsScreen(
 
 private fun openWhatsAppSupport(context: Context, rawPhone: String) {
     val cleanPhone = rawPhone.replace(Regex("[^0-9]"), "")
-    val defaultPhone = if (cleanPhone.isNotBlank()) cleanPhone else "50255801894"
+    val defaultPhone = if (cleanPhone.isNotBlank()) cleanPhone else "50230000000"
     val message = "¡Hola! Me comunico desde la app TucTuc Map para solicitar soporte o enviar una sugerencia."
     val waUrl = "https://api.whatsapp.com/send?phone=$defaultPhone&text=${Uri.encode(message)}"
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(waUrl)).apply {

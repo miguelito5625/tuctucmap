@@ -247,6 +247,12 @@ fun AdminBusinessConfigTab(
                 onClick = {
                     isSaving = true
                     scope.launch {
+                        val pDaily = priceDaily.replace(',', '.').trim().toDoubleOrNull() ?: 10.0
+                        val pWeekly = priceWeekly.replace(',', '.').trim().toDoubleOrNull() ?: 25.0
+                        val pQuincenal = priceQuincenal.replace(',', '.').trim().toDoubleOrNull() ?: 45.0
+                        val pMonthly = priceMonthly.replace(',', '.').trim().toDoubleOrNull() ?: 80.0
+                        val pRadius = searchRadiusKm.replace(',', '.').trim().toDoubleOrNull() ?: 5.0
+
                         val newCfg = config.copy(
                             adminWhatsapp = whatsappPhone.trim(),
                             adminWhatsappPhone = whatsappPhone.trim(),
@@ -258,14 +264,14 @@ fun AdminBusinessConfigTab(
                             biAccount = bank2Account.trim(),
                             accountHolderName = accountHolder.trim(),
                             currencySymbol = currencySymbol.trim(),
-                            priceDaily = priceDaily.toDoubleOrNull() ?: 10.0,
-                            priceWeekly = priceWeekly.toDoubleOrNull() ?: 25.0,
-                            priceSemanal = priceWeekly.toDoubleOrNull() ?: 25.0,
-                            priceQuincenal = priceQuincenal.toDoubleOrNull() ?: 45.0,
-                            priceMonthly = priceMonthly.toDoubleOrNull() ?: 80.0,
-                            priceMensual = priceMonthly.toDoubleOrNull() ?: 80.0,
-                            searchRadiusKm = searchRadiusKm.toDoubleOrNull() ?: 5.0,
-                            maxSearchRadiusKm = searchRadiusKm.toDoubleOrNull() ?: 5.0
+                            priceDaily = pDaily,
+                            priceWeekly = pWeekly,
+                            priceSemanal = pWeekly,
+                            priceQuincenal = pQuincenal,
+                            priceMonthly = pMonthly,
+                            priceMensual = pMonthly,
+                            searchRadiusKm = pRadius,
+                            maxSearchRadiusKm = pRadius
                         )
                         val res = adminRepo.updateAppConfig(newCfg)
                         isSaving = false
@@ -273,7 +279,9 @@ fun AdminBusinessConfigTab(
                             Toast.makeText(context, "Configuración actualizada en vivo", Toast.LENGTH_LONG).show()
                             loadConfig()
                         } else {
-                            Toast.makeText(context, "Error al guardar configuración", Toast.LENGTH_SHORT).show()
+                            val errorMsg = res.exceptionOrNull()?.localizedMessage ?: "Error al guardar configuración"
+                            android.util.Log.e("AdminBusinessConfigTab", "Error guardando configuración comercial: $errorMsg", res.exceptionOrNull())
+                            Toast.makeText(context, "Error: $errorMsg", Toast.LENGTH_LONG).show()
                         }
                     }
                 },

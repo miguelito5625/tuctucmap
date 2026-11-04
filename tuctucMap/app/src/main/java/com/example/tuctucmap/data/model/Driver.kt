@@ -24,9 +24,9 @@ object ServerClock {
 data class AppConfig(
     val id: String = "default",
     @SerialName("admin_whatsapp_phone")
-    val adminWhatsappPhone: String = "50255801894",
+    val adminWhatsappPhone: String = "50230000000",
     @SerialName("admin_whatsapp")
-    val adminWhatsapp: String = "50255801894",
+    val adminWhatsapp: String = "50230000000",
     @SerialName("banrural_account")
     val banruralAccount: String = "3402-0987-65",
     @SerialName("bank_1_name")
@@ -206,7 +206,8 @@ fun parseIsoTimestamp(dateStr: String?): Long {
         } catch (_: Exception) {
             try {
                 parsedMs = java.time.OffsetDateTime.parse(dateStr).toInstant().toEpochMilli()
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
     }
 
@@ -219,7 +220,8 @@ fun parseIsoTimestamp(dateStr: String?): Long {
                     parsedMs = date.time
                     break
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
     }
 
