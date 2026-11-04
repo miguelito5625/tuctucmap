@@ -78,6 +78,7 @@ fun AdminDriversTab(
                 financialStats = statsRes.getOrDefault(AdminFinancialStats())
             }
             isLoading = false
+            adminRepo.refreshPendingCounts()
         }
     }
 

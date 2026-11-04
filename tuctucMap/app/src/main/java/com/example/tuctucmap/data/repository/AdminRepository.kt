@@ -10,6 +10,9 @@ import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
@@ -22,6 +25,9 @@ import java.util.*
 class AdminRepository(private val supabaseRepo: SupabaseRepository) {
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
+
+    private val _pendingCounts = MutableStateFlow(Pair(0, 0))
+    val pendingCounts: StateFlow<Pair<Int, Int>> = _pendingCounts.asStateFlow()
 
     val currentAdminUid: String?
         get() = supabase.auth.currentUserOrNull()?.id
@@ -65,6 +71,7 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
             supabase.postgrest["profiles"].update(payload) {
                 filter { eq("id", uid) }
             }
+            refreshPendingCounts()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -77,6 +84,7 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
             supabase.postgrest["profiles"].update(payload) {
                 filter { eq("id", uid) }
             }
+            refreshPendingCounts()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -96,6 +104,7 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
                     filter { eq("id", uid) }
                 }
             }
+            refreshPendingCounts()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -158,6 +167,7 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
             )
             supabase.postgrest["driver_subscriptions"].insert(subPayload)
 
+            refreshPendingCounts()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -266,6 +276,7 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
                     customEndDate = customEndDate
                 )
             )
+            refreshPendingCounts()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -284,6 +295,7 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
                     rejectionReason = reason
                 )
             )
+            refreshPendingCounts()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -601,29 +613,41 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
         }
     }
 
+    @Serializable
+    private data class PendingCountIdDto(val id: String = "")
+
     /**
-     * Emite los conteos pendientes (Conductores pendientes, Solicitudes de pago pendientes)
+     * Consulta Supabase y actualiza de inmediato el StateFlow de conteos pendientes
+     * (conductores pendientes, solicitudes de pago pendientes).
+     * Retorna el Pair(pendingDrivers, pendingRequests).
      */
-    fun observePendingCounts(): Flow<Pair<Int, Int>> = flow {
-        while (true) {
-            try {
-                val pendingDrivers = supabase.postgrest["profiles"].select {
-                    filter {
-                        eq("role", "driver")
-                        eq("approval_status", "pendiente")
-                    }
-                }.decodeList<AdminDriver>().size
+    suspend fun refreshPendingCounts(): Pair<Int, Int> = withContext(Dispatchers.IO) {
+        try {
+            val pendingDrivers = supabase.postgrest["profiles"].select(Columns.list("id")) {
+                filter {
+                    eq("role", "driver")
+                    eq("approval_status", "pendiente")
+                }
+            }.decodeList<PendingCountIdDto>().size
 
-                val pendingRequests = supabase.postgrest["subscription_payment_requests"].select {
-                    filter { eq("status", "pendiente") }
-                }.decodeList<AdminPaymentRequest>().size
+            val pendingRequests = supabase.postgrest["subscription_payment_requests"].select(Columns.list("id")) {
+                filter { eq("status", "pendiente") }
+            }.decodeList<PendingCountIdDto>().size
 
-                emit(Pair(pendingDrivers, pendingRequests))
-            } catch (_: Exception) {
-                emit(Pair(0, 0))
-            }
-            kotlinx.coroutines.delay(12_000L) // Refresco suave cada 12 segundos
+            val result = Pair(pendingDrivers, pendingRequests)
+            _pendingCounts.value = result
+            result
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Log.w("AdminRepository", "Error al refrescar conteos pendientes: ${e.message}")
+            _pendingCounts.value
         }
-    }.flowOn(Dispatchers.IO)
+    }
+
+    /**
+     * Emite los conteos pendientes reactivamente a través de StateFlow
+     * (conductores pendientes, solicitudes de pago pendientes).
+     */
+    fun observePendingCounts(): Flow<Pair<Int, Int>> = _pendingCounts.asStateFlow()
 }
 

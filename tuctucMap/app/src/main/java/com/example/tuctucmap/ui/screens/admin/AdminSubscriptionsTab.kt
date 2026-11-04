@@ -75,6 +75,7 @@ fun AdminSubscriptionsTab(
                 history = histRes.getOrDefault(emptyList())
             }
             isLoading = false
+            adminRepo.refreshPendingCounts()
         }
     }
 

@@ -16,7 +16,9 @@ import com.example.tuctucmap.data.repository.AdminRepository
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.ui.components.AdminDrawerItem
 import com.example.tuctucmap.ui.components.AdminDrawerSheet
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,14 +36,15 @@ fun AdminMainScreen(
     val scope = rememberCoroutineScope()
 
     var selectedTab by remember { mutableStateOf(initialTab) }
-    var pendingDriversCount by remember { mutableStateOf(0) }
-    var pendingPaymentRequestsCount by remember { mutableStateOf(0) }
+    val pendingCounts by adminRepo.pendingCounts.collectAsState()
+    val pendingDriversCount = pendingCounts.first
+    val pendingPaymentRequestsCount = pendingCounts.second
 
-    // Observar conteos pendientes reactivamente
+    // Refresco inicial y sondeo periódico suave en segundo plano mientras el admin esté en pantalla
     LaunchedEffect(Unit) {
-        adminRepo.observePendingCounts().collectLatest { (drivers, requests) ->
-            pendingDriversCount = drivers
-            pendingPaymentRequestsCount = requests
+        while (isActive) {
+            adminRepo.refreshPendingCounts()
+            delay(10_000L)
         }
     }
 
@@ -138,7 +141,10 @@ fun AdminMainScreen(
                     // Pestaña 0: Conductores
                     NavigationBarItem(
                         selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 },
+                        onClick = {
+                            selectedTab = 0
+                            scope.launch { adminRepo.refreshPendingCounts() }
+                        },
                         icon = {
                             if (pendingDriversCount > 0) {
                                 BadgedBox(
@@ -164,7 +170,10 @@ fun AdminMainScreen(
                     // Pestaña 1: Suscripciones / Pagos
                     NavigationBarItem(
                         selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 },
+                        onClick = {
+                            selectedTab = 1
+                            scope.launch { adminRepo.refreshPendingCounts() }
+                        },
                         icon = {
                             if (pendingPaymentRequestsCount > 0) {
                                 BadgedBox(
