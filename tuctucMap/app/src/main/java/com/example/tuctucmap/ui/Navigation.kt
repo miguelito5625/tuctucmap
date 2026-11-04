@@ -8,6 +8,7 @@ import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.ui.screens.passenger.PassengerLoginScreen
 import com.example.tuctucmap.ui.screens.passenger.PassengerRegisterScreen
 import com.example.tuctucmap.ui.screens.passenger.PassengerProfileScreen
+import com.example.tuctucmap.ui.screens.settings.SettingsScreen
 import com.example.tuctucmap.ui.screens.driver.*
 import com.example.tuctucmap.ui.screens.passenger.PassengerMapScreen
 import com.example.tuctucmap.ui.screens.admin.AdminMainScreen
@@ -40,6 +41,7 @@ sealed class Screen {
     object PassengerProfile : Screen()
     object DriverProfile : Screen()
     object DriverSubscription : Screen()
+    object Settings : Screen()
     // Admin
     object AdminHome : Screen()
     object AdminTrips : Screen()
@@ -197,6 +199,9 @@ fun AppNavigation(
                 onNavigateToPassengerHistory = {
                     navigate(Screen.PassengerTripHistory)
                 },
+                onNavigateToSettings = {
+                    navigate(Screen.Settings)
+                },
                 onNavigateToAdmin = {
                     navigate(Screen.AdminHome, clearStack = true)
                 },
@@ -351,6 +356,9 @@ fun AppNavigation(
                 onViewProfile = {
                     navigate(Screen.DriverProfile)
                 },
+                onNavigateToSettings = {
+                    navigate(Screen.Settings)
+                },
                 onNavigateToRoute = { trip ->
                     navigate(Screen.DriverRouteToPassenger(trip))
                 }
@@ -439,6 +447,18 @@ fun AppNavigation(
                 onBack = {
                     backStack.removeAt(backStack.lastIndex)
                 }
+            )
+        }
+        is Screen.Settings -> {
+            SettingsScreen(
+                onBack = {
+                    if (backStack.size > 1) {
+                        backStack.removeAt(backStack.lastIndex)
+                    } else {
+                        navigate(Screen.PassengerMap, clearStack = true)
+                    }
+                },
+                adminWhatsappPhone = SupabaseRepository.cachedAppConfig.adminWhatsappPhone
             )
         }
         is Screen.AdminHome -> {

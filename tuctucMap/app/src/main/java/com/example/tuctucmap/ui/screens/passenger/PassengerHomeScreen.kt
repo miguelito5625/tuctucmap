@@ -71,6 +71,7 @@ fun PassengerHomeScreen(
                         PassengerDrawerItem.MAP -> onSearchTucTuc()
                         PassengerDrawerItem.HISTORY -> onViewHistory()
                         PassengerDrawerItem.PROFILE -> onViewProfile()
+                        PassengerDrawerItem.SETTINGS -> Unit
                     }
                 },
                 onLogout = {

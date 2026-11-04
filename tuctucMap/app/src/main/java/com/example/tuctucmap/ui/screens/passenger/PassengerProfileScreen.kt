@@ -35,6 +35,7 @@ fun PassengerProfileScreen(
     repository: SupabaseRepository,
     onBack: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val uid = repository.currentUserUid ?: ""
@@ -480,6 +481,84 @@ fun PassengerProfileScreen(
                                         fontSize = 15.sp
                                     )
                                 }
+                            }
+                        }
+                    }
+
+                    // ── Card 3: Ajustes y Aplicación ─────────────────────────
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0x18FFFFFF)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33F9D423))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = null,
+                                    tint = Color(0xFFF9D423),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Ajustes de la Aplicación",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+
+                            Text(
+                                text = "Apóyanos compartiendo TucTuc Map con tus vecinos y valorando la aplicación en Google Play Store.",
+                                fontSize = 13.sp,
+                                color = Color(0xFFCFD8DC),
+                                lineHeight = 18.sp
+                            )
+
+                            // Botón Calificar
+                            Button(
+                                onClick = { com.example.tuctucmap.ui.util.AppShareUtils.openPlayStoreForRating(context) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFF9D423),
+                                    contentColor = Color(0xFF0F2027)
+                                )
+                            ) {
+                                Icon(Icons.Default.Star, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Calificar aplicación en Google Play",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            }
+
+                            // Botón Compartir
+                            OutlinedButton(
+                                onClick = { com.example.tuctucmap.ui.util.AppShareUtils.shareApp(context) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF38BDF8)),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = Color(0xFF38BDF8)
+                                )
+                            ) {
+                                Icon(Icons.Default.Share, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Compartir aplicación",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
                             }
                         }
                     }

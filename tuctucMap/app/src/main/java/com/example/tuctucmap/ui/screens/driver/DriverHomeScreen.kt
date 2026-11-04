@@ -74,6 +74,7 @@ fun DriverHomeScreen(
     onViewReports: () -> Unit = {},
     onViewSubscription: () -> Unit = {},
     onViewProfile: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     onNavigateToRoute: (SupabaseRepository.TripInfo) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -401,7 +402,11 @@ fun DriverHomeScreen(
                         DriverDrawerItem.REPORTS -> onViewReports()
                         DriverDrawerItem.SUBSCRIPTIONS -> onViewSubscription()
                         DriverDrawerItem.PROFILE -> onViewProfile()
+                        DriverDrawerItem.SETTINGS -> onNavigateToSettings()
                     }
+                },
+                onShareApp = {
+                    coroutineScope.launch { drawerState.close() }
                 },
                 onLogout = {
                     coroutineScope.launch {

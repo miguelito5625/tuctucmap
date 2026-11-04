@@ -95,6 +95,7 @@ fun PassengerMapScreen(
     onNavigateToDriverRegister: () -> Unit = {},
     onNavigateToPassengerProfile: () -> Unit = {},
     onNavigateToPassengerHistory: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     onLogout: () -> Unit = {},
     onNavigateToAdmin: () -> Unit = {}
 ) {
@@ -447,7 +448,11 @@ fun PassengerMapScreen(
                         PassengerDrawerItem.HOME, PassengerDrawerItem.MAP -> { /* Ya en mapa */ }
                         PassengerDrawerItem.HISTORY -> onNavigateToPassengerHistory()
                         PassengerDrawerItem.PROFILE -> onNavigateToPassengerProfile()
+                        PassengerDrawerItem.SETTINGS -> onNavigateToSettings()
                     }
+                },
+                onShareApp = {
+                    coroutineScope.launch { drawerState.close() }
                 },
                 onNavigateToLogin = {
                     coroutineScope.launch { drawerState.close() }

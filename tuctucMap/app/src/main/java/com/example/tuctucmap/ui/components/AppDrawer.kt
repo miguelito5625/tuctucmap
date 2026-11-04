@@ -33,7 +33,8 @@ enum class PassengerDrawerItem {
     HOME,
     MAP,
     HISTORY,
-    PROFILE
+    PROFILE,
+    SETTINGS
 }
 
 enum class DriverDrawerItem {
@@ -42,7 +43,8 @@ enum class DriverDrawerItem {
     HISTORY,
     REPORTS,
     SUBSCRIPTIONS,
-    PROFILE
+    PROFILE,
+    SETTINGS
 }
 
 enum class AdminDrawerItem {
@@ -64,10 +66,12 @@ fun PassengerDrawerSheet(
     onNavigateToLogin: () -> Unit = {},
     onNavigateToDriver: () -> Unit = {},
     onNavigateToAdmin: () -> Unit = {},
+    onShareApp: () -> Unit = {},
     isAdmin: Boolean = false,
     isGuest: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     ModalDrawerSheet(
         modifier = modifier.width(320.dp),
         drawerContainerColor = Color(0xFF0F2027),
@@ -308,6 +312,23 @@ fun PassengerDrawerSheet(
                     )
                 }
 
+                DrawerNavigationItem(
+                    label = "Ajustes",
+                    icon = Icons.Default.Settings,
+                    isSelected = selectedItem == PassengerDrawerItem.SETTINGS,
+                    onClick = { onSelectItem(PassengerDrawerItem.SETTINGS) }
+                )
+
+                DrawerNavigationItem(
+                    label = "Compartir aplicación",
+                    icon = Icons.Default.Share,
+                    isSelected = false,
+                    onClick = {
+                        onShareApp()
+                        com.example.tuctucmap.ui.util.AppShareUtils.shareApp(context)
+                    }
+                )
+
                 Spacer(modifier = Modifier.height(4.dp))
                 HorizontalDivider(color = Color.White.copy(alpha = 0.08f), thickness = 1.dp)
                 Spacer(modifier = Modifier.height(4.dp))
@@ -383,8 +404,10 @@ fun DriverDrawerSheet(
     selectedItem: DriverDrawerItem,
     onSelectItem: (DriverDrawerItem) -> Unit,
     onLogout: () -> Unit,
+    onShareApp: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     ModalDrawerSheet(
         modifier = modifier.width(320.dp),
         drawerContainerColor = Color(0xFF0F2027),
@@ -630,6 +653,23 @@ fun DriverDrawerSheet(
                     isSelected = selectedItem == DriverDrawerItem.PROFILE,
                     onClick = { onSelectItem(DriverDrawerItem.PROFILE) }
                 )
+
+                DrawerNavigationItem(
+                    label = "Ajustes",
+                    icon = Icons.Default.Settings,
+                    isSelected = selectedItem == DriverDrawerItem.SETTINGS,
+                    onClick = { onSelectItem(DriverDrawerItem.SETTINGS) }
+                )
+
+                DrawerNavigationItem(
+                    label = "Compartir aplicación",
+                    icon = Icons.Default.Share,
+                    isSelected = false,
+                    onClick = {
+                        onShareApp()
+                        com.example.tuctucmap.ui.util.AppShareUtils.shareApp(context)
+                    }
+                )
             }
 
             // ── Footer / Cerrar Sesión ──────────────────────────────────────
@@ -685,6 +725,7 @@ fun AdminDrawerSheet(
     onExploreMap: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     ModalDrawerSheet(
         modifier = modifier.width(320.dp),
         drawerContainerColor = Color(0xFF0F2027),
@@ -838,6 +879,15 @@ fun AdminDrawerSheet(
                     icon = Icons.Default.Settings,
                     isSelected = selectedItem == AdminDrawerItem.CONFIG,
                     onClick = { onSelectItem(AdminDrawerItem.CONFIG) }
+                )
+
+                DrawerNavigationItem(
+                    label = "Compartir aplicación",
+                    icon = Icons.Default.Share,
+                    isSelected = false,
+                    onClick = {
+                        com.example.tuctucmap.ui.util.AppShareUtils.shareApp(context)
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
