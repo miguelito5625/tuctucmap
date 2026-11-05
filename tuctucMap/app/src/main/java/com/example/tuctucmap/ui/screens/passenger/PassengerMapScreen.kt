@@ -61,6 +61,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.tuctucmap.data.PassengerDestinationPreferences
+import com.example.tuctucmap.data.PassengerLocationPreferences
 import com.example.tuctucmap.data.model.DriverLocation
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.data.service.OsrmRoutingService
@@ -408,8 +409,10 @@ fun PassengerMapScreen(
         }
     }
 
-    // Ubicación actual del pasajero
-    val myLocGeo = myLocationOverlayInstance?.myLocation
+    // Ubicación actual del pasajero (con fallback inmediato a la última ubicación guardada en el dispositivo)
+    val myLocGeo = myLocationOverlayInstance?.myLocation ?: remember(context) {
+        PassengerLocationPreferences.getLastSavedLocation(context)
+    }
     val maxRadiusMeters = remember { SupabaseRepository.cachedAppConfig.maxSearchRadiusKm * 1000.0 }
 
     // Separar conductores disponibles vs en pausa/ocupados dentro de la geocerca del municipio
@@ -590,7 +593,7 @@ fun PassengerMapScreen(
                             setTileSource(AppTileSource)
                             setMultiTouchControls(true)
                             controller.setZoom(16.0)
-                            val startPoint = GeoPoint(14.6349, -90.5069)
+                            val startPoint = PassengerLocationPreferences.getInitialMapLocation(ctx)
                             controller.setCenter(startPoint)
 
                             val myLocationOverlay = PassengerLocationOverlay(GpsMyLocationProvider(ctx), this, ctx).apply {
@@ -598,6 +601,7 @@ fun PassengerMapScreen(
                                 runOnFirstFix {
                                     val myLoc = myLocation
                                     if (myLoc != null) {
+                                        PassengerLocationPreferences.saveLastLocation(ctx, myLoc.latitude, myLoc.longitude)
                                         post {
                                             controller.animateTo(myLoc)
                                         }
@@ -904,7 +908,12 @@ fun PassengerMapScreen(
                             myLocationOverlayInstance?.let { overlay ->
                                 val myLoc = overlay.myLocation
                                 if (myLoc != null) {
+                                    PassengerLocationPreferences.saveLastLocation(context, myLoc.latitude, myLoc.longitude)
                                     mapViewInstance?.controller?.animateTo(myLoc)
+                                } else {
+                                    PassengerLocationPreferences.getLastSavedLocation(context)?.let { savedLoc ->
+                                        mapViewInstance?.controller?.animateTo(savedLoc)
+                                    }
                                 }
                             }
                         },
@@ -1522,9 +1531,10 @@ fun PassengerMapScreen(
 
                         Button(
                             onClick = {
-                                val myLoc = myLocationOverlayInstance?.myLocation
+                                val myLoc = myLocationOverlayInstance?.myLocation ?: PassengerLocationPreferences.getLastSavedLocation(context)
                                 if (myLoc != null) {
                                     isRequestingTrip = true
+                                    PassengerLocationPreferences.saveLastLocation(context, myLoc.latitude, myLoc.longitude)
                                     if (!isUserLoggedIn) {
                                         sharedPrefs.edit()
                                             .putString("guest_passenger_name", guestName.trim())

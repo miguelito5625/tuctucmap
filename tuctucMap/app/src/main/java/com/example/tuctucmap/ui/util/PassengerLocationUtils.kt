@@ -54,11 +54,40 @@ var ACTIVE_PASSENGER_AVATAR: PassengerAvatarType = PassengerAvatarType.QUETZAL_A
 class PassengerLocationOverlay(
     provider: IMyLocationProvider,
     private val mapView: MapView,
-    context: Context,
+    private val context: Context,
     val avatarType: PassengerAvatarType = ACTIVE_PASSENGER_AVATAR
 ) : MyLocationNewOverlay(provider, mapView) {
 
     private val density = context.resources.displayMetrics.density
+    private var hasHandledInitialLiveFix = false
+
+    init {
+        // Inicializar inmediatamente con la última ubicación guardada o conocida para evitar
+        // que el mapa cargue en blanco o en coordenadas ajenas antes del fix GPS en vivo.
+        val initialLoc = com.example.tuctucmap.data.PassengerLocationPreferences.getLastSavedLocation(context)
+        if (initialLoc != null) {
+            val loc = android.location.Location("passenger_last_saved").apply {
+                latitude = initialLoc.latitude
+                longitude = initialLoc.longitude
+                time = System.currentTimeMillis()
+            }
+            setLocation(loc)
+        }
+    }
+
+    override fun onLocationChanged(location: android.location.Location?, source: IMyLocationProvider?) {
+        super.onLocationChanged(location, source)
+        if (location != null && com.example.tuctucmap.data.PassengerLocationPreferences.isValidCoordinate(location.latitude, location.longitude)) {
+            com.example.tuctucmap.data.PassengerLocationPreferences.saveLastLocationThrottled(context, location.latitude, location.longitude)
+            if (!hasHandledInitialLiveFix) {
+                hasHandledInitialLiveFix = true
+                val newGeo = GeoPoint(location.latitude, location.longitude)
+                mapView.post {
+                    mapView.controller.animateTo(newGeo)
+                }
+            }
+        }
+    }
 
     // Carga de fotogramas según el avatar configurado (+20% tamaño balanceado con marcador de conductores)
     private val frames: List<Bitmap> = when (avatarType) {
