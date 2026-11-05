@@ -39,7 +39,6 @@ fun DriverSubscriptionExpiredScreen(
     repository: SupabaseRepository,
     onRenewed: () -> Unit,
     onLogout: () -> Unit,
-    onViewMap: () -> Unit = {},
     onApprovalRevoked: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -571,28 +570,7 @@ fun DriverSubscriptionExpiredScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Botón: Ver mapa de conductores activos (solo lectura)
-            Button(
-                onClick = onViewMap,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1E3A5F),
-                    contentColor = Color.White
-                )
-            ) {
-                Icon(imageVector = Icons.Default.Map, contentDescription = null)
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "Ver Conductores en el Mapa",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
 
             // Botón de cerrar sesión
             OutlinedButton(

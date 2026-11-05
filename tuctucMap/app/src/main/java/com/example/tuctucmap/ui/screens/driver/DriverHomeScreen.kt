@@ -60,8 +60,6 @@ import java.util.Locale
 /**
  * Pantalla principal del conductor (HUD / Cockpit Operativo).
  * Diseñada para máxima ergonomía, velocidad y ahorro de batería y datos en calle.
- * El mapa general ya no se carga por defecto para evitar distracciones y consumo innecesario;
- * se accede a él de forma opcional mediante [onViewMap] o en el Drawer.
  */
 @Composable
 fun DriverHomeScreen(
@@ -69,7 +67,6 @@ fun DriverHomeScreen(
     onLogout: () -> Unit,
     onSubscriptionExpired: () -> Unit = {},
     onApprovalRevoked: () -> Unit = {},
-    onViewMap: () -> Unit = {},
     onViewHistory: () -> Unit = {},
     onViewReports: () -> Unit = {},
     onViewSubscription: () -> Unit = {},
@@ -1053,7 +1050,7 @@ fun DriverHomeScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // 4. ACCESOS RÁPIDOS (Cuadrícula 2x2 de Herramientas)
+                    // 4. ACCESOS RÁPIDOS (Herramientas del Conductor)
                     Text(
                         text = "Herramientas del conductor",
                         color = Color.White,
@@ -1161,97 +1158,47 @@ fun DriverHomeScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    Row(
+                    // Acceso 3: Mi Suscripción
+                    Surface(
+                        onClick = onViewSubscription,
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFF152534),
+                        border = BorderStroke(1.dp, Color(0x2638BDF8))
                     ) {
-                        // Acceso 3: Mi Suscripción
-                        Surface(
-                            onClick = onViewSubscription,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(16.dp),
-                            color = Color(0xFF152534),
-                            border = BorderStroke(1.dp, Color(0x2638BDF8))
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0x2238BDF8)),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Color(0x2238BDF8)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Default.CardMembership,
-                                        contentDescription = null,
-                                        tint = Color(0xFF38BDF8),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(
-                                        text = "Mi Suscripción",
-                                        color = Color.White,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = "Planes y pagos",
-                                        color = Color(0xFF94A3B8),
-                                        fontSize = 11.sp,
-                                        maxLines = 1
-                                    )
-                                }
+                                Icon(
+                                    Icons.Default.CardMembership,
+                                    contentDescription = null,
+                                    tint = Color(0xFF38BDF8),
+                                    modifier = Modifier.size(20.dp)
+                                )
                             }
-                        }
-
-                        // Acceso 4: Ver Mapa
-                        Surface(
-                            onClick = onViewMap,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(16.dp),
-                            color = Color(0xFF152534),
-                            border = BorderStroke(1.dp, Color(0x26A78BFA))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 14.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Color(0x22A78BFA)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Default.Map,
-                                        contentDescription = null,
-                                        tint = Color(0xFFA78BFA),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(
-                                        text = "Ver Mapa",
-                                        color = Color.White,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = "Mapa completo",
-                                        color = Color(0xFF94A3B8),
-                                        fontSize = 11.sp,
-                                        maxLines = 1
-                                    )
-                                }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "Mi Suscripción",
+                                    color = Color.White,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1
+                                )
+                                Text(
+                                    text = "Planes y pagos",
+                                    color = Color(0xFF94A3B8),
+                                    fontSize = 11.sp,
+                                    maxLines = 1
+                                )
                             }
                         }
                     }

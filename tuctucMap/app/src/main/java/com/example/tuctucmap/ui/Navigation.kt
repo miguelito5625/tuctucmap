@@ -31,8 +31,6 @@ sealed class Screen {
     object DriverPending : Screen()
     object DriverHome : Screen()
     object DriverSubscriptionExpired : Screen()
-    /** Mapa en pantalla completa — accesible desde cualquier pantalla de conductor */
-    data class DriverMapFullscreen(val returnTo: Screen) : Screen()
     /** Navegación nivel 1 con trazado de ruta en app hacia el pasajero */
     data class DriverRouteToPassenger(val trip: com.example.tuctucmap.data.repository.SupabaseRepository.TripInfo) : Screen()
     object PassengerTripHistory : Screen()
@@ -319,9 +317,6 @@ fun AppNavigation(
                         repository.logout()
                         navigate(Screen.DriverLogin, clearStack = true)
                     }
-                },
-                onViewMap = {
-                    navigate(Screen.DriverMapFullscreen(returnTo = Screen.DriverPending))
                 }
             )
         }
@@ -341,9 +336,6 @@ fun AppNavigation(
                 },
                 onApprovalRevoked = {
                     navigate(Screen.DriverPending, clearStack = true)
-                },
-                onViewMap = {
-                    navigate(Screen.DriverMapFullscreen(returnTo = Screen.DriverHome))
                 },
                 onViewHistory = {
                     navigate(Screen.DriverTripHistory)
@@ -409,20 +401,6 @@ fun AppNavigation(
                         repository.logout()
                         navigate(Screen.DriverLogin, clearStack = true)
                     }
-                },
-                onViewMap = {
-                    navigate(Screen.DriverMapFullscreen(returnTo = Screen.DriverSubscriptionExpired))
-                }
-            )
-        }
-        is Screen.DriverMapFullscreen -> {
-            DriverMapFullscreenScreen(
-                repository = repository,
-                onBack = {
-                    backStack.removeAt(backStack.lastIndex)
-                },
-                onNavigateToRoute = { trip ->
-                    navigate(Screen.DriverRouteToPassenger(trip))
                 }
             )
         }

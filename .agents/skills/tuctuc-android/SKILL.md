@@ -57,7 +57,7 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
    - Implementado en `MarkerIconUtils.kt`.
    - Utiliza recursos WebP preprocesados con transparencia en `res/drawable-nodpi/` (`ic_tuc_tuc.webp`, `ic_quetzal_passenger.webp`, `splash_tuc_tuc.webp`) con `inScaled = false`, evitando picos de 37-67 MB de RAM al decodificar en pantallas `xxhdpi`/`xxxhdpi` y eliminando bucles de píxeles en el hilo principal.
    - Escala el icono del TucTuc dinámicamente a `48.dp` según la densidad de pantalla y retorna nuevas envolturas `BitmapDrawable(resources, cachedBitmap)` por marcador para evitar colisiones de `alpha` o `bounds`.
-   - Todos los `MapView` (`PassengerMapScreen`, `ActiveDriversMapView`, `DriverRouteToPassengerScreen`) están vinculados a `LifecycleEventObserver` (`onResume()`, `onPause()`, `disableMyLocation()` y `onDetach()`).
+   - Todos los `MapView` (`PassengerMapScreen`, `DriverRouteToPassengerScreen`) están vinculados a `LifecycleEventObserver` (`onResume()`, `onPause()`, `disableMyLocation()` y `onDetach()`).
    - Genera dinámicamente el pin de recogida del pasajero (`getPassengerPickupIcon`) con el icono del Quetzal sobre un escudo circular esmeralda y blanco.
 4. **Trazado de Ruta al Pasajero (Nivel 1 con OSRM & OSMDroid):**
    - Implementado en `OsrmRoutingService.kt` y `DriverRouteToPassengerScreen.kt`.
@@ -75,7 +75,7 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
 2. **Servicio en Segundo Plano (`LocationTrackingService`):**
    - Ubicación: `tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt`.
    - Emisión adaptativa hacia Firebase Realtime Database (`>= 8 metros` o heartbeat cada `45 segundos`).
-   - **Fuente Única de Solicitudes y Voz (`pendingTripsFlow` & `TextToSpeech`):** El servicio centraliza la única instancia de `TextToSpeech` y la única suscripción a `observePendingTripsForDriver(driverId)`, exponiendo `pendingTripsFlow` hacia `DriverHomeScreen` y `ActiveDriversMapView` y utilizando el icono vectorial monocromático `R.drawable.ic_stat_tuctuc` para notificaciones del sistema. `announcedTripIds` e `ignoredBroadcastTripIds` están acotados mediante LRU (`<= 200` entradas).
+   - **Fuente Única de Solicitudes y Voz (`pendingTripsFlow` & `TextToSpeech`):** El servicio centraliza la única instancia de `TextToSpeech` y la única suscripción a `observePendingTripsForDriver(driverId)`, exponiendo `pendingTripsFlow` hacia `DriverHomeScreen` y utilizando el icono vectorial monocromático `R.drawable.ic_stat_tuctuc` para notificaciones del sistema. `announcedTripIds` e `ignoredBroadcastTripIds` están acotados mediante LRU (`<= 200` entradas).
 
 ---
 

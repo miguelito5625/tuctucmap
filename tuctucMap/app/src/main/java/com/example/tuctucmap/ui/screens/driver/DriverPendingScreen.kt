@@ -30,7 +30,6 @@ fun DriverPendingScreen(
     repository: SupabaseRepository,
     onApproved: () -> Unit,
     onLogout: () -> Unit,
-    onViewMap: () -> Unit = {},
     onSubscriptionExpired: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -164,28 +163,7 @@ fun DriverPendingScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Botón: Ver mapa de conductores activos
-            Button(
-                onClick = onViewMap,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1E3A5F),
-                    contentColor = Color.White
-                )
-            ) {
-                Icon(imageVector = Icons.Default.Map, contentDescription = null)
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "Ver Conductores en el Mapa",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
 
             // Botón para cerrar sesión
             OutlinedButton(
