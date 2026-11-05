@@ -1048,19 +1048,19 @@ private fun TripRouteModal(
                                     color = Color(0xFF64748B)
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = trip.resolvedPassengerName.ifBlank { "Pasajero" },
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    Text(
-                                        text = trip.resolvedPassengerName.ifBlank { "Pasajero" },
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.weight(1f, fill = false)
-                                    )
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(4.dp))
@@ -1071,7 +1071,7 @@ private fun TripRouteModal(
                                             .padding(horizontal = 5.dp, vertical = 2.dp)
                                     ) {
                                         Text(
-                                            text = if (trip.isRegisteredPassenger) "Registrado" else "Invitado",
+                                            text = if (trip.isRegisteredPassenger) "Cuenta Registrada" else "Sin cuenta (Invitado)",
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.Medium,
                                             color = if (trip.isRegisteredPassenger) Color(0xFF34D399) else Color(
@@ -1080,14 +1080,15 @@ private fun TripRouteModal(
                                             maxLines = 1
                                         )
                                     }
-                                }
-                                if (trip.resolvedPassengerPhone.isNotBlank()) {
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "📞 ${trip.resolvedPassengerPhone}",
-                                        fontSize = 11.sp,
-                                        color = Color(0xFF38BDF8)
-                                    )
+                                    if (trip.resolvedPassengerPhone.isNotBlank()) {
+                                        Text(
+                                            text = "📞 ${trip.resolvedPassengerPhone}",
+                                            fontSize = 11.sp,
+                                            color = Color(0xFF38BDF8),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
                                 }
                             }
 
@@ -1106,7 +1107,9 @@ private fun TripRouteModal(
                                     text = trip.resolvedDriverName.ifBlank { "TucTuc" },
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = Color.White,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }

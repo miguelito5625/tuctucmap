@@ -1,16 +1,16 @@
 # Graph Report - tuctucmap  (2026-11-05)
 
 ## Corpus Check
-- 124 files · ~137,577 words
+- 124 files · ~137,586 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1207 nodes · 1992 edges · 102 communities (75 shown, 27 thin omitted)
+- 1207 nodes · 1992 edges · 103 communities (75 shown, 28 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `05fc0794`
+- Built from commit: `0c7c1515`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -53,7 +53,7 @@
 - AGENTS.md
 - Skill: Base de Datos & Backend (Supabase PostgreSQL)
 - App
-- drivers.component.ts
+- driver.model.ts
 - SupabaseRepository.kt
 - PassengerDestinationPreferences
 - Skill: Angular Dashboard (TucTuc Map)
@@ -89,7 +89,7 @@
 - 2. El Flujo de Trabajo en 3 Fases (El Ciclo Consultivo)
 - PassengerMapScreen.kt
 - AdminBusinessConfigTab.kt
-- driver.model.ts
+- AppConfig
 - ExcelExporter
 - @angular/common
 - @angular/platform-browser
@@ -107,7 +107,8 @@
 - AdminDrawerItem
 - parseIsoTimestamp
 - SubscriptionHistory
-- @angular/material
+- app.routes.ts
+- @angular/cdk
 
 ## God Nodes (most connected - your core abstractions)
 1. `SupabaseRepository` - 115 edges
@@ -136,7 +137,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (102 total, 27 thin omitted)
+## Communities (103 total, 28 thin omitted)
 
 ### Community 2 - "💰 Reporte de Costos Operativos y Rentabilidad en Producción: TucTuc Map"
 Cohesion: 0.10
@@ -172,7 +173,7 @@ Nodes (29): Configuración del Proyecto y Dependencias, Manifiesto de Android y 
 
 ### Community 10 - "dependencies"
 Cohesion: 0.13
-Nodes (15): @angular/animations, @angular/cdk, @angular/compiler, @angular/forms, @angular/router, leaflet, dependencies, @angular/animations (+7 more)
+Nodes (15): @angular/animations, @angular/compiler, @angular/forms, @angular/material, @angular/router, leaflet, dependencies, @angular/animations (+7 more)
 
 ### Community 11 - "devDependencies"
 Cohesion: 0.13
@@ -274,9 +275,9 @@ Nodes (6): 1. Arquitectura de Datos & Tablas Principales, 2. Row Level Security 
 Cohesion: 0.36
 Nodes (4): App, appConfig, routes, Component
 
-### Community 38 - "drivers.component.ts"
-Cohesion: 0.18
-Nodes (8): leaflet, allowedCommonJsDependencies, authGuard(), PaymentMethod, SubscriptionPlan, DriverHistoryDialogComponent, Component, sanitizeCsvCell()
+### Community 38 - "driver.model.ts"
+Cohesion: 0.19
+Nodes (7): FinancialKPIs, LiveDriverLocation, PaymentMethod, RenewalRequestStatus, SubscriptionPlan, DriverHistoryDialogComponent, Component
 
 ### Community 39 - "SupabaseRepository.kt"
 Cohesion: 0.24
@@ -370,10 +371,6 @@ Nodes (7): calculateRemainingDays(), Driver, ServerClock, SubscriptionRenewalReq
 Cohesion: 0.46
 Nodes (7): AppConfig, AdminBusinessConfigTab(), configFieldColors(), ConfigSectionTitle(), Context, Modifier, testWhatsAppNumber()
 
-### Community 82 - "driver.model.ts"
-Cohesion: 0.25
-Nodes (4): AppConfig, FinancialKPIs, LiveDriverLocation, RenewalRequestStatus
-
 ### Community 86 - "SettingsScreen.kt"
 Cohesion: 0.70
 Nodes (4): Context, Modifier, openWhatsAppSupport(), SettingsScreen()
@@ -402,10 +399,14 @@ Nodes (7): AdminDrawerItem, CONFIG, DRIVERS, FLEET_MAP, PASSENGERS, SUBSCRIPTION
 Cohesion: 0.83
 Nodes (3): parseIsoTimestamp(), DriverProfileScreen(), formatExpiryDate()
 
+### Community 101 - "app.routes.ts"
+Cohesion: 0.33
+Nodes (4): leaflet, allowedCommonJsDependencies, authGuard(), sanitizeCsvCell()
+
 ## Knowledge Gaps
 - **370 isolated node(s):** `{ Client }`, `{ dbConfig }`, `public.app_config`, `fs`, `path` (+365 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **27 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **28 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_

@@ -394,17 +394,56 @@
       "source_location": "L10"
     },
     {
+      "id": "tuctucmapdashboard_src_app_core_models_driver_model_financialkpis",
+      "label": "FinancialKPIs",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "driver.model.ts",
+      "file_type": "code",
+      "norm_label": "financialkpis",
+      "source_file": "tuctucMapDashboard/src/app/core/models/driver.model.ts",
+      "source_location": "L83"
+    },
+    {
+      "id": "tuctucmapdashboard_src_app_core_models_driver_model_livedriverlocation",
+      "label": "LiveDriverLocation",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "driver.model.ts",
+      "file_type": "code",
+      "norm_label": "livedriverlocation",
+      "source_file": "tuctucMapDashboard/src/app/core/models/driver.model.ts",
+      "source_location": "L70"
+    },
+    {
       "id": "tuctucmapdashboard_src_app_core_models_driver_model_paymentmethod",
       "label": "PaymentMethod",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "drivers.component.ts",
+      "community_name": "driver.model.ts",
       "file_type": "code",
       "norm_label": "paymentmethod",
       "source_file": "tuctucMapDashboard/src/app/core/models/driver.model.ts",
       "source_location": "L8"
+    },
+    {
+      "id": "tuctucmapdashboard_src_app_core_models_driver_model_renewalrequeststatus",
+      "label": "RenewalRequestStatus",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "driver.model.ts",
+      "file_type": "code",
+      "norm_label": "renewalrequeststatus",
+      "source_file": "tuctucMapDashboard/src/app/core/models/driver.model.ts",
+      "source_location": "L91"
     },
     {
       "id": "tuctucmapdashboard_src_app_core_models_driver_model_subscriptionplan",
@@ -413,7 +452,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "drivers.component.ts",
+      "community_name": "driver.model.ts",
       "file_type": "code",
       "norm_label": "subscriptionplan",
       "source_file": "tuctucMapDashboard/src/app/core/models/driver.model.ts",
@@ -426,7 +465,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "drivers.component.ts",
+      "community_name": "driver.model.ts",
       "file_type": "code",
       "norm_label": "driverhistorydialogcomponent",
       "source_file": "tuctucMapDashboard/src/app/features/drivers/driver-history-dialog.component.ts",
@@ -966,7 +1005,7 @@
       "source_location": "L21"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1398",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1401",
       "label": "android",
       "_callable": true,
       "_callable_class": true,
@@ -976,7 +1015,7 @@
       "file_type": "code",
       "norm_label": "android",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1398"
+      "source_location": "L1401"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_passenger_passengermapscreen_passengermapscreen_object_animatorlisteneradapter_l705",
@@ -1531,50 +1570,11 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 82,
-      "community_name": "driver.model.ts",
+      "community_name": "AppConfig",
       "file_type": "code",
       "norm_label": "appconfig",
       "source_file": "tuctucMapDashboard/src/app/core/models/driver.model.ts",
       "source_location": "L10"
-    },
-    {
-      "id": "tuctucmapdashboard_src_app_core_models_driver_model_financialkpis",
-      "label": "FinancialKPIs",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 82,
-      "community_name": "driver.model.ts",
-      "file_type": "code",
-      "norm_label": "financialkpis",
-      "source_file": "tuctucMapDashboard/src/app/core/models/driver.model.ts",
-      "source_location": "L83"
-    },
-    {
-      "id": "tuctucmapdashboard_src_app_core_models_driver_model_livedriverlocation",
-      "label": "LiveDriverLocation",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 82,
-      "community_name": "driver.model.ts",
-      "file_type": "code",
-      "norm_label": "livedriverlocation",
-      "source_file": "tuctucMapDashboard/src/app/core/models/driver.model.ts",
-      "source_location": "L70"
-    },
-    {
-      "id": "tuctucmapdashboard_src_app_core_models_driver_model_renewalrequeststatus",
-      "label": "RenewalRequestStatus",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 82,
-      "community_name": "driver.model.ts",
-      "file_type": "code",
-      "norm_label": "renewalrequeststatus",
-      "source_file": "tuctucMapDashboard/src/app/core/models/driver.model.ts",
-      "source_location": "L91"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter_excelexporter",
@@ -2017,6 +2017,30 @@
       "norm_label": ".maptosubscriptionhistory()",
       "source_file": "tuctucMapDashboard/src/app/services/supabase.service.ts",
       "source_location": "L268"
+    },
+    {
+      "id": "tuctucmapdashboard_src_app_core_guards_auth_guard_authguard",
+      "label": "authGuard()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "app.routes.ts",
+      "file_type": "code",
+      "norm_label": "authguard()",
+      "source_file": "tuctucMapDashboard/src/app/core/guards/auth.guard.ts",
+      "source_location": "L5"
+    },
+    {
+      "id": "tuctucmapdashboard_src_app_shared_csv_security_sanitizecsvcell",
+      "label": "sanitizeCsvCell()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "app.routes.ts",
+      "file_type": "code",
+      "norm_label": "sanitizecsvcell()",
+      "source_file": "tuctucMapDashboard/src/app/shared/csv-security.ts",
+      "source_location": "L7"
     },
     {
       "id": "databasetuctucapp_apply_improvements_sql_main",
@@ -2472,7 +2496,7 @@
       "file_type": "code",
       "norm_label": "driverfilterdialog()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1465"
+      "source_location": "L1468"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_exporttripscsv",
@@ -2484,7 +2508,7 @@
       "file_type": "code",
       "norm_label": "exporttripscsv()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1697"
+      "source_location": "L1700"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_formattripdate",
@@ -2496,7 +2520,7 @@
       "file_type": "code",
       "norm_label": "formattripdate()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1459"
+      "source_location": "L1462"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_getperiodrangeiso",
@@ -2520,7 +2544,7 @@
       "file_type": "code",
       "norm_label": "legenditem()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1445"
+      "source_location": "L1448"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal",
@@ -3579,28 +3603,40 @@
       "source_location": "L1166"
     },
     {
-      "id": "tuctucmapdashboard_src_app_core_guards_auth_guard_authguard",
-      "label": "authGuard()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "drivers.component.ts",
-      "file_type": "code",
-      "norm_label": "authguard()",
-      "source_file": "tuctucMapDashboard/src/app/core/guards/auth.guard.ts",
-      "source_location": "L5"
-    },
-    {
       "id": "tuctucmapdashboard_src_app_features_drivers_driver_history_dialog_component_driverhistorydialogcomponent_ngoninit",
       "label": ".ngOnInit()",
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "drivers.component.ts",
+      "community_name": "driver.model.ts",
       "file_type": "code",
       "norm_label": ".ngoninit()",
       "source_file": "tuctucMapDashboard/src/app/features/drivers/driver-history-dialog.component.ts",
       "source_location": "L176"
+    },
+    {
+      "id": "tuctucmapdashboard_src_app_services_supabase_service_supabaseservice_getfinancialstats",
+      "label": ".getFinancialStats()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "driver.model.ts",
+      "file_type": "code",
+      "norm_label": ".getfinancialstats()",
+      "source_file": "tuctucMapDashboard/src/app/services/supabase.service.ts",
+      "source_location": "L289"
+    },
+    {
+      "id": "tuctucmapdashboard_src_app_services_supabase_service_supabaseservice_getlivedrivers",
+      "label": ".getLiveDrivers()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "driver.model.ts",
+      "file_type": "code",
+      "norm_label": ".getlivedrivers()",
+      "source_file": "tuctucMapDashboard/src/app/services/supabase.service.ts",
+      "source_location": "L377"
     },
     {
       "id": "tuctucmapdashboard_src_app_services_supabase_service_supabaseservice_renewsubscription",
@@ -3608,7 +3644,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "drivers.component.ts",
+      "community_name": "driver.model.ts",
       "file_type": "code",
       "norm_label": ".renewsubscription()",
       "source_file": "tuctucMapDashboard/src/app/services/supabase.service.ts",
@@ -3620,23 +3656,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 38,
-      "community_name": "drivers.component.ts",
+      "community_name": "driver.model.ts",
       "file_type": "code",
       "norm_label": ".setsubscriptionexpiry()",
       "source_file": "tuctucMapDashboard/src/app/services/supabase.service.ts",
       "source_location": "L532"
-    },
-    {
-      "id": "tuctucmapdashboard_src_app_shared_csv_security_sanitizecsvcell",
-      "label": "sanitizeCsvCell()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "drivers.component.ts",
-      "file_type": "code",
-      "norm_label": "sanitizecsvcell()",
-      "source_file": "tuctucMapDashboard/src/app/shared/csv-security.ts",
-      "source_location": "L7"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_accepttripatomically",
@@ -4263,7 +4287,7 @@
       "source_location": "L397"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1398_onlayoutchange",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1401_onlayoutchange",
       "label": ".onLayoutChange()",
       "_callable": true,
       "_origin": "ast",
@@ -4272,7 +4296,7 @@
       "file_type": "code",
       "norm_label": ".onlayoutchange()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1400"
+      "source_location": "L1403"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverroutetopassengerscreen_driverroutetopassengerscreen",
@@ -5816,35 +5840,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 82,
-      "community_name": "driver.model.ts",
+      "community_name": "AppConfig",
       "file_type": "code",
       "norm_label": ".getappconfig()",
       "source_file": "tuctucMapDashboard/src/app/services/supabase.service.ts",
       "source_location": "L65"
-    },
-    {
-      "id": "tuctucmapdashboard_src_app_services_supabase_service_supabaseservice_getfinancialstats",
-      "label": ".getFinancialStats()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 82,
-      "community_name": "driver.model.ts",
-      "file_type": "code",
-      "norm_label": ".getfinancialstats()",
-      "source_file": "tuctucMapDashboard/src/app/services/supabase.service.ts",
-      "source_location": "L289"
-    },
-    {
-      "id": "tuctucmapdashboard_src_app_services_supabase_service_supabaseservice_getlivedrivers",
-      "label": ".getLiveDrivers()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 82,
-      "community_name": "driver.model.ts",
-      "file_type": "code",
-      "norm_label": ".getlivedrivers()",
-      "source_file": "tuctucMapDashboard/src/app/services/supabase.service.ts",
-      "source_location": "L377"
     },
     {
       "id": "tuctucmapdashboard_src_app_services_supabase_service_supabaseservice_updateappconfig",
@@ -5852,7 +5852,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 82,
-      "community_name": "driver.model.ts",
+      "community_name": "AppConfig",
       "file_type": "code",
       "norm_label": ".updateappconfig()",
       "source_file": "tuctucMapDashboard/src/app/services/supabase.service.ts",
@@ -6226,17 +6226,6 @@
       "source_location": "L14"
     },
     {
-      "id": "tuctucmapdashboard_package_dependencies_angular_cdk",
-      "label": "@angular/cdk",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "dependencies",
-      "file_type": "code",
-      "norm_label": "@angular/cdk",
-      "source_file": "tuctucMapDashboard/package.json",
-      "source_location": "L15"
-    },
-    {
       "id": "tuctucmapdashboard_package_dependencies_angular_compiler",
       "label": "@angular/compiler",
       "_origin": "ast",
@@ -6257,6 +6246,17 @@
       "norm_label": "@angular/forms",
       "source_file": "tuctucMapDashboard/package.json",
       "source_location": "L19"
+    },
+    {
+      "id": "tuctucmapdashboard_package_dependencies_angular_material",
+      "label": "@angular/material",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "@angular/material",
+      "source_file": "tuctucMapDashboard/package.json",
+      "source_location": "L20"
     },
     {
       "id": "tuctucmapdashboard_package_dependencies_angular_router",
@@ -6303,17 +6303,6 @@
       "source_location": "L14"
     },
     {
-      "id": "angular_cdk",
-      "label": "@angular/cdk",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "dependencies",
-      "file_type": "concept",
-      "norm_label": "@angular/cdk",
-      "source_file": "tuctucMapDashboard/package.json",
-      "source_location": "L15"
-    },
-    {
       "id": "angular_compiler",
       "label": "@angular/compiler",
       "_origin": "ast",
@@ -6334,6 +6323,17 @@
       "norm_label": "@angular/forms",
       "source_file": "tuctucMapDashboard/package.json",
       "source_location": "L19"
+    },
+    {
+      "id": "angular_material",
+      "label": "@angular/material",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "dependencies",
+      "file_type": "concept",
+      "norm_label": "@angular/material",
+      "source_file": "tuctucMapDashboard/package.json",
+      "source_location": "L20"
     },
     {
       "id": "angular_router",
@@ -6369,26 +6369,103 @@
       "source_location": "L24"
     },
     {
-      "id": "tuctucmapdashboard_package_dependencies_angular_material",
-      "label": "@angular/material",
+      "id": "tuctucmapdashboard_angular_options_allowedcommonjsdependencies",
+      "label": "allowedCommonJsDependencies",
       "_origin": "ast",
       "community": 101,
-      "community_name": "@angular/material",
+      "community_name": "app.routes.ts",
       "file_type": "code",
-      "norm_label": "@angular/material",
-      "source_file": "tuctucMapDashboard/package.json",
-      "source_location": "L20"
+      "norm_label": "allowedcommonjsdependencies",
+      "source_file": "tuctucMapDashboard/angular.json",
+      "source_location": "L28"
     },
     {
-      "id": "angular_material",
-      "label": "@angular/material",
+      "id": "tuctucmapdashboard_src_app_app_routes",
+      "label": "app.routes.ts",
       "_origin": "ast",
       "community": 101,
-      "community_name": "@angular/material",
+      "community_name": "app.routes.ts",
+      "file_type": "code",
+      "norm_label": "app.routes.ts",
+      "source_file": "tuctucMapDashboard/src/app/app.routes.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "tuctucmapdashboard_src_app_core_guards_auth_guard",
+      "label": "auth.guard.ts",
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "app.routes.ts",
+      "file_type": "code",
+      "norm_label": "auth.guard.ts",
+      "source_file": "tuctucMapDashboard/src/app/core/guards/auth.guard.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "tuctucmapdashboard_src_app_features_subscriptions_subscriptions_component",
+      "label": "subscriptions.component.ts",
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "app.routes.ts",
+      "file_type": "code",
+      "norm_label": "subscriptions.component.ts",
+      "source_file": "tuctucMapDashboard/src/app/features/subscriptions/subscriptions.component.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "tuctucmapdashboard_src_app_features_trips_trips_component",
+      "label": "trips.component.ts",
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "app.routes.ts",
+      "file_type": "code",
+      "norm_label": "trips.component.ts",
+      "source_file": "tuctucMapDashboard/src/app/features/trips/trips.component.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "tuctucmapdashboard_src_app_shared_csv_security",
+      "label": "csv-security.ts",
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "app.routes.ts",
+      "file_type": "code",
+      "norm_label": "csv-security.ts",
+      "source_file": "tuctucMapDashboard/src/app/shared/csv-security.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "ref_leaflet",
+      "label": "leaflet",
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "app.routes.ts",
       "file_type": "concept",
-      "norm_label": "@angular/material",
+      "norm_label": "leaflet",
+      "source_file": "tuctucMapDashboard/angular.json",
+      "source_location": "L28"
+    },
+    {
+      "id": "tuctucmapdashboard_package_dependencies_angular_cdk",
+      "label": "@angular/cdk",
+      "_origin": "ast",
+      "community": 102,
+      "community_name": "@angular/cdk",
+      "file_type": "code",
+      "norm_label": "@angular/cdk",
       "source_file": "tuctucMapDashboard/package.json",
-      "source_location": "L20"
+      "source_location": "L15"
+    },
+    {
+      "id": "angular_cdk",
+      "label": "@angular/cdk",
+      "_origin": "ast",
+      "community": 102,
+      "community_name": "@angular/cdk",
+      "file_type": "concept",
+      "norm_label": "@angular/cdk",
+      "source_file": "tuctucMapDashboard/package.json",
+      "source_location": "L15"
     },
     {
       "id": "tuctucmapdashboard_package_devdependencies",
@@ -9987,36 +10064,14 @@
       "source_location": "L1"
     },
     {
-      "id": "tuctucmapdashboard_angular_options_allowedcommonjsdependencies",
-      "label": "allowedCommonJsDependencies",
+      "id": "tuctucmapdashboard_src_app_core_models_driver_model",
+      "label": "driver.model.ts",
       "_origin": "ast",
       "community": 38,
-      "community_name": "drivers.component.ts",
+      "community_name": "driver.model.ts",
       "file_type": "code",
-      "norm_label": "allowedcommonjsdependencies",
-      "source_file": "tuctucMapDashboard/angular.json",
-      "source_location": "L28"
-    },
-    {
-      "id": "tuctucmapdashboard_src_app_app_routes",
-      "label": "app.routes.ts",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "drivers.component.ts",
-      "file_type": "code",
-      "norm_label": "app.routes.ts",
-      "source_file": "tuctucMapDashboard/src/app/app.routes.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmapdashboard_src_app_core_guards_auth_guard",
-      "label": "auth.guard.ts",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "drivers.component.ts",
-      "file_type": "code",
-      "norm_label": "auth.guard.ts",
-      "source_file": "tuctucMapDashboard/src/app/core/guards/auth.guard.ts",
+      "norm_label": "driver.model.ts",
+      "source_file": "tuctucMapDashboard/src/app/core/models/driver.model.ts",
       "source_location": "L1"
     },
     {
@@ -10024,7 +10079,7 @@
       "label": "driver-history-dialog.component.ts",
       "_origin": "ast",
       "community": 38,
-      "community_name": "drivers.component.ts",
+      "community_name": "driver.model.ts",
       "file_type": "code",
       "norm_label": "driver-history-dialog.component.ts",
       "source_file": "tuctucMapDashboard/src/app/features/drivers/driver-history-dialog.component.ts",
@@ -10035,7 +10090,7 @@
       "label": "Component",
       "_origin": "ast",
       "community": 38,
-      "community_name": "drivers.component.ts",
+      "community_name": "driver.model.ts",
       "file_type": "code",
       "norm_label": "component",
       "source_file": "",
@@ -10046,55 +10101,22 @@
       "label": "drivers.component.ts",
       "_origin": "ast",
       "community": 38,
-      "community_name": "drivers.component.ts",
+      "community_name": "driver.model.ts",
       "file_type": "code",
       "norm_label": "drivers.component.ts",
       "source_file": "tuctucMapDashboard/src/app/features/drivers/drivers.component.ts",
       "source_location": "L1"
     },
     {
-      "id": "tuctucmapdashboard_src_app_features_subscriptions_subscriptions_component",
-      "label": "subscriptions.component.ts",
+      "id": "tuctucmapdashboard_src_app_features_fleet_map_fleet_map_component",
+      "label": "fleet-map.component.ts",
       "_origin": "ast",
       "community": 38,
-      "community_name": "drivers.component.ts",
+      "community_name": "driver.model.ts",
       "file_type": "code",
-      "norm_label": "subscriptions.component.ts",
-      "source_file": "tuctucMapDashboard/src/app/features/subscriptions/subscriptions.component.ts",
+      "norm_label": "fleet-map.component.ts",
+      "source_file": "tuctucMapDashboard/src/app/features/fleet-map/fleet-map.component.ts",
       "source_location": "L1"
-    },
-    {
-      "id": "tuctucmapdashboard_src_app_features_trips_trips_component",
-      "label": "trips.component.ts",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "drivers.component.ts",
-      "file_type": "code",
-      "norm_label": "trips.component.ts",
-      "source_file": "tuctucMapDashboard/src/app/features/trips/trips.component.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmapdashboard_src_app_shared_csv_security",
-      "label": "csv-security.ts",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "drivers.component.ts",
-      "file_type": "code",
-      "norm_label": "csv-security.ts",
-      "source_file": "tuctucMapDashboard/src/app/shared/csv-security.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "ref_leaflet",
-      "label": "leaflet",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "drivers.component.ts",
-      "file_type": "concept",
-      "norm_label": "leaflet",
-      "source_file": "tuctucMapDashboard/angular.json",
-      "source_location": "L28"
     },
     {
       "id": "mutabledata",
@@ -13473,36 +13495,14 @@
       "source_location": ""
     },
     {
-      "id": "tuctucmapdashboard_src_app_core_models_driver_model",
-      "label": "driver.model.ts",
-      "_origin": "ast",
-      "community": 82,
-      "community_name": "driver.model.ts",
-      "file_type": "code",
-      "norm_label": "driver.model.ts",
-      "source_file": "tuctucMapDashboard/src/app/core/models/driver.model.ts",
-      "source_location": "L1"
-    },
-    {
       "id": "tuctucmapdashboard_src_app_features_business_config_business_config_component",
       "label": "business-config.component.ts",
       "_origin": "ast",
       "community": 82,
-      "community_name": "driver.model.ts",
+      "community_name": "AppConfig",
       "file_type": "code",
       "norm_label": "business-config.component.ts",
       "source_file": "tuctucMapDashboard/src/app/features/business-config/business-config.component.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmapdashboard_src_app_features_fleet_map_fleet_map_component",
-      "label": "fleet-map.component.ts",
-      "_origin": "ast",
-      "community": 82,
-      "community_name": "driver.model.ts",
-      "file_type": "code",
-      "norm_label": "fleet-map.component.ts",
-      "source_file": "tuctucMapDashboard/src/app/features/fleet-map/fleet-map.component.ts",
       "source_location": "L1"
     },
     {
@@ -16154,7 +16154,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1725",
+      "source_location": "L1728",
       "weight": 1.0
     },
     {
@@ -16166,7 +16166,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1236",
+      "source_location": "L1239",
       "weight": 1.0
     },
     {
@@ -16178,7 +16178,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1246",
+      "source_location": "L1249",
       "weight": 1.0
     },
     {
@@ -16190,7 +16190,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1260",
+      "source_location": "L1263",
       "weight": 1.0
     },
     {
@@ -16202,7 +16202,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1426",
+      "source_location": "L1429",
       "weight": 1.0
     },
     {
@@ -18626,7 +18626,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1465",
+      "source_location": "L1468",
       "weight": 1.0
     },
     {
@@ -18638,7 +18638,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1697",
+      "source_location": "L1700",
       "weight": 1.0
     },
     {
@@ -25016,7 +25016,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1697",
+      "source_location": "L1700",
       "weight": 1.0
     },
     {
@@ -25040,7 +25040,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1445",
+      "source_location": "L1448",
       "weight": 1.0
     },
     {
@@ -25609,7 +25609,7 @@
     },
     {
       "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_passengerlocationutils_passengerlocationoverlay_drawmylocation",
-      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1398",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1401",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -25645,7 +25645,7 @@
     },
     {
       "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_passengerlocationutils_passengerlocationoverlay_onlocationchanged",
-      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1398",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1401",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -31490,7 +31490,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1445",
+      "source_location": "L1448",
       "weight": 1.0
     },
     {
@@ -31501,7 +31501,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1459",
+      "source_location": "L1462",
       "weight": 1.0
     },
     {
@@ -31512,7 +31512,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1465",
+      "source_location": "L1468",
       "weight": 1.0
     },
     {
@@ -31523,7 +31523,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1697",
+      "source_location": "L1700",
       "weight": 1.0
     },
     {
@@ -31594,13 +31594,13 @@
     },
     {
       "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal",
-      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1398",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1401",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1398",
+      "source_location": "L1401",
       "weight": 1.0
     },
     {
@@ -34164,14 +34164,14 @@
       "weight": 1.0
     },
     {
-      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1398",
-      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1398",
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1401",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1401",
       "relation": "implements",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1398",
+      "source_location": "L1401",
       "weight": 1.0
     },
     {
@@ -35847,14 +35847,14 @@
       "weight": 1.0
     },
     {
-      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1398",
-      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1398_onlayoutchange",
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1401",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_triproutemodal_object_android_l1401_onlayoutchange",
       "relation": "method",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L1400",
+      "source_location": "L1403",
       "weight": 1.0
     },
     {
@@ -37902,5 +37902,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "05fc07946ffa1686bd92b78988cea73c01472058"
+  "built_at_commit": "0c7c1515582644602b39779aec0ed5b84382ef53"
 }
