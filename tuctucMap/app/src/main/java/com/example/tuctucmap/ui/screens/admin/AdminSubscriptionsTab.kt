@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -34,11 +35,69 @@ import com.example.tuctucmap.data.model.AppConfig
 import com.example.tuctucmap.data.repository.AdminRepository
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.ui.util.CsvSecurityUtils
+import com.example.tuctucmap.ui.util.ExcelExporter
 import kotlinx.coroutines.launch
 import java.io.File
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.*
+
+enum class SubscriptionHistoryPeriodFilter(val label: String) {
+    TODAY("Hoy"),
+    LAST_3_DAYS("3 días"),
+    LAST_7_DAYS("7 días"),
+    CUSTOM("Rango personalizado")
+}
+
+private fun getSubscriptionPeriodRange(
+    filter: SubscriptionHistoryPeriodFilter,
+    customStartUtcMillis: Long? = null,
+    customEndUtcMillis: Long? = null
+): Pair<Long, Long> {
+    if (filter == SubscriptionHistoryPeriodFilter.CUSTOM && customStartUtcMillis != null && customEndUtcMillis != null) {
+        val startCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            timeInMillis = minOf(customStartUtcMillis, customEndUtcMillis)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val endCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            timeInMillis = maxOf(customStartUtcMillis, customEndUtcMillis)
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }
+        return Pair(startCal.timeInMillis, endCal.timeInMillis)
+    }
+
+    val daysBack = when (filter) {
+        SubscriptionHistoryPeriodFilter.TODAY -> 0
+        SubscriptionHistoryPeriodFilter.LAST_3_DAYS -> 2
+        SubscriptionHistoryPeriodFilter.LAST_7_DAYS -> 6
+        SubscriptionHistoryPeriodFilter.CUSTOM -> 0
+    }
+
+    val startCal = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+        if (daysBack > 0) {
+            add(Calendar.DAY_OF_YEAR, -daysBack)
+        }
+    }
+
+    val endCal = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 23)
+        set(Calendar.MINUTE, 59)
+        set(Calendar.SECOND, 59)
+        set(Calendar.MILLISECOND, 999)
+    }
+
+    return Pair(startCal.timeInMillis, endCal.timeInMillis)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,6 +116,12 @@ fun AdminSubscriptionsTab(
     var isLoading by remember { mutableStateOf(true) }
 
     var selectedFilter by remember { mutableStateOf("pendiente") } // "pendiente", "aprobado", "rechazado", "todos"
+
+    // Filtros del Historial Global (Por defecto: Hoy)
+    var historyPeriodFilter by remember { mutableStateOf(SubscriptionHistoryPeriodFilter.TODAY) }
+    var customHistoryStartUtcMillis by remember { mutableStateOf<Long?>(null) }
+    var customHistoryEndUtcMillis by remember { mutableStateOf<Long?>(null) }
+    var showHistoryDateRangePickerDialog by remember { mutableStateOf(false) }
 
     // Diálogos de acción
     var requestToApprove by remember { mutableStateOf<AdminPaymentRequest?>(null) }
@@ -89,6 +154,29 @@ fun AdminSubscriptionsTab(
     val filteredRequests = remember(requests, selectedFilter) {
         if (selectedFilter == "todos") requests
         else requests.filter { it.status == selectedFilter }
+    }
+
+    val filteredHistory = remember(history, historyPeriodFilter, customHistoryStartUtcMillis, customHistoryEndUtcMillis) {
+        val (startMs, endMs) = getSubscriptionPeriodRange(
+            filter = historyPeriodFilter,
+            customStartUtcMillis = customHistoryStartUtcMillis,
+            customEndUtcMillis = customHistoryEndUtcMillis
+        )
+        history.filter { item ->
+            val epoch = item.createdAtEpoch
+            if (epoch > 0L) {
+                epoch in startMs..endMs
+            } else false
+        }
+    }
+
+    val customRangeLabel = remember(customHistoryStartUtcMillis, customHistoryEndUtcMillis) {
+        if (customHistoryStartUtcMillis != null && customHistoryEndUtcMillis != null) {
+            val sdf = SimpleDateFormat("dd/MM", Locale.US)
+            "${sdf.format(Date(customHistoryStartUtcMillis!!))} - ${sdf.format(Date(customHistoryEndUtcMillis!!))}"
+        } else {
+            "Personalizado"
+        }
     }
 
     Column(
@@ -241,6 +329,59 @@ fun AdminSubscriptionsTab(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                // Filtros de Período de Fecha
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        item {
+                            FilterChip(
+                                selected = historyPeriodFilter == SubscriptionHistoryPeriodFilter.TODAY,
+                                onClick = { historyPeriodFilter = SubscriptionHistoryPeriodFilter.TODAY },
+                                label = { Text("Hoy") },
+                                colors = filterChipColors()
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = historyPeriodFilter == SubscriptionHistoryPeriodFilter.LAST_3_DAYS,
+                                onClick = { historyPeriodFilter = SubscriptionHistoryPeriodFilter.LAST_3_DAYS },
+                                label = { Text("3 días") },
+                                colors = filterChipColors()
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = historyPeriodFilter == SubscriptionHistoryPeriodFilter.LAST_7_DAYS,
+                                onClick = { historyPeriodFilter = SubscriptionHistoryPeriodFilter.LAST_7_DAYS },
+                                label = { Text("7 días") },
+                                colors = filterChipColors()
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = historyPeriodFilter == SubscriptionHistoryPeriodFilter.CUSTOM,
+                                onClick = {
+                                    historyPeriodFilter = SubscriptionHistoryPeriodFilter.CUSTOM
+                                    showHistoryDateRangePickerDialog = true
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(14.dp))
+                                },
+                                label = {
+                                    Text(
+                                        if (historyPeriodFilter == SubscriptionHistoryPeriodFilter.CUSTOM && customHistoryStartUtcMillis != null)
+                                            customRangeLabel
+                                        else "Rango personalizado"
+                                    )
+                                },
+                                colors = filterChipColors()
+                            )
+                        }
+                    }
+                }
+
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -248,7 +389,7 @@ fun AdminSubscriptionsTab(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${history.size} Registros Confirmados",
+                            text = "${filteredHistory.size} Registros (${historyPeriodFilter.label})",
                             color = Color(0xFF94A3B8),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
@@ -256,32 +397,77 @@ fun AdminSubscriptionsTab(
 
                         Button(
                             onClick = {
-                                exportAndShareCsv(context, history, appConfig.currencySymbol)
+                                ExcelExporter.exportAndShareSubscriptionsExcel(
+                                    context = context,
+                                    history = filteredHistory,
+                                    currencySymbol = appConfig.currencySymbol,
+                                    periodLabel = if (historyPeriodFilter == SubscriptionHistoryPeriodFilter.CUSTOM && customHistoryStartUtcMillis != null)
+                                        customRangeLabel
+                                    else historyPeriodFilter.label
+                                )
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
                             shape = RoundedCornerShape(10.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Exportar CSV", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Exportar Excel", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
 
-                if (history.isEmpty()) {
+                if (filteredHistory.isEmpty()) {
                     item {
-                        Box(
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 50.dp),
-                            contentAlignment = Alignment.Center
+                                .padding(vertical = 30.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Aún no hay historial de pagos registrado", color = Color(0xFF94A3B8), fontSize = 14.sp)
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.SearchOff,
+                                    contentDescription = null,
+                                    tint = Color(0xFF64748B),
+                                    modifier = Modifier.size(40.dp)
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    text = "No hay registros para este período",
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "No se encontraron pagos confirmados para el filtro: ${historyPeriodFilter.label}.",
+                                    color = Color(0xFF94A3B8),
+                                    fontSize = 12.sp,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                                if (historyPeriodFilter != SubscriptionHistoryPeriodFilter.LAST_7_DAYS) {
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    OutlinedButton(
+                                        onClick = { historyPeriodFilter = SubscriptionHistoryPeriodFilter.LAST_7_DAYS },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFF59E0B)),
+                                        border = BorderStroke(1.dp, Color(0xFFF59E0B))
+                                    ) {
+                                        Text("Ver últimos 7 días", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
                         }
                     }
                 } else {
-                    items(history, key = { it.id }) { item ->
+                    items(filteredHistory, key = { it.id }) { item ->
                         SubscriptionHistoryCard(item = item, currencySymbol = appConfig.currencySymbol)
                     }
                 }
@@ -401,6 +587,83 @@ fun AdminSubscriptionsTab(
             },
             containerColor = Color(0xFF1E293B)
         )
+    }
+
+    // ── Diálogo DateRangePicker para Rango Personalizado del Historial ─────────
+    if (showHistoryDateRangePickerDialog) {
+        val dateRangePickerState = rememberDateRangePickerState(
+            initialSelectedStartDateMillis = customHistoryStartUtcMillis ?: System.currentTimeMillis(),
+            initialSelectedEndDateMillis = customHistoryEndUtcMillis ?: System.currentTimeMillis()
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showHistoryDateRangePickerDialog = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val start = dateRangePickerState.selectedStartDateMillis
+                        val end = dateRangePickerState.selectedEndDateMillis ?: start
+                        if (start != null && end != null) {
+                            customHistoryStartUtcMillis = minOf(start, end)
+                            customHistoryEndUtcMillis = maxOf(start, end)
+                            historyPeriodFilter = SubscriptionHistoryPeriodFilter.CUSTOM
+                            showHistoryDateRangePickerDialog = false
+                        }
+                    },
+                    enabled = dateRangePickerState.selectedStartDateMillis != null
+                ) {
+                    Text("Aplicar", color = Color(0xFFF59E0B), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showHistoryDateRangePickerDialog = false }) {
+                    Text("Cancelar", color = Color.White)
+                }
+            },
+            colors = DatePickerDefaults.colors(
+                containerColor = Color(0xFF1E293B)
+            )
+        ) {
+            DateRangePicker(
+                state = dateRangePickerState,
+                title = {
+                    Text(
+                        text = "Seleccionar Rango de Suscripciones",
+                        modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp),
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                headline = {
+                    Text(
+                        text = "Filtra por fecha de confirmación de pago",
+                        modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
+                        color = Color(0xFF94A3B8),
+                        fontSize = 12.sp
+                    )
+                },
+                showModeToggle = false,
+                colors = DatePickerDefaults.colors(
+                    containerColor = Color(0xFF1E293B),
+                    titleContentColor = Color.White,
+                    headlineContentColor = Color.White,
+                    weekdayContentColor = Color(0xFF94A3B8),
+                    subheadContentColor = Color(0xFFCBD5E1),
+                    navigationContentColor = Color.White,
+                    yearContentColor = Color.White,
+                    currentYearContentColor = Color(0xFFF59E0B),
+                    selectedYearContentColor = Color(0xFF0F172A),
+                    selectedYearContainerColor = Color(0xFFF59E0B),
+                    dayContentColor = Color.White,
+                    disabledDayContentColor = Color(0xFF475569),
+                    selectedDayContentColor = Color(0xFF0F172A),
+                    selectedDayContainerColor = Color(0xFFF59E0B),
+                    dayInSelectionRangeContentColor = Color(0xFF0F172A),
+                    dayInSelectionRangeContainerColor = Color(0x66F59E0B)
+                )
+            )
+        }
     }
 }
 

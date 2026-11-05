@@ -901,6 +901,17 @@ private fun TripRouteModal(
     val context = LocalContext.current
     var routePoints by remember { mutableStateOf<List<SupabaseRepository.RoutePoint>>(emptyList()) }
     var isLoadingRoute by remember { mutableStateOf(true) }
+    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            try {
+                mapViewRef?.onPause()
+                mapViewRef?.onDetach()
+            } catch (_: Exception) {}
+            mapViewRef = null
+        }
+    }
 
     LaunchedEffect(trip.id) {
         isLoadingRoute = true
@@ -1186,14 +1197,15 @@ private fun TripRouteModal(
                             AndroidView(
                                 factory = { ctx ->
                                     MapView(ctx).apply {
+                                        mapViewRef = this
                                         setTileSource(AppTileSource)
                                         setMultiTouchControls(true)
                                         isTilesScaledToDpi = true
 
                                         val allBoundsPoints = mutableListOf<GeoPoint>()
 
-                                        // 1. Trazado de Polyline (Dorado TucTuc #F9D423)
-                                        if (hasPoints) {
+                                        // 1. Trazado de Polyline (Dorado TucTuc #F9D423) solo si hay al menos 2 puntos
+                                        if (routePoints.size >= 2) {
                                             val geoPoints = routePoints.map { GeoPoint(it.lat, it.lon) }
                                             allBoundsPoints.addAll(geoPoints)
 
@@ -1221,23 +1233,39 @@ private fun TripRouteModal(
                                             overlays.add(startMarker)
 
                                             // Marcador de Fin (TucTuc al finalizar - Rojo)
-                                            if (geoPoints.size > 1) {
-                                                val endPt = geoPoints.last()
-                                                val endFare = trip.fare?.let { "Q" + String.format(Locale.US, "%.2f", it) } ?: "-"
-                                                val endMarker = Marker(this).apply {
-                                                    position = endPt
-                                                    icon = createCircleMarkerDrawable(
-                                                        ctx,
-                                                        android.graphics.Color.parseColor("#EF4444"),
-                                                        android.graphics.Color.WHITE,
-                                                        16
-                                                    )
-                                                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                                                    title = "Fin del viaje"
-                                                    snippet = "Cobro: $endFare"
-                                                }
-                                                overlays.add(endMarker)
+                                            val endPt = geoPoints.last()
+                                            val endFare = trip.fare?.let { "Q" + String.format(Locale.US, "%.2f", it) } ?: "-"
+                                            val endMarker = Marker(this).apply {
+                                                position = endPt
+                                                icon = createCircleMarkerDrawable(
+                                                    ctx,
+                                                    android.graphics.Color.parseColor("#EF4444"),
+                                                    android.graphics.Color.WHITE,
+                                                    16
+                                                )
+                                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                                                title = "Fin del viaje"
+                                                snippet = "Cobro: $endFare"
                                             }
+                                            overlays.add(endMarker)
+                                        } else if (routePoints.size == 1) {
+                                            // Solo 1 punto de telemetría: se muestra marcador verde sin crear Polyline corrupto
+                                            val singlePt = GeoPoint(routePoints[0].lat, routePoints[0].lon)
+                                            allBoundsPoints.add(singlePt)
+
+                                            val startMarker = Marker(this).apply {
+                                                position = singlePt
+                                                icon = createCircleMarkerDrawable(
+                                                    ctx,
+                                                    android.graphics.Color.parseColor("#22C55E"),
+                                                    android.graphics.Color.WHITE,
+                                                    16
+                                                )
+                                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                                                title = "Ubicación del TucTuc"
+                                                snippet = "Punto GPS registrado"
+                                            }
+                                            overlays.add(startMarker)
                                         }
 
                                         // 2. Marcador de Recogida del Pasajero (Amarillo con borde oscuro)
@@ -1258,12 +1286,15 @@ private fun TripRouteModal(
                                                 snippet = trip.resolvedPassengerName.ifBlank { "Pasajero" }
                                             }
                                             overlays.add(passengerMarker)
-
-
                                         }
 
-                                        // 3. Ajuste de zoom y encuadre simétrico centrado (Auto-fit Bounds)
-                                        if (allBoundsPoints.isNotEmpty()) {
+                                        // 3. Ajuste seguro de centro y zoom (Anti-Freeze, Anti-NaN)
+                                        fun safeApplyBounds() {
+                                            if (allBoundsPoints.isEmpty()) {
+                                                controller.setZoom(16.0)
+                                                return
+                                            }
+
                                             var minLat = allBoundsPoints.first().latitude
                                             var maxLat = allBoundsPoints.first().latitude
                                             var minLon = allBoundsPoints.first().longitude
@@ -1281,34 +1312,61 @@ private fun TripRouteModal(
                                             val centerPoint = GeoPoint(centerLat, centerLon)
                                             controller.setCenter(centerPoint)
 
-                                            if (minLat == maxLat && minLon == maxLon) {
-                                                controller.setZoom(16.0)
-                                            } else {
-                                                val latDiff = maxLat - minLat
-                                                val lonDiff = maxLon - minLon
-                                                val minSpan = 0.0055 // Proporciona margen para visualizar ambos puntos centrados y con calles de referencia
-                                                val latSpan = latDiff.coerceAtLeast(minSpan)
-                                                val lonSpan = lonDiff.coerceAtLeast(minSpan)
+                                            val latDiff = maxLat - minLat
+                                            val lonDiff = maxLon - minLon
 
-                                                val paddingFactor = 0.50
-                                                val halfLat = (latSpan * (1.0 + paddingFactor)) / 2.0
-                                                val halfLon = (lonSpan * (1.0 + paddingFactor)) / 2.0
+                                            if (allBoundsPoints.size < 2 || (latDiff < 0.0001 && lonDiff < 0.0001)) {
+                                                controller.setZoom(16.5)
+                                                return
+                                            }
 
-                                                val boundingBox = org.osmdroid.util.BoundingBox(
-                                                    centerLat + halfLat,
-                                                    centerLon + halfLon,
-                                                    centerLat - halfLat,
-                                                    centerLon - halfLon
-                                                )
-                                                post {
-                                                    try {
-                                                        zoomToBoundingBox(boundingBox, false, 60)
-                                                    } catch (_: Exception) {
-                                                        controller.setZoom(15.5)
+                                            val w = width
+                                            val h = height
+                                            val paddingPx = 60
+
+                                            if (w > paddingPx * 2 + 50 && h > paddingPx * 2 + 50) {
+                                                try {
+                                                    val minSpan = 0.0040
+                                                    val latSpan = latDiff.coerceAtLeast(minSpan)
+                                                    val lonSpan = lonDiff.coerceAtLeast(minSpan)
+                                                    val paddingFactor = 0.35
+                                                    val halfLat = (latSpan * (1.0 + paddingFactor)) / 2.0
+                                                    val halfLon = (lonSpan * (1.0 + paddingFactor)) / 2.0
+
+                                                    val bbox = org.osmdroid.util.BoundingBox(
+                                                        centerLat + halfLat,
+                                                        centerLon + halfLon,
+                                                        centerLat - halfLat,
+                                                        centerLon - halfLon
+                                                    )
+                                                    zoomToBoundingBox(bbox, false, paddingPx)
+                                                    val currentZoom = zoomLevelDouble
+                                                    if (currentZoom.isNaN() || currentZoom < 4.0 || currentZoom > 20.0) {
+                                                        controller.setZoom(16.0)
                                                         controller.setCenter(centerPoint)
                                                     }
+                                                } catch (_: Exception) {
+                                                    controller.setZoom(16.0)
+                                                    controller.setCenter(centerPoint)
                                                 }
+                                            } else {
+                                                controller.setZoom(16.0)
                                             }
+                                        }
+
+                                        if (width > 0 && height > 0) {
+                                            safeApplyBounds()
+                                        } else {
+                                            addOnLayoutChangeListener(object : android.view.View.OnLayoutChangeListener {
+                                                override fun onLayoutChange(
+                                                    v: android.view.View?,
+                                                    left: Int, top: Int, right: Int, bottom: Int,
+                                                    oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int
+                                                ) {
+                                                    removeOnLayoutChangeListener(this)
+                                                    safeApplyBounds()
+                                                }
+                                            })
                                         }
                                     }
                                 },
