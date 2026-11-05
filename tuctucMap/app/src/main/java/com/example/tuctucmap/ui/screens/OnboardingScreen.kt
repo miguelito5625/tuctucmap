@@ -1,6 +1,6 @@
 package com.example.tuctucmap.ui.screens
 
-import android.content.Context
+import com.example.tuctucmap.data.SecurePrefs
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -26,7 +26,6 @@ fun OnboardingScreen(
     onSelectDriver: () -> Unit
 ) {
     val context = LocalContext.current
-    val sharedPrefs = context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
 
     Box(
         modifier = Modifier
@@ -100,7 +99,7 @@ fun OnboardingScreen(
             // Botón de Pasajero (Usuario)
             Button(
                 onClick = {
-                    sharedPrefs.edit().putString("user_role", "passenger").apply()
+                    SecurePrefs.saveUserRole(context, "passenger")
                     onSelectPassenger()
                 },
                 modifier = Modifier
@@ -134,7 +133,7 @@ fun OnboardingScreen(
             // Botón de Conductor
             OutlinedButton(
                 onClick = {
-                    sharedPrefs.edit().putString("user_role", "driver").apply()
+                    SecurePrefs.saveUserRole(context, "driver")
                     onSelectDriver()
                 },
                 modifier = Modifier

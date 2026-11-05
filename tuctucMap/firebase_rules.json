@@ -2,17 +2,19 @@
   "rules": {
     "driver_locations": {
       ".read": "true",
+      ".write": "false",
       "$driverId": {
         ".write": "true",
-        ".validate": "!newData.exists() || (newData.hasChildren(['driver_id', 'lat', 'lon', 'status', 'updated_at']) && newData.child('driver_id').val() == $driverId && newData.child('lat').isNumber() && newData.child('lat').val() >= -90 && newData.child('lat').val() <= 90 && newData.child('lon').isNumber() && newData.child('lon').val() >= -180 && newData.child('lon').val() <= 180 && newData.child('status').isString())"
+        ".validate": "!newData.exists() || (newData.hasChildren(['driver_id', 'lat', 'lon', 'status', 'updated_at']) && newData.child('driver_id').val() == $driverId && newData.child('lat').isNumber() && newData.child('lat').val() >= -90 && newData.child('lat').val() <= 90 && newData.child('lon').isNumber() && newData.child('lon').val() >= -180 && newData.child('lon').val() <= 180 && newData.child('status').isString() && (!newData.child('nombre').exists() || (newData.child('nombre').isString() && newData.child('nombre').val().length <= 60)) && (!newData.child('telefono').exists() || (newData.child('telefono').isString() && newData.child('telefono').val().length <= 25)) && (!newData.child('placas').exists() || (newData.child('placas').isString() && newData.child('placas').val().length <= 25)) && (!newData.child('numeroUnidad').exists() || (newData.child('numeroUnidad').isString() && newData.child('numeroUnidad').val().length <= 25)))"
       }
     },
     "trips": {
       ".read": "true",
+      ".write": "false",
       ".indexOn": ["status", "driverId", "passengerId", "timestamp"],
       "$tripId": {
         ".write": "true",
-        ".validate": "!newData.exists() || (newData.hasChildren(['tripId', 'passengerId', 'passengerLat', 'passengerLon', 'status', 'timestamp']) && newData.child('tripId').val() == $tripId && newData.child('passengerLat').isNumber() && newData.child('passengerLat').val() >= -90 && newData.child('passengerLat').val() <= 90 && newData.child('passengerLon').isNumber() && newData.child('passengerLon').val() >= -180 && newData.child('passengerLon').val() <= 180 && (newData.child('status').val() == 'requested' || newData.child('status').val() == 'accepted' || newData.child('status').val() == 'completed' || newData.child('status').val() == 'cancelled' || newData.child('status').val() == 'rejected' || newData.child('status').val() == 'timeout'))"
+        ".validate": "!newData.exists() || (newData.hasChildren(['tripId', 'passengerId', 'passengerLat', 'passengerLon', 'status', 'timestamp']) && newData.child('tripId').val() == $tripId && newData.child('passengerLat').isNumber() && newData.child('passengerLat').val() >= -90 && newData.child('passengerLat').val() <= 90 && newData.child('passengerLon').isNumber() && newData.child('passengerLon').val() >= -180 && newData.child('passengerLon').val() <= 180 && (newData.child('status').val() == 'requested' || newData.child('status').val() == 'accepted' || newData.child('status').val() == 'completed' || newData.child('status').val() == 'cancelled' || newData.child('status').val() == 'rejected' || newData.child('status').val() == 'timeout') && (!newData.child('passengerName').exists() || (newData.child('passengerName').isString() && newData.child('passengerName').val().length <= 60)) && (!newData.child('passengerPhone').exists() || (newData.child('passengerPhone').isString() && newData.child('passengerPhone').val().length <= 25)) && (!newData.child('destination').exists() || (newData.child('destination').isString() && newData.child('destination').val().length <= 150)) && (!newData.child('message').exists() || (newData.child('message').isString() && newData.child('message').val().length <= 150)))"
       }
     }
   }

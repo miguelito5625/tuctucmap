@@ -24,6 +24,7 @@ import {
 } from '@angular/material/dialog';
 
 import { SupabaseService } from '../../services/supabase.service';
+import { sanitizeCsvCell } from '../../shared/csv-security';
 import {
   SubscriptionHistory,
   SubscriptionPaymentRequest,
@@ -1580,15 +1581,15 @@ export class SubscriptionsComponent implements OnInit, OnDestroy {
 
     const headers = ['ID', 'Conductor', 'Placas', 'Plan', 'Monto Pagado', 'Metodo', 'Referencia', 'Fecha Inicio', 'Fecha Fin'];
     const rows = list.map(s => [
-      `"${s.id || ''}"`,
-      `"${(s.driverName || '').replace(/"/g, '""')}"`,
-      `"${s.driverPlate || ''}"`,
-      `"${s.plan_type || ''}"`,
-      `"${s.amount_paid != null ? s.amount_paid.toFixed(2) : '0.00'}"`,
-      `"${this.formatPaymentMethod(s.payment_method)}"`,
-      `"${(s.reference_number || '').replace(/"/g, '""')}"`,
-      `"${s.start_date || ''}"`,
-      `"${s.end_date || ''}"`
+      sanitizeCsvCell(s.id),
+      sanitizeCsvCell(s.driverName),
+      sanitizeCsvCell(s.driverPlate),
+      sanitizeCsvCell(s.plan_type),
+      sanitizeCsvCell(s.amount_paid != null ? s.amount_paid.toFixed(2) : '0.00'),
+      sanitizeCsvCell(this.formatPaymentMethod(s.payment_method)),
+      sanitizeCsvCell(s.reference_number),
+      sanitizeCsvCell(s.start_date),
+      sanitizeCsvCell(s.end_date)
     ]);
 
     const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');

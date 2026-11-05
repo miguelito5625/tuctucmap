@@ -448,7 +448,7 @@ fun PassengerMapScreen(
         drawerState = drawerState,
         gesturesEnabled = drawerState.isOpen,
         drawerContent = {
-            val isAdminUser = remember(sharedPrefs) { sharedPrefs.getString("user_role", null) == "admin" }
+            val isAdminUser = remember(context) { com.example.tuctucmap.data.SecurePrefs.getUserRole(context) == "admin" }
             PassengerDrawerSheet(
                 passenger = passengerProfile,
                 currentEmail = repository.currentUserEmail ?: "",

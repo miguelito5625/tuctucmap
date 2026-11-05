@@ -51,9 +51,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val supabaseUrl = getSecretProperty("SUPABASE_URL", "https://doypobovndxkbkikkozq.supabase.co")
+        val supabaseUrl = getSecretProperty("SUPABASE_URL", "")
         val supabaseKey = getSecretProperty("SUPABASE_ANON_KEY", "")
-        val firebaseRtdbUrl = getSecretProperty("FIREBASE_RTDB_URL", "https://tuctuc-map-default-rtdb.firebaseio.com")
+        val firebaseRtdbUrl = getSecretProperty("FIREBASE_RTDB_URL", "")
 
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_KEY", "\"$supabaseKey\"")

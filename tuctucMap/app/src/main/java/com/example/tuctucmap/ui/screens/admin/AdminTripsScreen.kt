@@ -42,6 +42,7 @@ import com.example.tuctucmap.data.model.parseIsoTimestamp
 import com.example.tuctucmap.data.repository.AdminRepository
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.ui.util.AppTileSource
+import com.example.tuctucmap.ui.util.CsvSecurityUtils
 import kotlinx.coroutines.launch
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -1595,17 +1596,16 @@ private fun exportTripsCsv(context: Context, trips: List<AdminTrip>) {
             val tipo = if (t.isRegisteredPassenger) "Registrado" else "Invitado"
             val fare = t.fare ?: 0.0
             val dist = t.distanceKm ?: 0.0
-            val cleanDest = t.message.replace("\"", "'")
 
-            sb.append("\"${t.id}\",")
-            sb.append("\"${t.resolvedPassengerName}\",")
-            sb.append("\"${t.resolvedPassengerPhone}\",")
-            sb.append("\"$tipo\",")
-            sb.append("\"${t.resolvedDriverName}\",")
-            sb.append("\"$cleanDest\",")
-            sb.append("$fare,")
-            sb.append("$dist,")
-            sb.append("\"$dateStr\"\n")
+            sb.append(CsvSecurityUtils.escapeCsvCell(t.id)).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(t.resolvedPassengerName)).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(t.resolvedPassengerPhone)).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(tipo)).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(t.resolvedDriverName)).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(t.message)).append(",")
+            sb.append(fare).append(",")
+            sb.append(dist).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(dateStr)).append("\n")
         }
 
         val cacheDir = context.cacheDir

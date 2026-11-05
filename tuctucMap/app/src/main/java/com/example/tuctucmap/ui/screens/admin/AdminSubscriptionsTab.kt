@@ -33,6 +33,7 @@ import com.example.tuctucmap.data.model.AdminSubscriptionHistory
 import com.example.tuctucmap.data.model.AppConfig
 import com.example.tuctucmap.data.repository.AdminRepository
 import com.example.tuctucmap.data.repository.SupabaseRepository
+import com.example.tuctucmap.ui.util.CsvSecurityUtils
 import kotlinx.coroutines.launch
 import java.io.File
 import java.net.URLEncoder
@@ -647,16 +648,16 @@ private fun exportAndShareCsv(
             val dateStr = if (h.createdAtEpoch > 0) sdf.format(Date(h.createdAtEpoch)) else ""
             val endStr = if (h.endDateEpoch > 0) sdf.format(Date(h.endDateEpoch)) else ""
             val status = if (h.isCurrentlyActive) "Activo" else "Expirado"
-            sb.append("\"${h.id}\",")
-            sb.append("\"${h.driverName}\",")
-            sb.append("\"${h.driverPlate}\",")
-            sb.append("\"${h.planType}\",")
-            sb.append("${h.amountPaid},")
-            sb.append("\"${h.paymentMethod}\",")
-            sb.append("\"${h.referenceNumber}\",")
-            sb.append("\"$dateStr\",")
-            sb.append("\"$endStr\",")
-            sb.append("\"$status\"\n")
+            sb.append(CsvSecurityUtils.escapeCsvCell(h.id)).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(h.driverName)).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(h.driverPlate)).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(h.planType)).append(",")
+            sb.append(h.amountPaid).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(h.paymentMethod)).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(h.referenceNumber)).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(dateStr)).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(endStr)).append(",")
+            sb.append(CsvSecurityUtils.escapeCsvCell(status)).append("\n")
         }
 
         val cacheDir = context.cacheDir

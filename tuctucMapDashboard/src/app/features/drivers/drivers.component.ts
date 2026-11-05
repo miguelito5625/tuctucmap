@@ -19,6 +19,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { sanitizeCsvCell } from '../../shared/csv-security';
 import {
   MatDialog,
   MatDialogModule,
@@ -717,13 +718,13 @@ export class DriversComponent implements OnInit, OnDestroy {
 
     const headers = ['UID', 'Nombre', 'Correo', 'Teléfono', 'Placas', 'Estado Aprobación', 'Vencimiento Suscripción'];
     const rows = list.map((d) => [
-      `"${d.uid || ''}"`,
-      `"${(d.nombre || '').replace(/"/g, '""')}"`,
-      `"${(d.email || '').replace(/"/g, '""')}"`,
-      `"${d.telefono || ''}"`,
-      `"${d.placas || ''}"`,
-      `"${d.estadoAprobacion || ''}"`,
-      `"${this.formatExpiryDate(d.fechaVencimientoSuscripcion)}"`,
+      sanitizeCsvCell(d.uid),
+      sanitizeCsvCell(d.nombre),
+      sanitizeCsvCell(d.email),
+      sanitizeCsvCell(d.telefono),
+      sanitizeCsvCell(d.placas),
+      sanitizeCsvCell(d.estadoAprobacion),
+      sanitizeCsvCell(this.formatExpiryDate(d.fechaVencimientoSuscripcion)),
     ]);
 
     const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');

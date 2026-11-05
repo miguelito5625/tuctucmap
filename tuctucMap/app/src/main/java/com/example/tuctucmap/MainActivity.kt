@@ -108,8 +108,7 @@ class MainActivity : ComponentActivity() {
                         } catch (_: Exception) {}
                     }
 
-                    val sharedPrefs = getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
-                    var savedRole = sharedPrefs.getString("user_role", null)
+                    var savedRole = SecurePrefs.getUserRole(this@MainActivity)
                     val hasStoredSession = SecurePrefs.loadUserSession(this@MainActivity) != null
 
                     // Si no hay ninguna sesión persistida en SecurePrefs ni rol guardado:
@@ -139,13 +138,8 @@ class MainActivity : ComponentActivity() {
                             (hasStoredSession && uid.isNotBlank())
 
                     if (isAuthed) {
-                        // 1. Si el rol guardado ya es "admin", entrar directamente a AdminHome
-                        if (savedRole == "admin") {
-                            initialScreen = Screen.AdminHome
-                            return@LaunchedEffect
-                        }
-
-                        // 2. Verificar rol real en Supabase profiles por si savedRole estaba desactualizado o era driver/passenger
+                        // [SEC-05] Verificar rol real en Supabase profiles.
+                        // Para acceder al rol admin se exige validación estricta en el servidor para evitar spoofing local.
                         val verifiedRole = if (uid.isNotBlank()) {
                             try {
                                 withTimeoutOrNull(2500L) {
@@ -157,13 +151,20 @@ class MainActivity : ComponentActivity() {
                         val effectiveRole = verifiedRole ?: savedRole
 
                         if (effectiveRole == "admin") {
-                            sharedPrefs.edit().putString("user_role", "admin").commit()
-                            initialScreen = Screen.AdminHome
-                            return@LaunchedEffect
+                            if (verifiedRole == "admin") {
+                                SecurePrefs.saveUserRole(this@MainActivity, "admin")
+                                initialScreen = Screen.AdminHome
+                                return@LaunchedEffect
+                            } else {
+                                // No verificado por el servidor: degradar rol y bloquear acceso al panel admin
+                                SecurePrefs.saveUserRole(this@MainActivity, "passenger")
+                                initialScreen = Screen.PassengerMap
+                                return@LaunchedEffect
+                            }
                         }
 
                         if (!verifiedRole.isNullOrBlank() && verifiedRole != savedRole) {
-                            sharedPrefs.edit().putString("user_role", verifiedRole).commit()
+                            SecurePrefs.saveUserRole(this@MainActivity, verifiedRole)
                             savedRole = verifiedRole
                         }
 

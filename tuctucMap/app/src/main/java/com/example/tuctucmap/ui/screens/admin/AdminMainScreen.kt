@@ -40,6 +40,21 @@ fun AdminMainScreen(
     val pendingDriversCount = pendingCounts.first
     val pendingPaymentRequestsCount = pendingCounts.second
 
+    // [SEC-05] Validación estricta en servidor de credenciales de admin al abrir la pantalla
+    LaunchedEffect(Unit) {
+        val uid = supabaseRepo.currentUserUid
+        if (uid.isNullOrBlank()) {
+            onLogout()
+            return@LaunchedEffect
+        }
+        val role = try {
+            supabaseRepo.getUserRole(uid)
+        } catch (_: Exception) { null }
+        if (role != "admin") {
+            onLogout()
+        }
+    }
+
     // Refresco inicial y sondeo periódico suave en segundo plano mientras el admin esté en pantalla
     LaunchedEffect(Unit) {
         while (isActive) {

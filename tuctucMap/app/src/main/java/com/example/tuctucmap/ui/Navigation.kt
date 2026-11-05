@@ -83,19 +83,13 @@ fun AppNavigation(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // Helper para guardar rol en SharedPreferences
+    // Helper para guardar rol en almacenamiento seguro cifrado (SEC-05)
     fun saveRole(role: String) {
-        context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
-            .edit()
-            .putString("user_role", role)
-            .commit()
+        com.example.tuctucmap.data.SecurePrefs.saveUserRole(context, role)
     }
 
     fun clearRole() {
-        context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE)
-            .edit()
-            .remove("user_role")
-            .commit()
+        com.example.tuctucmap.data.SecurePrefs.saveUserRole(context, "")
     }
 
     when (val screen = currentScreen) {

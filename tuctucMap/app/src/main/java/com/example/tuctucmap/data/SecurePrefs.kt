@@ -214,6 +214,32 @@ object SecurePrefs : SessionManager {
         return decrypt(raw)
     }
 
+    // --- Caché cifrada del rol de usuario (Mitigación SEC-05) ---
+
+    fun saveUserRole(context: Context, role: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val encRole = encrypt(role) ?: return
+        prefs.edit()
+            .putString("enc_user_role", encRole)
+            .remove("user_role") // Limpiar texto plano legacy
+            .apply()
+    }
+
+    fun getUserRole(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val enc = prefs.getString("enc_user_role", null)
+        if (enc != null) {
+            val decrypted = decrypt(enc)
+            if (!decrypted.isNullOrBlank()) return decrypted
+        }
+        val plain = prefs.getString("user_role", null)
+        if (!plain.isNullOrBlank()) {
+            saveUserRole(context, plain)
+            return plain
+        }
+        return null
+    }
+
     fun clearTokens(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit()
@@ -221,6 +247,7 @@ object SecurePrefs : SessionManager {
             .remove("supabase_access")
             .remove("supabase_refresh")
             .remove("user_role")
+            .remove("enc_user_role")
             .remove("driver_last_approval_status")
             .remove("driver_last_sub_end")
             .apply()

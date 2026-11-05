@@ -9,6 +9,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SupabaseService } from '../../services/supabase.service';
+import { sanitizeCsvCell } from '../../shared/csv-security';
 import * as L from 'leaflet';
 
 @Component({
@@ -192,16 +193,16 @@ export class TripsComponent implements OnInit, OnDestroy {
 
     const headers = ['ID', 'Pasajero', 'Tipo Pasajero', 'Teléfono Pasajero', 'Conductor', 'Tarifa (Q)', 'Distancia (km)', 'Mensaje', 'Estado', 'Fecha'];
     const rows = data.map((t) => [
-      `"${t.id || ''}"`,
-      `"${(t.passengerName || '').replace(/"/g, '""')}"`,
-      `"${t.isRegistered ? 'Registrado' : 'Sin cuenta (Invitado)'}"`,
-      `"${(t.passengerPhone || '').replace(/"/g, '""')}"`,
-      `"${(t.driverName || '').replace(/"/g, '""')}"`,
-      `"${t.fare != null ? t.fare.toFixed(2) : ''}"`,
-      `"${t.distance_km != null ? t.distance_km.toFixed(2) : ''}"`,
-      `"${(t.message || '').replace(/"/g, '""')}"`,
-      `"${t.status || ''}"`,
-      `"${new Date(t.created_at).toLocaleString('es-GT')}"`,
+      sanitizeCsvCell(t.id),
+      sanitizeCsvCell(t.passengerName),
+      sanitizeCsvCell(t.isRegistered ? 'Registrado' : 'Sin cuenta (Invitado)'),
+      sanitizeCsvCell(t.passengerPhone),
+      sanitizeCsvCell(t.driverName),
+      sanitizeCsvCell(t.fare != null ? t.fare.toFixed(2) : ''),
+      sanitizeCsvCell(t.distance_km != null ? t.distance_km.toFixed(2) : ''),
+      sanitizeCsvCell(t.message),
+      sanitizeCsvCell(t.status),
+      sanitizeCsvCell(new Date(t.created_at).toLocaleString('es-GT')),
     ]);
 
     const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');

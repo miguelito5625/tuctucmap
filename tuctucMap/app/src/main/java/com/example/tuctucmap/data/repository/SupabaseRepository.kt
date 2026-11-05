@@ -101,7 +101,10 @@ class SupabaseRepository {
                     offsetRef.addValueEventListener(object : ValueEventListener {
                         override fun onDataChange(snapshot: DataSnapshot) {
                             val offset = snapshot.getValue(Long::class.java) ?: 0L
-                            ServerClock.offsetMillis = offset
+                            // [SEC-07] Solo aplicar offset de Firebase si Supabase aún no ha sincronizado la hora autoritativa
+                            if (!ServerClock.isSyncedWithSupabase) {
+                                ServerClock.offsetMillis = offset
+                            }
                         }
 
                         override fun onCancelled(error: DatabaseError) {}

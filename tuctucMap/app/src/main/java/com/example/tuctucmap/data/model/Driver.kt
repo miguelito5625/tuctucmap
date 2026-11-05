@@ -11,11 +11,15 @@ object ServerClock {
     @Volatile
     var offsetMillis: Long = 0L
 
+    @Volatile
+    var isSyncedWithSupabase: Boolean = false
+
     fun nowMillis(): Long = System.currentTimeMillis() + offsetMillis
 
     fun updateFromServerEpoch(serverEpochMillis: Long) {
         if (serverEpochMillis > 1_700_000_000_000L) {
             offsetMillis = serverEpochMillis - System.currentTimeMillis()
+            isSyncedWithSupabase = true
         }
     }
 }

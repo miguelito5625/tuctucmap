@@ -332,22 +332,42 @@ CREATE OR REPLACE FUNCTION public.approve_subscription_payment_request(
 RETURNS JSONB AS $$
 DECLARE
   v_req RECORD;
+  v_cfg RECORD;
   v_current_end TIMESTAMPTZ;
   v_base_time TIMESTAMPTZ;
   v_days_to_add INT;
   v_new_end TIMESTAMPTZ;
+  v_official_amount NUMERIC(10,2);
 BEGIN
   IF NOT public.is_admin() THEN
     RAISE EXCEPTION 'Acceso denegado: solo administradores pueden aprobar solicitudes de renovación.';
   END IF;
 
-  SELECT * INTO v_req FROM public.subscription_payment_requests WHERE id = p_request_id;
+  -- Bloqueo pesimista FOR UPDATE para evitar condiciones de carrera (double-spending)
+  SELECT * INTO v_req 
+  FROM public.subscription_payment_requests 
+  WHERE id = p_request_id
+  FOR UPDATE;
+
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Solicitud de renovación no encontrada.';
   END IF;
 
   IF v_req.status = 'aprobado' THEN
     RAISE EXCEPTION 'Esta solicitud ya fue aprobada previamente.';
+  END IF;
+
+  -- Obtener precios oficiales del sistema para neutralizar manipulación de montos desde el cliente
+  SELECT * INTO v_cfg FROM public.app_config WHERE id = 'default' LIMIT 1;
+  IF FOUND THEN
+    CASE v_req.plan_type
+      WHEN 'semanal' THEN v_official_amount := COALESCE(v_cfg.price_semanal, v_cfg.price_weekly, 25.00);
+      WHEN 'quincenal' THEN v_official_amount := COALESCE(v_cfg.price_quincenal, 45.00);
+      WHEN 'mensual' THEN v_official_amount := COALESCE(v_cfg.price_mensual, v_cfg.price_monthly, 80.00);
+      ELSE v_official_amount := COALESCE(v_req.amount, 25.00);
+    END CASE;
+  ELSE
+    v_official_amount := COALESCE(v_req.amount, 25.00);
   END IF;
 
   SELECT subscription_end_date INTO v_current_end 
@@ -391,13 +411,14 @@ BEGIN
     NOW(),
     v_new_end,
     v_req.plan_type,
-    v_req.amount,
+    v_official_amount,
     v_req.payment_method,
     COALESCE(v_req.reference_number, '')
   );
 
   UPDATE public.subscription_payment_requests
   SET status = 'aprobado',
+      amount = v_official_amount,
       reviewed_at = NOW(),
       reviewed_by = auth.uid()
   WHERE id = p_request_id;
@@ -405,7 +426,8 @@ BEGIN
   RETURN jsonb_build_object(
     'success', true,
     'new_end_date', v_new_end,
-    'driver_id', v_req.driver_id
+    'driver_id', v_req.driver_id,
+    'amount_applied', v_official_amount
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
@@ -517,11 +539,16 @@ ALTER TABLE public.driver_subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.app_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscription_payment_requests ENABLE ROW LEVEL SECURITY;
 
--- Reglas para Profiles (Bloqueado para usuarios anónimos no autenticados)
+-- Reglas para Profiles ([SEC-02] Restricción RLS para proteger PII y teléfonos)
 DROP POLICY IF EXISTS "Profiles viewable by everyone" ON public.profiles;
 DROP POLICY IF EXISTS "Profiles viewable by authenticated users" ON public.profiles;
-CREATE POLICY "Profiles viewable by authenticated users" ON public.profiles
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "Users view own profile or admins view all" ON public.profiles;
+CREATE POLICY "Users view own profile or admins view all" ON public.profiles
+  FOR SELECT USING (
+    auth.uid() = id
+    OR public.is_admin()
+    OR (role = 'driver' AND approval_status = 'aprobado')
+  );
 
 DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
 CREATE POLICY "Users can insert their own profile" ON public.profiles
@@ -606,6 +633,23 @@ CREATE POLICY "Participants and admin can update trips" ON public.trips
     auth.uid() = driver_id OR
     public.is_admin()
   );
+
+-- [SEC-03] Inmutabilidad estricta de viajes completados/rechazados/cancelados
+CREATE OR REPLACE FUNCTION public.check_trip_immutable_after_completion()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF OLD.status IN ('completed', 'rejected', 'cancelled') AND NOT public.is_admin() THEN
+    RAISE EXCEPTION 'No se pueden modificar viajes finalizados o cancelados (status actual: %)', OLD.status;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS trg_protect_finished_trips ON public.trips;
+CREATE TRIGGER trg_protect_finished_trips
+  BEFORE UPDATE ON public.trips
+  FOR EACH ROW
+  EXECUTE FUNCTION public.check_trip_immutable_after_completion();
 
 -- Habilitar Supabase Realtime para tablas requeridas en el Dashboard
 DO $$
