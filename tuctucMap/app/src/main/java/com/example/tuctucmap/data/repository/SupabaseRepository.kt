@@ -19,6 +19,7 @@ import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.CoroutineScope
@@ -68,6 +69,9 @@ class SupabaseRepository {
         @Volatile
         var cachedAppConfig: AppConfig = AppConfig()
             private set
+
+        private val _appConfigFlow = kotlinx.coroutines.flow.MutableStateFlow(cachedAppConfig)
+        val appConfigFlow: kotlinx.coroutines.flow.StateFlow<AppConfig> = _appConfigFlow.asStateFlow()
 
         @Volatile
         private var lastServerClockSyncElapsedMs: Long = 0L
@@ -163,6 +167,8 @@ class SupabaseRepository {
         }
     }
 
+    val appConfigFlow: kotlinx.coroutines.flow.StateFlow<AppConfig> get() = Companion.appConfigFlow
+
     /**
      * Obtiene la configuración dinámica del negocio (WhatsApp admin, cuentas bancarias, tarifas, radio km).
      * Incluye caché en memoria con TTL de 60s para ahorrar tráfico de red.
@@ -178,6 +184,7 @@ class SupabaseRepository {
             }.decodeSingleOrNull<AppConfig>()
             if (cfg != null) {
                 cachedAppConfig = cfg
+                _appConfigFlow.value = cfg
                 lastAppConfigFetchElapsedMs = android.os.SystemClock.elapsedRealtime()
                 cfg
             } else {
@@ -818,7 +825,7 @@ class SupabaseRepository {
                 endUtc = null
             }
 
-            val trips = supabase.postgrest["trips"].select {
+            val trips = supabase.postgrest["trips"].select(columns = tripColumnsWithoutRoute) {
                 filter {
                     eq("driver_id", uid)
                     gte("created_at", startUtc)
@@ -1093,7 +1100,7 @@ class SupabaseRepository {
                                     )
                                 }
                             } else {
-                                if (trip.passengerId == currentUserUid || trip.driverId == driverId) {
+                                if (trip.passengerId == currentUserUid || trip.driverId == driverId || (isBroadcast && now - trip.timestamp > 120_000L)) {
                                     child.ref.removeValue()
                                 }
                             }
@@ -1315,6 +1322,7 @@ class SupabaseRepository {
         val channel = supabase.channel(uniqueChannelId)
         val flow = channel.postgresChangeFlow<PostgresAction>("public") {
             table = "profiles"
+            filter("id", FilterOperator.EQ, uid)
         }
 
         launch {
@@ -1364,6 +1372,7 @@ class SupabaseRepository {
         val channel = supabase.channel(uniqueChannelId)
         val flow = channel.postgresChangeFlow<PostgresAction>("public") {
             table = "profiles"
+            filter("id", FilterOperator.EQ, uid)
         }
 
         launch {

@@ -83,10 +83,17 @@ object OsrmRoutingService {
         }
 
         try {
-            // Formato OSRM: /route/v1/driving/{lon1},{lat1};{lon2},{lat2}?overview=full&geometries=geojson
+            // Formato OSRM: {baseUrl}{lon1},{lat1};{lon2},{lat2}?overview=full&geometries=geojson
+            val configuredBaseUrl = com.example.tuctucmap.data.repository.SupabaseRepository.cachedAppConfig.osrmServerUrl
+            val baseUrl = if (configuredBaseUrl.isNotBlank()) {
+                if (configuredBaseUrl.endsWith("/")) configuredBaseUrl else "$configuredBaseUrl/"
+            } else {
+                "https://router.project-osrm.org/route/v1/driving/"
+            }
             val urlString = String.format(
                 Locale.US,
-                "https://router.project-osrm.org/route/v1/driving/%.6f,%.6f;%.6f,%.6f?overview=full&geometries=geojson",
+                "%s%.6f,%.6f;%.6f,%.6f?overview=full&geometries=geojson",
+                baseUrl,
                 startLon, startLat, endLon, endLat
             )
 

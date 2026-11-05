@@ -65,26 +65,10 @@ fun AdminFleetMapTab(
     val tucTucIcon = remember(context) { MarkerIconUtils.getTucTucIcon(context) }
     val pausedTucTucIcon = remember(context) { MarkerIconUtils.getPausedTucTucIcon(context) }
 
-    // Suscripción en tiempo real a Firebase Realtime Database sin límite de radio
-    DisposableEffect(Unit) {
-        val ref = Firebase.database.getReference("driver_locations")
-        val listener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val list = mutableListOf<DriverLocation>()
-                for (child in snapshot.children) {
-                    val loc = supabaseRepo.parseDriverLocationSnapshot(child)
-                    if (loc != null && loc.active && loc.isRecentlyActive()) {
-                        list.add(loc)
-                    }
-                }
-                liveDrivers = list
-            }
-
-            override fun onCancelled(error: DatabaseError) {}
-        }
-        ref.addValueEventListener(listener)
-        onDispose {
-            ref.removeEventListener(listener)
+    // Suscripción incremental optimizada a Firebase Realtime Database sin límite de radio (ChildEventListener)
+    LaunchedEffect(Unit) {
+        supabaseRepo.observeActiveLocations().collect { list ->
+            liveDrivers = list
         }
     }
 

@@ -27,6 +27,7 @@ export interface AppConfig {
   price_mensual: number;
   search_radius_km: number;
   max_search_radius_km: number;
+  osrm_server_url?: string;
   updated_at?: string;
 }
 

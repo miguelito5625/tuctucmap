@@ -517,8 +517,12 @@ class LocationTrackingService : Service() {
         tts?.stop()
         tts?.shutdown()
         if (driverUid.isNotBlank()) {
+            val uidToRemove = driverUid
             CoroutineScope(Dispatchers.IO).launch {
-                repository.removeLocation(driverUid)
+                // Si el servicio fue reiniciado rápidamente o está activa otra instancia, no borrar ubicación
+                if (!isRunning && activeServiceInstance == null) {
+                    repository.removeLocation(uidToRemove)
+                }
             }
         }
         serviceScope.cancel()

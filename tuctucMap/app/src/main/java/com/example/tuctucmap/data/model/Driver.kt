@@ -58,7 +58,9 @@ data class AppConfig(
     @SerialName("max_search_radius_km")
     val maxSearchRadiusKm: Double = 5.0,
     @SerialName("search_radius_km")
-    val searchRadiusKm: Double = 5.0
+    val searchRadiusKm: Double = 5.0,
+    @SerialName("osrm_server_url")
+    val osrmServerUrl: String = "https://router.project-osrm.org/route/v1/driving/"
 )
 
 @Serializable

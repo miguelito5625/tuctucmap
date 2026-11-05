@@ -63,6 +63,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.example.tuctucmap.data.PassengerDestinationPreferences
 import com.example.tuctucmap.data.PassengerLocationPreferences
 import com.example.tuctucmap.data.model.DriverLocation
+import com.example.tuctucmap.data.model.ServerClock
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.data.service.OsrmRoutingService
 import com.example.tuctucmap.ui.util.AppTileSource
@@ -141,6 +142,7 @@ fun PassengerMapScreen(
     }
 
     LaunchedEffect(Unit) {
+        repository.getAppConfig()
         if (!hasLocationPermission) {
             permissionLauncher.launch(
                 arrayOf(
@@ -242,7 +244,15 @@ fun PassengerMapScreen(
     LaunchedEffect(activeTripId) {
         activeTripId?.let { tid ->
             repository.observeTrip(tid).collect { trip ->
-                if (trip == null || trip.status in listOf("completed", "cancelled", "timeout")) {
+                val now = ServerClock.nowMillis()
+                val isExpiredRequested = trip != null && trip.status == "requested" && (now - trip.timestamp > 60_000L)
+                if (trip == null || trip.status in listOf("completed", "cancelled", "timeout") || isExpiredRequested) {
+                    if (isExpiredRequested) {
+                        try {
+                            repository.updateTripStatus(tid, "timeout")
+                            repository.deleteTrip(tid)
+                        } catch (_: Exception) {}
+                    }
                     if (trip?.status == "completed") {
                         com.example.tuctucmap.ui.util.InAppReviewHelper.recordSuccessfulTripAndRequestReview(context)
                     }
@@ -413,7 +423,8 @@ fun PassengerMapScreen(
     val myLocGeo = myLocationOverlayInstance?.myLocation ?: remember(context) {
         PassengerLocationPreferences.getLastSavedLocation(context)
     }
-    val maxRadiusMeters = remember { SupabaseRepository.cachedAppConfig.maxSearchRadiusKm * 1000.0 }
+    val appConfig by repository.appConfigFlow.collectAsState()
+    val maxRadiusMeters = remember(appConfig.maxSearchRadiusKm) { appConfig.maxSearchRadiusKm * 1000.0 }
 
     // Separar conductores disponibles vs en pausa/ocupados dentro de la geocerca del municipio
     val nearbyDriverLocations = remember(rawDriverLocations, myLocGeo?.latitude, myLocGeo?.longitude) {

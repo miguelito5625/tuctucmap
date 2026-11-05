@@ -38,7 +38,8 @@ export class SupabaseService {
     price_monthly: 80.00,
     price_mensual: 80.00,
     search_radius_km: 5.00,
-    max_search_radius_km: 5.00
+    max_search_radius_km: 5.00,
+    osrm_server_url: 'https://router.project-osrm.org/route/v1/driving/'
   };
 
   constructor() {
@@ -89,6 +90,7 @@ export class SupabaseService {
           price_mensual: Number(data.price_mensual || data.price_monthly) || 80.00,
           search_radius_km: Number(data.search_radius_km || data.max_search_radius_km) || 5.00,
           max_search_radius_km: Number(data.max_search_radius_km || data.search_radius_km) || 5.00,
+          osrm_server_url: data.osrm_server_url || 'https://router.project-osrm.org/route/v1/driving/',
           updated_at: data.updated_at
         };
       }
@@ -286,16 +288,6 @@ export class SupabaseService {
 
   async getFinancialStats(): Promise<FinancialKPIs> {
     const cfg = await this.getAppConfig();
-    const { data: subs } = await this.supabase
-      .from('driver_subscriptions')
-      .select('amount_paid, created_at, end_date');
-
-    const { data: approvedDrivers } = await this.supabase
-      .from('profiles')
-      .select('id, subscription_end_date')
-      .eq('role', 'driver')
-      .eq('approval_status', 'aprobado');
-
     const now = Date.now();
     const sevenDaysLater = now + (7 * 24 * 60 * 60 * 1000);
     const currentMonth = new Date().getMonth();
@@ -304,14 +296,29 @@ export class SupabaseService {
     let totalRevenue = 0;
     let monthRevenue = 0;
 
-    (subs || []).forEach(s => {
-      const amt = Number(s.amount_paid) || 0;
-      totalRevenue += amt;
-      const d = new Date(s.created_at);
-      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-        monthRevenue += amt;
-      }
-    });
+    const { data: rpcSummary } = await this.supabase.rpc('get_admin_financial_summary');
+    if (rpcSummary && rpcSummary.length > 0) {
+      totalRevenue = Number(rpcSummary[0].total_revenue) || 0;
+      monthRevenue = Number(rpcSummary[0].month_revenue) || 0;
+    } else {
+      const { data: subs } = await this.supabase
+        .from('driver_subscriptions')
+        .select('amount_paid, created_at');
+      (subs || []).forEach(s => {
+        const amt = Number(s.amount_paid) || 0;
+        totalRevenue += amt;
+        const d = new Date(s.created_at);
+        if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+          monthRevenue += amt;
+        }
+      });
+    }
+
+    const { data: approvedDrivers } = await this.supabase
+      .from('profiles')
+      .select('id, subscription_end_date')
+      .eq('role', 'driver')
+      .eq('approval_status', 'aprobado');
 
     let expiringIn7Days = 0;
     let activeFleetCount = 0;

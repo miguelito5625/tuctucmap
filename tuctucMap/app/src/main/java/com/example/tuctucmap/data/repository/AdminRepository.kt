@@ -185,27 +185,34 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
             val currentMonth = calNow.get(Calendar.MONTH)
             val currentYear = calNow.get(Calendar.YEAR)
 
-            val subs = supabase.postgrest["driver_subscriptions"].select().decodeList<AdminSubscriptionHistory>()
+            val (totalRevenue, monthRevenue) = try {
+                val rpcSummary = supabase.postgrest.rpc("get_admin_financial_summary")
+                    .decodeSingle<AdminFinancialSummaryDto>()
+                Pair(rpcSummary.totalRevenue, rpcSummary.monthRevenue)
+            } catch (e: Exception) {
+                android.util.Log.w("AdminRepository", "RPC get_admin_financial_summary fallback: ${e.message}")
+                val subs = supabase.postgrest["driver_subscriptions"].select().decodeList<AdminSubscriptionHistory>()
+                var total = 0.0
+                var month = 0.0
+                for (sub in subs) {
+                    val amt = sub.amountPaid
+                    total += amt
+                    if (sub.createdAtEpoch > 0L) {
+                        val c = Calendar.getInstance().apply { timeInMillis = sub.createdAtEpoch }
+                        if (c.get(Calendar.MONTH) == currentMonth && c.get(Calendar.YEAR) == currentYear) {
+                            month += amt
+                        }
+                    }
+                }
+                Pair(total, month)
+            }
+
             val drivers = supabase.postgrest["profiles"].select {
                 filter {
                     eq("role", "driver")
                     eq("approval_status", "aprobado")
                 }
             }.decodeList<AdminDriver>()
-
-            var totalRevenue = 0.0
-            var monthRevenue = 0.0
-
-            for (sub in subs) {
-                val amt = sub.amountPaid
-                totalRevenue += amt
-                if (sub.createdAtEpoch > 0L) {
-                    val c = Calendar.getInstance().apply { timeInMillis = sub.createdAtEpoch }
-                    if (c.get(Calendar.MONTH) == currentMonth && c.get(Calendar.YEAR) == currentYear) {
-                        monthRevenue += amt
-                    }
-                }
-            }
 
             var activeFleetCount = 0
             var expiringIn7Days = 0
@@ -394,15 +401,23 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
                 val phone: String? = null
             )
 
-            val profileMap = try {
-                val list = supabase.postgrest["profiles"]
-                    .select(columns = Columns.list("id", "name", "phone"))
-                    .decodeList<ProfileLookup>()
-                list.associateBy { it.id }
-            } catch (e: Exception) {
-                android.util.Log.w("AdminRepository", "Profile lookup fallback in getCompletedTrips: ${e.message}")
-                emptyMap()
-            }
+            val userIds = trips.flatMap { listOfNotNull(it.driverId, it.passengerId) }
+                .filter { it.isNotBlank() }
+                .distinct()
+
+            val profileMap = if (userIds.isNotEmpty()) {
+                try {
+                    val list = supabase.postgrest["profiles"]
+                        .select(columns = Columns.list("id", "name", "phone")) {
+                            filter { isIn("id", userIds) }
+                        }
+                        .decodeList<ProfileLookup>()
+                    list.associateBy { it.id }
+                } catch (e: Exception) {
+                    android.util.Log.w("AdminRepository", "Profile lookup fallback in getCompletedTrips: ${e.message}")
+                    emptyMap()
+                }
+            } else emptyMap()
 
             for (t in trips) {
                 val directName = t.passengerNameDirect?.trim()
@@ -514,24 +529,35 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
 
     suspend fun getPassengers(): Result<List<AdminPassenger>> = withContext(Dispatchers.IO) {
         try {
-            val list = supabase.postgrest["profiles"].select {
-                filter { eq("role", "passenger") }
-                order("created_at", Order.DESCENDING)
-            }.decodeList<AdminPassenger>()
+            val list = try {
+                supabase.postgrest.rpc("get_admin_passengers_summary")
+                    .decodeList<AdminPassenger>()
+            } catch (e: Exception) {
+                android.util.Log.w("AdminRepository", "RPC get_admin_passengers_summary fallback: ${e.message}")
+                val fallbackList = supabase.postgrest["profiles"].select {
+                    filter { eq("role", "passenger") }
+                    order("created_at", Order.DESCENDING)
+                }.decodeList<AdminPassenger>()
 
-            @kotlinx.serialization.Serializable
-            data class TripPassengerIdDto(val passenger_id: String? = null)
+                val passengerIds = fallbackList.map { it.id }.filter { it.isNotBlank() }
+                if (passengerIds.isNotEmpty()) {
+                    @kotlinx.serialization.Serializable
+                    data class TripPassengerIdDto(val passenger_id: String? = null)
 
-            val trips = supabase.postgrest["trips"].select(columns = Columns.list("passenger_id")).decodeList<TripPassengerIdDto>()
-            val counts = mutableMapOf<String, Int>()
-            for (t in trips) {
-                t.passenger_id?.let { pid ->
-                    counts[pid] = (counts[pid] ?: 0) + 1
+                    val trips = supabase.postgrest["trips"].select(columns = Columns.list("passenger_id")) {
+                        filter { isIn("passenger_id", passengerIds) }
+                    }.decodeList<TripPassengerIdDto>()
+                    val counts = mutableMapOf<String, Int>()
+                    for (t in trips) {
+                        t.passenger_id?.let { pid ->
+                            counts[pid] = (counts[pid] ?: 0) + 1
+                        }
+                    }
+                    for (p in fallbackList) {
+                        p.tripsCount = counts[p.id] ?: 0
+                    }
                 }
-            }
-
-            for (p in list) {
-                p.tripsCount = counts[p.id] ?: 0
+                fallbackList
             }
 
             Result.success(list)

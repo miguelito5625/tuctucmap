@@ -154,6 +154,14 @@ data class AdminTrip(
 }
 
 @Serializable
+data class AdminFinancialSummaryDto(
+    @SerialName("total_revenue")
+    val totalRevenue: Double = 0.0,
+    @SerialName("month_revenue")
+    val monthRevenue: Double = 0.0
+)
+
+@Serializable
 data class AdminPassenger(
     val id: String = "",
     @SerialName("name")
@@ -165,6 +173,7 @@ data class AdminPassenger(
     @SerialName("created_at")
     val createdAt: String? = null,
     val role: String = "passenger",
+    @SerialName("trips_count")
     var tripsCount: Int = 0
 ) {
     val nombre: String get() = rawNombre ?: ""
