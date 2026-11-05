@@ -180,6 +180,19 @@ class LocationTrackingService : Service() {
                         )
                     }
                 }
+            } else if (distanceMeters > 2000.0f && location.accuracy <= 30.0f) {
+                // Recuperación de caché antigua: si hubo un salto > 2000m pero el nuevo punto GPS tiene buena precisión,
+                // actualizar lastTripRecordedLocation para desbloquear el rastreo continuo de waypoints
+                lastTripRecordedLocation = location
+                synchronized(_tripRoutePoints) {
+                    _tripRoutePoints.add(
+                        SupabaseRepository.RoutePoint(
+                            lat = location.latitude,
+                            lon = location.longitude,
+                            timestamp = ServerClock.nowMillis()
+                        )
+                    )
+                }
             }
         }
 
@@ -188,6 +201,39 @@ class LocationTrackingService : Service() {
          * y la lista completa de puntos GPS registrados durante el recorrido.
          */
         fun finishTripTracking(): Pair<Double, List<SupabaseRepository.RoutePoint>> {
+            // Asegurar registrar la posición GPS actual de destino final antes de cerrar
+            val finalLoc = currentLocation.value
+            if (finalLoc != null) {
+                val lastLoc = lastTripRecordedLocation
+                if (lastLoc != null) {
+                    val finalDeltaMeters = finalLoc.distanceTo(lastLoc)
+                    if (finalDeltaMeters in 3.0f..2000.0f) {
+                        activeTripDistanceMeters.value += finalDeltaMeters.toDouble()
+                        synchronized(_tripRoutePoints) {
+                            _tripRoutePoints.add(
+                                SupabaseRepository.RoutePoint(
+                                    lat = finalLoc.latitude,
+                                    lon = finalLoc.longitude,
+                                    timestamp = ServerClock.nowMillis()
+                                )
+                            )
+                        }
+                    }
+                } else {
+                    synchronized(_tripRoutePoints) {
+                        if (_tripRoutePoints.isEmpty()) {
+                            _tripRoutePoints.add(
+                                SupabaseRepository.RoutePoint(
+                                    lat = finalLoc.latitude,
+                                    lon = finalLoc.longitude,
+                                    timestamp = ServerClock.nowMillis()
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
             val totalMeters = activeTripDistanceMeters.value
             val distanceKm = Math.round((totalMeters / 1000.0) * 100.0) / 100.0
             val points = synchronized(_tripRoutePoints) { _tripRoutePoints.toList() }
@@ -202,6 +248,13 @@ class LocationTrackingService : Service() {
             }
 
             return Pair(distanceKm, points)
+        }
+
+        /**
+         * Obtiene una copia en caliente de los puntos GPS registrados hasta el momento sin finalizar el viaje.
+         */
+        fun getTripRoutePointsSnapshot(): List<SupabaseRepository.RoutePoint> {
+            return synchronized(_tripRoutePoints) { _tripRoutePoints.toList() }
         }
 
         /**

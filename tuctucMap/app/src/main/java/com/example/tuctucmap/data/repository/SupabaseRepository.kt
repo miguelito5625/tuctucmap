@@ -33,6 +33,10 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.MutableData
 import com.google.firebase.database.Transaction
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.math.*
@@ -611,7 +615,8 @@ class SupabaseRepository {
         val distance_km: Double? = null,
         val route_points: List<RoutePoint>? = null,
         val passenger_name: String? = null,
-        val passenger_phone: String? = null
+        val passenger_phone: String? = null,
+        val created_at: String? = null
     )
 
     @kotlinx.serialization.Serializable
@@ -727,6 +732,16 @@ class SupabaseRepository {
             val effectivePassengerPhone = tripInfo.passengerPhone.trim().take(MAX_PHONE_LENGTH).ifBlank { null }
             val safeMessage = sanitizeTripMessage(tripInfo.message).ifBlank { "Viaje realizado" }
 
+            val effectiveRoutePoints = routePoints ?: tripInfo.routePoints
+            val startTimestamp = effectiveRoutePoints?.firstOrNull()?.timestamp?.takeIf { it > 0 }
+                ?: tripInfo.timestamp.takeIf { it > 0 }
+            val createdAtIso = startTimestamp?.let { ts ->
+                val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }
+                sdf.format(Date(ts))
+            }
+
             val dto = CompletedTripDto(
                 passenger_id = passengerIdToSave,
                 driver_id = effectiveDriverId,
@@ -736,9 +751,10 @@ class SupabaseRepository {
                 message = safeMessage,
                 fare = fare ?: tripInfo.fare,
                 distance_km = distanceKm ?: tripInfo.distanceKm,
-                route_points = routePoints ?: tripInfo.routePoints,
+                route_points = effectiveRoutePoints,
                 passenger_name = effectivePassengerName,
-                passenger_phone = effectivePassengerPhone
+                passenger_phone = effectivePassengerPhone,
+                created_at = createdAtIso
             )
             supabase.postgrest["trips"].insert(dto)
             Result.success(Unit)

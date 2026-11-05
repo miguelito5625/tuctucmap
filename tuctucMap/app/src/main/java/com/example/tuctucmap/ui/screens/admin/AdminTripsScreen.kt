@@ -189,6 +189,7 @@ fun AdminTripsScreen(
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
                 return utcTimeMillis in minAllowedUtcMidnight..maxAllowedUtcMidnight
             }
+
             override fun isSelectableYear(year: Int): Boolean {
                 val minYear = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
                     timeInMillis = minAllowedUtcMidnight
@@ -212,11 +213,12 @@ fun AdminTripsScreen(
                 customEndUtcMillis = customRangeEndUtcMillis
             )
 
-            val driverFilterList = if (selectedDriverIds.isEmpty() || (drivers.isNotEmpty() && selectedDriverIds.size == drivers.size)) {
-                null
-            } else {
-                selectedDriverIds.toList()
-            }
+            val driverFilterList =
+                if (selectedDriverIds.isEmpty() || (drivers.isNotEmpty() && selectedDriverIds.size == drivers.size)) {
+                    null
+                } else {
+                    selectedDriverIds.toList()
+                }
 
             val res = adminRepo.getCompletedTrips(
                 startDateIso = startIso,
@@ -261,10 +263,12 @@ fun AdminTripsScreen(
             selectedDriverIds.isEmpty() || (drivers.isNotEmpty() && selectedDriverIds.size == drivers.size) -> {
                 "Todos los conductores"
             }
+
             selectedDriverIds.size == 1 -> {
                 val d = drivers.firstOrNull { it.id in selectedDriverIds }
                 d?.nombre?.ifBlank { "1 conductor" } ?: "1 conductor"
             }
+
             else -> {
                 "${selectedDriverIds.size} conductores"
             }
@@ -302,7 +306,13 @@ fun AdminTripsScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Buscar por pasajero, conductor o destino...", color = Color(0xFF94A3B8), fontSize = 13.sp) },
+                    placeholder = {
+                        Text(
+                            "Buscar por pasajero, conductor o destino...",
+                            color = Color(0xFF94A3B8),
+                            fontSize = 13.sp
+                        )
+                    },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFF59E0B)) },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
@@ -405,8 +415,16 @@ fun AdminTripsScreen(
                         label = {
                             Text(
                                 if (currentPeriodFilter == AdminTripPeriodFilter.CUSTOM && customRangeStartUtcMillis != null && customRangeEndUtcMillis != null) {
-                                    val sdf = SimpleDateFormat("dd/MM", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }
-                                    "${sdf.format(Date(customRangeStartUtcMillis!!))} - ${sdf.format(Date(customRangeEndUtcMillis!!))}"
+                                    val sdf = SimpleDateFormat("dd/MM", Locale.US).apply {
+                                        timeZone = TimeZone.getTimeZone("UTC")
+                                    }
+                                    "${sdf.format(Date(customRangeStartUtcMillis!!))} - ${
+                                        sdf.format(
+                                            Date(
+                                                customRangeEndUtcMillis!!
+                                            )
+                                        )
+                                    }"
                                 } else {
                                     "Personalizado"
                                 }
@@ -433,7 +451,8 @@ fun AdminTripsScreen(
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val isFilteredDrivers = selectedDriverIds.isNotEmpty() && (drivers.isEmpty() || selectedDriverIds.size < drivers.size)
+                val isFilteredDrivers =
+                    selectedDriverIds.isNotEmpty() && (drivers.isEmpty() || selectedDriverIds.size < drivers.size)
                 FilterChip(
                     selected = isFilteredDrivers,
                     onClick = { showDriverFilterDialog = true },
@@ -442,10 +461,12 @@ fun AdminTripsScreen(
                             selectedDriverIds.isEmpty() || (drivers.isNotEmpty() && selectedDriverIds.size == drivers.size) -> {
                                 if (drivers.isNotEmpty()) "Conductores: Todos (${drivers.size})" else "Conductores: Todos"
                             }
+
                             selectedDriverIds.size == 1 -> {
                                 val d = drivers.firstOrNull { it.id in selectedDriverIds }
                                 "Conductor: ${d?.nombre ?: "1 selec."}"
                             }
+
                             else -> {
                                 "Conductores: ${selectedDriverIds.size} de ${drivers.size}"
                             }
@@ -849,7 +870,13 @@ private fun AdminTripCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val distText = if (trip.distanceKm != null) "${String.format(Locale.US, "%.1f", trip.distanceKm)} km" else "Distancia N/D"
+                val distText = if (trip.distanceKm != null) "${
+                    String.format(
+                        Locale.US,
+                        "%.1f",
+                        trip.distanceKm
+                    )
+                } km" else "Distancia N/D"
                 Text(
                     text = "$distText • ${formatTripDate(trip.createdAtEpoch)}",
                     fontSize = 11.sp,
@@ -908,7 +935,8 @@ private fun TripRouteModal(
             try {
                 mapViewRef?.onPause()
                 mapViewRef?.onDetach()
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
             mapViewRef = null
         }
     }
@@ -1028,7 +1056,10 @@ private fun TripRouteModal(
                                         text = trip.resolvedPassengerName.ifBlank { "Pasajero" },
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color.White
+                                        color = Color.White,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
                                     )
                                     Box(
                                         modifier = Modifier
@@ -1040,10 +1071,13 @@ private fun TripRouteModal(
                                             .padding(horizontal = 5.dp, vertical = 2.dp)
                                     ) {
                                         Text(
-                                            text = if (trip.isRegisteredPassenger) "Cuenta Registrada" else "Sin cuenta (Invitado)",
+                                            text = if (trip.isRegisteredPassenger) "Registrado" else "Invitado",
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.Medium,
-                                            color = if (trip.isRegisteredPassenger) Color(0xFF34D399) else Color(0xFF93C5FD)
+                                            color = if (trip.isRegisteredPassenger) Color(0xFF34D399) else Color(
+                                                0xFF93C5FD
+                                            ),
+                                            maxLines = 1
                                         )
                                     }
                                 }
@@ -1095,7 +1129,8 @@ private fun TripRouteModal(
                                     color = Color(0xFF64748B)
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
-                                val fareStr = trip.fare?.let { "Q" + String.format(Locale.US, "%.2f", it) } ?: "No especificado"
+                                val fareStr =
+                                    trip.fare?.let { "Q" + String.format(Locale.US, "%.2f", it) } ?: "No especificado"
                                 Text(
                                     text = fareStr,
                                     fontSize = 14.sp,
@@ -1113,7 +1148,8 @@ private fun TripRouteModal(
                                     color = Color(0xFF64748B)
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
-                                val distStr = trip.distanceKm?.let { String.format(Locale.US, "%.2f km", it) } ?: "No registrada"
+                                val distStr =
+                                    trip.distanceKm?.let { String.format(Locale.US, "%.2f km", it) } ?: "No registrada"
                                 Text(
                                     text = distStr,
                                     fontSize = 13.sp,
@@ -1172,7 +1208,8 @@ private fun TripRouteModal(
                         }
                     } else {
                         val hasPoints = routePoints.isNotEmpty()
-                        val hasPassengerLocation = trip.passengerLat != null && trip.passengerLon != null && trip.passengerLat != 0.0
+                        val hasPassengerLocation =
+                            trip.passengerLat != null && trip.passengerLon != null && trip.passengerLat != 0.0
 
                         if (!hasPoints && !hasPassengerLocation) {
                             Column(
@@ -1234,7 +1271,8 @@ private fun TripRouteModal(
 
                                             // Marcador de Fin (TucTuc al finalizar - Rojo)
                                             val endPt = geoPoints.last()
-                                            val endFare = trip.fare?.let { "Q" + String.format(Locale.US, "%.2f", it) } ?: "-"
+                                            val endFare =
+                                                trip.fare?.let { "Q" + String.format(Locale.US, "%.2f", it) } ?: "-"
                                             val endMarker = Marker(this).apply {
                                                 position = endPt
                                                 icon = createCircleMarkerDrawable(
@@ -1357,7 +1395,8 @@ private fun TripRouteModal(
                                         if (width > 0 && height > 0) {
                                             safeApplyBounds()
                                         } else {
-                                            addOnLayoutChangeListener(object : android.view.View.OnLayoutChangeListener {
+                                            addOnLayoutChangeListener(object :
+                                                android.view.View.OnLayoutChangeListener {
                                                 override fun onLayoutChange(
                                                     v: android.view.View?,
                                                     left: Int, top: Int, right: Int, bottom: Int,
@@ -1490,11 +1529,23 @@ private fun DriverFilterDialog(
                     value = driverSearch,
                     onValueChange = { driverSearch = it },
                     placeholder = { Text("Buscar por nombre, unidad...", color = Color(0xFF94A3B8), fontSize = 12.sp) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFF59E0B), modifier = Modifier.size(18.dp)) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = null,
+                            tint = Color(0xFFF59E0B),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    },
                     trailingIcon = {
                         if (driverSearch.isNotEmpty()) {
                             IconButton(onClick = { driverSearch = "" }) {
-                                Icon(Icons.Default.Close, contentDescription = "Limpiar", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Limpiar",
+                                    tint = Color(0xFF94A3B8),
+                                    modifier = Modifier.size(16.dp)
+                                )
                             }
                         }
                     },
