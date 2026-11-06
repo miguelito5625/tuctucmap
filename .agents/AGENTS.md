@@ -60,6 +60,10 @@ Para optimizar el uso de tokens y mantener procedimientos estandarizados, este p
    - Detección activa de lagunas y formulación de dudas críticas (edge cases, arquitectura, UI/UX, persistencia).
    - Asesoramiento y recomendación experta: presentación de opciones ponderadas destacando la solución técnica óptima con `(Recomendado)` justificado.
 
+8. **[`tuctuc-crash-resolver`](./skills/tuctuc-crash-resolver/SKILL.md):**
+   - Auditoría, diagnóstico y solución de errores y crashes almacenados en `public.app_crash_logs`.
+   - Consulta de fallos pendientes en Supabase, formulación de propuestas de solución técnicas con validación del usuario, aplicación de parches, verificación de compilación y marcado de incidencias resueltas (`UPDATE ... SET resolved = true`).
+
 ---
 
 ## 3. Reglas Obligatorias del Agente (AI Rules)
