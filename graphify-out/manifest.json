@@ -318,8 +318,8 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/AppDrawer.kt": {
-    "mtime": 1793983864.1922348,
-    "seen": 1793984196.818267,
+    "mtime": 1793984336.1806538,
+    "seen": 1793985015.7167838,
     "ast_hash": "bd75799570a5dbe0478bad82792aac45",
     "semantic_hash": ""
   },
@@ -516,9 +516,9 @@
     "semantic_hash": "a0e4d192b9e2e17256124dbfc8e24e6a"
   },
   ".agents/skills/tuctuc-android/SKILL.md": {
-    "mtime": 1793981936.4497173,
-    "seen": 1793982761.7266421,
-    "ast_hash": "e65b36eccd40d1e6cc7f12bf2860f342",
+    "mtime": 1793984217.692176,
+    "seen": 1793985015.7169054,
+    "ast_hash": "a84fdc77041b673be65674711fbf6552",
     "semantic_hash": ""
   },
   ".agents/skills/tuctuc-dashboard/SKILL.md": {
@@ -666,8 +666,8 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt": {
-    "mtime": 1793983765.671474,
-    "seen": 1793984196.8182518,
+    "mtime": 1793984335.9291108,
+    "seen": 1793985015.7167635,
     "ast_hash": "6b6759ab17ad1b6eb5d8a7344ba779a6",
     "semantic_hash": ""
   },
@@ -696,8 +696,8 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminMainScreen.kt": {
-    "mtime": 1793983893.709787,
-    "seen": 1793984196.818279,
+    "mtime": 1793984336.6225557,
+    "seen": 1793985015.716799,
     "ast_hash": "99770d8e190b7cfd50ae2977fe77db61",
     "semantic_hash": ""
   },
@@ -840,9 +840,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt": {
-    "mtime": 1793984071.92844,
-    "seen": 1793984196.8182738,
-    "ast_hash": "054acd8e265c38ae386b5945bacfbe08",
+    "mtime": 1793984902.7731678,
+    "seen": 1793985015.7167923,
+    "ast_hash": "21247bc25481c0df0e0fac7f7948eb8c",
     "semantic_hash": ""
   }
 }
