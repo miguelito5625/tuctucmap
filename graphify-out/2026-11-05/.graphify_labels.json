@@ -37,7 +37,7 @@
   "35": "AGENTS.md",
   "36": "Skill: Base de Datos & Backend (Supabase PostgreSQL)",
   "37": "App",
-  "38": "drivers.component.ts",
+  "38": "driver.model.ts",
   "39": "SupabaseRepository.kt",
   "40": "PassengerDestinationPreferences",
   "41": "Skill: Angular Dashboard (TucTuc Map)",
@@ -81,7 +81,7 @@
   "79": "2. El Flujo de Trabajo en 3 Fases (El Ciclo Consultivo)",
   "80": "PassengerMapScreen.kt",
   "81": "AdminBusinessConfigTab.kt",
-  "82": "driver.model.ts",
+  "82": "AppConfig",
   "83": "ExcelExporter",
   "84": "@angular/common",
   "85": "@angular/platform-browser",
@@ -100,5 +100,6 @@
   "98": "AdminDrawerItem",
   "99": "parseIsoTimestamp",
   "100": "SubscriptionHistory",
-  "101": "@angular/material"
+  "101": "app.routes.ts",
+  "102": "@angular/cdk"
 }
