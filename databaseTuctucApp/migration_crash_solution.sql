@@ -6,3 +6,4 @@ ADD COLUMN IF NOT EXISTS solution VARCHAR(300);
 UPDATE public.app_crash_logs
 SET solution = 'Prueba intencional de telemetría auditada: captura local, despacho al inicio y sincronización con Supabase verificado exitosamente.'
 WHERE resolved = true AND (solution IS NULL OR solution = '');
+
