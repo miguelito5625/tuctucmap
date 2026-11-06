@@ -81,3 +81,4 @@ Previo a permitir el registro abierto de usuarios y conductores, la aplicación 
    - Inscribir formalmente la actividad económica como Pequeño Contribuyente (5%).
    - Emitir boletas/facturas electrónicas por cada renovación de suscripción aprobada en el Dashboard.
    - Socializar la plataforma con las directivas de las líneas de tuctucs de la localidad.
+
