@@ -522,7 +522,7 @@ BEGIN
     p.role,
     COUNT(t.id) AS trips_count
   FROM public.profiles p
-  LEFT JOIN public.trips t ON t.passenger_id = p.id::text
+  LEFT JOIN public.trips t ON t.passenger_id = p.id
   WHERE p.role = 'passenger'
   GROUP BY p.id, p.name, p.phone, p.email, p.created_at, p.role
   ORDER BY p.created_at DESC;
