@@ -28,6 +28,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tuctucmap.data.model.parseIsoTimestamp
+import com.example.tuctucmap.data.model.getOperationalCalendar
+import com.example.tuctucmap.data.model.OPERATIONAL_TIMEZONE
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -102,7 +104,7 @@ fun DriverReportsScreen(
     val spanishLocale = remember { Locale.forLanguageTag("es") }
 
     // Fechas límites para selector de fechas (máximo 7 días hacia atrás hasta hoy)
-    val todayLocal = remember { Calendar.getInstance() }
+    val todayLocal = remember { getOperationalCalendar() }
     val maxAllowedUtcMidnight = remember(todayLocal) {
         Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
             clear()
@@ -133,9 +135,9 @@ fun DriverReportsScreen(
         }
     }
 
-    // Cálculo estricto de inicio y fin del período en la zona horaria del dispositivo
+    // Cálculo estricto de inicio y fin del período en la zona horaria operativa (Guatemala)
     val (startOfTodayMs, startOfYesterdayMs) = remember {
-        val cal = Calendar.getInstance().apply {
+        val cal = getOperationalCalendar().apply {
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
@@ -148,8 +150,8 @@ fun DriverReportsScreen(
     }
 
     val (activeStartMs, activeEndMs) = remember(currentPeriodFilter, customRangeStartUtcMillis, customRangeEndUtcMillis) {
-        val startCal = Calendar.getInstance()
-        val endCal = Calendar.getInstance()
+        val startCal = getOperationalCalendar()
+        val endCal = getOperationalCalendar()
 
         when (currentPeriodFilter) {
             DriverReportsPeriodFilter.TODAY -> {
@@ -203,8 +205,8 @@ fun DriverReportsScreen(
         Pair(startCal.timeInMillis, endCal.timeInMillis)
     }
 
-    val shortDateSdf = remember { SimpleDateFormat("dd/MM", Locale.getDefault()) }
-    val fullDateSdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
+    val shortDateSdf = remember { SimpleDateFormat("dd/MM", Locale.getDefault()).apply { timeZone = OPERATIONAL_TIMEZONE } }
+    val fullDateSdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply { timeZone = OPERATIONAL_TIMEZONE } }
 
     val customRangeSummary = remember(customRangeStartUtcMillis, customRangeEndUtcMillis) {
         if (customRangeStartUtcMillis != null && customRangeEndUtcMillis != null) {
@@ -251,11 +253,11 @@ fun DriverReportsScreen(
     // Estadísticas completas de los 7 días de la semana para la gráfica de barras
     val weeklyDayStats = remember(allWeeklyTrips) {
         val stats = mutableListOf<WeeklyDayStat>()
-        val dayNameFormat = SimpleDateFormat("EEE", Locale.forLanguageTag("es-GT"))
-        val dayNumFormat = SimpleDateFormat("d", Locale.getDefault())
-        val fullDateFormat = SimpleDateFormat("EEEE d 'de' MMMM", Locale.forLanguageTag("es-GT"))
+        val dayNameFormat = SimpleDateFormat("EEE", Locale.forLanguageTag("es-GT")).apply { timeZone = OPERATIONAL_TIMEZONE }
+        val dayNumFormat = SimpleDateFormat("d", Locale.getDefault()).apply { timeZone = OPERATIONAL_TIMEZONE }
+        val fullDateFormat = SimpleDateFormat("EEEE d 'de' MMMM", Locale.forLanguageTag("es-GT")).apply { timeZone = OPERATIONAL_TIMEZONE }
 
-        val todayCal = Calendar.getInstance().apply {
+        val todayCal = getOperationalCalendar().apply {
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
@@ -263,7 +265,7 @@ fun DriverReportsScreen(
         }
         val todayMidnightMs = todayCal.timeInMillis
 
-        val yesterdayCal = Calendar.getInstance().apply {
+        val yesterdayCal = getOperationalCalendar().apply {
             add(Calendar.DAY_OF_YEAR, -1)
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
@@ -273,7 +275,7 @@ fun DriverReportsScreen(
         val yesterdayMidnightMs = yesterdayCal.timeInMillis
 
         for (i in 6 downTo 0) {
-            val startCal = Calendar.getInstance().apply {
+            val startCal = getOperationalCalendar().apply {
                 add(Calendar.DAY_OF_YEAR, -i)
                 set(Calendar.HOUR_OF_DAY, 0)
                 set(Calendar.MINUTE, 0)
@@ -281,7 +283,7 @@ fun DriverReportsScreen(
                 set(Calendar.MILLISECOND, 0)
             }
             val startMs = startCal.timeInMillis
-            val endMs = Calendar.getInstance().apply {
+            val endMs = getOperationalCalendar().apply {
                 timeInMillis = startMs
                 set(Calendar.HOUR_OF_DAY, 23)
                 set(Calendar.MINUTE, 59)
@@ -320,13 +322,13 @@ fun DriverReportsScreen(
 
     // Agrupación por días para el desglose (cuando el rango personalizado tiene más de 1 día)
     val dayFormat = remember { SimpleDateFormat("EEEE d 'de' MMMM", Locale.forLanguageTag("es-GT")) }
-    val timeFormat = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
+    val timeFormat = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()).apply { timeZone = OPERATIONAL_TIMEZONE } }
 
     val dailyGroups = remember(filteredTrips) {
         val groups = mutableMapOf<String, MutableList<SupabaseRepository.CompletedTripResponseDto>>()
         val dayEpochs = mutableMapOf<String, Long>()
 
-        val cal = Calendar.getInstance()
+        val cal = getOperationalCalendar()
         filteredTrips.forEach { trip ->
             val epoch = parseIsoTimestamp(trip.created_at)
             cal.timeInMillis = epoch

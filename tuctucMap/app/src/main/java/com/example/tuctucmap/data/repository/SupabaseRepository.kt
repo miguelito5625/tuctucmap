@@ -5,6 +5,7 @@ import com.example.tuctucmap.data.model.Driver
 import com.example.tuctucmap.data.model.Passenger
 import com.example.tuctucmap.data.model.DriverLocation
 import com.example.tuctucmap.data.model.ServerClock
+import com.example.tuctucmap.data.model.getOperationalCalendar
 import com.example.tuctucmap.data.supabase
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
@@ -659,7 +660,7 @@ class SupabaseRepository {
     suspend fun getDriverTodaySummary(): Result<DriverTodaySummary> {
         return try {
             val uid = currentUserUid ?: return Result.failure(Exception("No user"))
-            val cal = java.util.Calendar.getInstance().apply {
+            val cal = getOperationalCalendar().apply {
                 set(java.util.Calendar.HOUR_OF_DAY, 0)
                 set(java.util.Calendar.MINUTE, 0)
                 set(java.util.Calendar.SECOND, 0)
@@ -682,6 +683,7 @@ class SupabaseRepository {
             val earnings = todayTrips.sumOf { it.fare ?: 0.0 }
             Result.success(DriverTodaySummary(count = count, totalEarnings = earnings))
         } catch (e: Exception) {
+            android.util.Log.e("SupabaseRepository", "Error al consultar resumen diario del conductor: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -828,7 +830,7 @@ class SupabaseRepository {
                 endUtc = endDateUtc?.takeIf { it.isNotBlank() }
             } else {
                 val clampedDays = (days ?: 7).coerceIn(1, 7)
-                val cal = java.util.Calendar.getInstance().apply {
+                val cal = getOperationalCalendar().apply {
                     if (clampedDays > 1) {
                         add(java.util.Calendar.DAY_OF_YEAR, -(clampedDays - 1))
                     }
@@ -902,7 +904,7 @@ class SupabaseRepository {
     suspend fun getDriverWeeklyReportData(): Result<List<CompletedTripResponseDto>> {
         return try {
             val uid = currentUserUid ?: return Result.failure(Exception("No user"))
-            val cal = java.util.Calendar.getInstance().apply {
+            val cal = getOperationalCalendar().apply {
                 add(java.util.Calendar.DAY_OF_YEAR, -7)
                 set(java.util.Calendar.HOUR_OF_DAY, 0)
                 set(java.util.Calendar.MINUTE, 0)

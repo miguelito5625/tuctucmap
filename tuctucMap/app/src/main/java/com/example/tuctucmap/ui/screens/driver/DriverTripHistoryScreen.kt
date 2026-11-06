@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.sp
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.ui.util.ExternalNavigationUtils
 import com.example.tuctucmap.data.model.parseIsoTimestamp
+import com.example.tuctucmap.data.model.getOperationalCalendar
+import com.example.tuctucmap.data.model.OPERATIONAL_TIMEZONE
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -62,10 +64,10 @@ fun DriverTripHistoryScreen(
     var showDatePickerDialog by remember { mutableStateOf(false) }
     var selectedTrip by remember { mutableStateOf<SupabaseRepository.CompletedTripResponseDto?>(null) }
 
-    // Fechas en zona horaria local del dispositivo
+    // Fechas en zona horaria operativa (Guatemala)
     val localBounds = remember(currentPeriodFilter, customRangeStartUtcMillis, customRangeEndUtcMillis) {
-        val startCal = Calendar.getInstance()
-        val endCal = Calendar.getInstance()
+        val startCal = getOperationalCalendar()
+        val endCal = getOperationalCalendar()
 
         when (currentPeriodFilter) {
             DriverHistoryPeriodFilter.TODAY -> {
@@ -125,8 +127,8 @@ fun DriverTripHistoryScreen(
         }
     }
 
-    val shortDateSdf = remember { SimpleDateFormat("dd/MM", Locale.getDefault()) }
-    val fullDateSdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
+    val shortDateSdf = remember { SimpleDateFormat("dd/MM", Locale.getDefault()).apply { timeZone = OPERATIONAL_TIMEZONE } }
+    val fullDateSdf = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply { timeZone = OPERATIONAL_TIMEZONE } }
 
     val customRangeSummary = remember(customRangeStartUtcMillis, customRangeEndUtcMillis) {
         if (customRangeStartUtcMillis != null && customRangeEndUtcMillis != null) {
@@ -175,7 +177,7 @@ fun DriverTripHistoryScreen(
     }
 
     // Configuración de límites para el selector de fechas (máximo 7 días hacia atrás hasta hoy)
-    val todayLocal = remember { Calendar.getInstance() }
+    val todayLocal = remember { getOperationalCalendar() }
     val maxAllowedUtcMidnight = remember(todayLocal) {
         Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
             clear()
@@ -208,7 +210,7 @@ fun DriverTripHistoryScreen(
 
     val dateFormat = remember {
         SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).apply {
-            timeZone = TimeZone.getDefault()
+            timeZone = OPERATIONAL_TIMEZONE
         }
     }
 

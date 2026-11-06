@@ -24,6 +24,17 @@ object ServerClock {
     }
 }
 
+/**
+ * Zona horaria operativa oficial de TucTuc Map (Guatemala, UTC-6 sin cambio de hora de verano).
+ * Centraliza los cortes de jornada para evitar discrepancias en emuladores o dispositivos
+ * con zona horaria de fábrica en GMT/UTC.
+ */
+val OPERATIONAL_TIMEZONE: java.util.TimeZone = java.util.TimeZone.getTimeZone("America/Guatemala")
+
+fun getOperationalCalendar(): java.util.Calendar {
+    return java.util.Calendar.getInstance(OPERATIONAL_TIMEZONE)
+}
+
 @Serializable
 data class AppConfig(
     val id: String = "default",
