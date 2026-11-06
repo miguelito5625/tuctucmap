@@ -294,8 +294,8 @@
     "semantic_hash": "25a59d33cee61cb7205f10a5621a3523"
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt": {
-    "mtime": 1793928710.6708975,
-    "seen": 1793929167.8704493,
+    "mtime": 1793929260.6398482,
+    "seen": 1793930262.0899804,
     "ast_hash": "a2ce21ae1a99b0885021b7af298f753b",
     "semantic_hash": ""
   },
@@ -366,8 +366,8 @@
     "semantic_hash": "034fc6b3525c1a1dd6b11fd7991a64f8"
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverReportsScreen.kt": {
-    "mtime": 1793928826.3086312,
-    "seen": 1793929167.8704724,
+    "mtime": 1793929261.1147354,
+    "seen": 1793930262.0900307,
     "ast_hash": "6623defd3c7bbe45936047c2092e02ec",
     "semantic_hash": ""
   },
@@ -390,8 +390,8 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverTripHistoryScreen.kt": {
-    "mtime": 1793928895.196243,
-    "seen": 1793929167.870478,
+    "mtime": 1793929261.5682983,
+    "seen": 1793930262.09004,
     "ast_hash": "7687c0862ce41345a9371dafdab0f951",
     "semantic_hash": ""
   },
@@ -474,10 +474,10 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/test/java/com/example/tuctucmap/ExampleUnitTest.kt": {
-    "mtime": 1793929139.2415302,
-    "seen": 1793929167.8704998,
-    "ast_hash": "af50326b69e41d57196e20801cf1ac2c",
-    "semantic_hash": "af50326b69e41d57196e20801cf1ac2c"
+    "mtime": 1793929255.5154123,
+    "seen": 1793930262.090087,
+    "ast_hash": "d95f09c2f42f61d59966040a2bfc3ee8",
+    "semantic_hash": ""
   },
   "tuctucMap/build.gradle.kts": {
     "mtime": 1790739456.1263137,
@@ -666,15 +666,15 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt": {
-    "mtime": 1793851541.246547,
-    "seen": 1793899858.422786,
-    "ast_hash": "126ec6d7b914e9bcc950bae9925486fe",
+    "mtime": 1793930053.9525013,
+    "seen": 1793930262.0899632,
+    "ast_hash": "eeb43d2161e5dc31a272c0671d91944f",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt": {
-    "mtime": 1793927313.0703814,
-    "seen": 1793929167.8704484,
-    "ast_hash": "af17f9eb1c7220ba03c7113777d865d3",
+    "mtime": 1793930074.5660472,
+    "seen": 1793930262.0899773,
+    "ast_hash": "180095561304cad827d80c3f5da2b2c8",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminBusinessConfigTab.kt": {
@@ -708,9 +708,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt": {
-    "mtime": 1793927313.440526,
-    "seen": 1793929167.8704648,
-    "ast_hash": "378e1c1c554816c376f8f392f6d5bfb0",
+    "mtime": 1793930222.5221364,
+    "seen": 1793930262.0900106,
+    "ast_hash": "1ac07615737aa876261a5a3cc4188dd7",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt": {
@@ -786,9 +786,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExcelExporter.kt": {
-    "mtime": 1793915496.5663252,
-    "seen": 1793915578.0256095,
-    "ast_hash": "d5b6710a63da2c0d39253e820ac3c2ff",
+    "mtime": 1793930100.991477,
+    "seen": 1793930262.0900726,
+    "ast_hash": "08de7e76b1c78e813917de475fd4cb24",
     "semantic_hash": ""
   },
   "reportes/AUDITORIA_RENDIMIENTO_APP.md": {
