@@ -114,6 +114,8 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
    - **`AdminFleetMapTab.kt`:** Monitoreo en vivo de toda la flota conectada vía Firebase RTDB (`driver_locations`) sobre OSMDroid (`AppTileSource`), pines verde/naranja y panel deslizable inferior para centrado dinámico de cámara.
    - **`AdminBusinessConfigTab.kt`:** Edición y sincronización en vivo de `public.app_config` (WhatsApp admin, cuentas bancarias, titular, tarifas y geocerca) con soporte `.imePadding()` y `.verticalScroll()`.
    - **`AdminTripsScreen.kt` & `AdminPassengersScreen.kt`:** Auditoría de viajes con visor interactivo de polilínea GPS de ruta y directorio completo de pasajeros.
+   - **`AdminCrashLogsScreen.kt`:** Gestión y resolución en vivo de reportes de errores de la app móvil: tarjetas KPI (total, pendientes, resueltos), buscador interactivo, chips de filtrado, visor modal `ModalBottomSheet` de Stack Trace con formato consola y copia al portapapeles, y acciones para marcar incidencias como resueltas o eliminarlas.
+
 
 ---
 

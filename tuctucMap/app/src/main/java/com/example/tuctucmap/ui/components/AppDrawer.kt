@@ -54,7 +54,8 @@ enum class AdminDrawerItem {
     FLEET_MAP,
     TRIPS,
     PASSENGERS,
-    CONFIG
+    CONFIG,
+    CRASH_LOGS
 }
 
 @Composable
@@ -718,6 +719,7 @@ fun AdminDrawerSheet(
     onSelectItem: (AdminDrawerItem) -> Unit,
     onLogout: () -> Unit,
     onExploreMap: () -> Unit = {},
+    unresolvedCrashesCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -877,6 +879,14 @@ fun AdminDrawerSheet(
                 )
 
                 DrawerNavigationItem(
+                    label = "Reportes de Errores",
+                    icon = Icons.Default.BugReport,
+                    isSelected = selectedItem == AdminDrawerItem.CRASH_LOGS,
+                    onClick = { onSelectItem(AdminDrawerItem.CRASH_LOGS) },
+                    badge = if (unresolvedCrashesCount > 0) "$unresolvedCrashesCount" else null
+                )
+
+                DrawerNavigationItem(
                     label = "Compartir aplicación",
                     icon = Icons.Default.Share,
                     isSelected = false,
@@ -957,16 +967,37 @@ private fun DrawerNavigationItem(
     label: String,
     icon: ImageVector,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    badge: String? = null
 ) {
     NavigationDrawerItem(
         label = {
-            Text(
-                text = label,
-                fontSize = 15.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) Color(0xFFF9D423) else Color.White
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = label,
+                    fontSize = 15.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    color = if (isSelected) Color(0xFFF9D423) else Color.White
+                )
+                if (!badge.isNullOrBlank()) {
+                    Surface(
+                        shape = CircleShape,
+                        color = Color(0xFFEF4444)
+                    ) {
+                        Text(
+                            text = badge,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
         },
         icon = {
             Icon(

@@ -29,6 +29,7 @@ fun AdminMainScreen(
     onLogout: () -> Unit,
     onNavigateToTrips: () -> Unit,
     onNavigateToPassengers: () -> Unit,
+    onNavigateToCrashLogs: () -> Unit = {},
     onExploreMapAsPassenger: () -> Unit,
     initialTab: Int = 0
 ) {
@@ -39,6 +40,7 @@ fun AdminMainScreen(
     val pendingCounts by adminRepo.pendingCounts.collectAsState()
     val pendingDriversCount = pendingCounts.first
     val pendingPaymentRequestsCount = pendingCounts.second
+    val unresolvedCrashesCount by adminRepo.unresolvedCrashesCount.collectAsState()
 
     // [SEC-05] Validación estricta en servidor de credenciales de admin al abrir la pantalla
     LaunchedEffect(Unit) {
@@ -79,6 +81,7 @@ fun AdminMainScreen(
             AdminDrawerSheet(
                 currentEmail = currentEmail,
                 selectedItem = selectedDrawerItem,
+                unresolvedCrashesCount = unresolvedCrashesCount,
                 onSelectItem = { item ->
                     scope.launch { drawerState.close() }
                     when (item) {
@@ -88,6 +91,7 @@ fun AdminMainScreen(
                         AdminDrawerItem.CONFIG -> selectedTab = 3
                         AdminDrawerItem.TRIPS -> onNavigateToTrips()
                         AdminDrawerItem.PASSENGERS -> onNavigateToPassengers()
+                        AdminDrawerItem.CRASH_LOGS -> onNavigateToCrashLogs()
                     }
                 },
                 onLogout = {
@@ -126,7 +130,7 @@ fun AdminMainScreen(
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             // Badge sobre el icono de menú si hay pendientes
-                            val totalPending = pendingDriversCount + pendingPaymentRequestsCount
+                            val totalPending = pendingDriversCount + pendingPaymentRequestsCount + unresolvedCrashesCount
                             if (totalPending > 0) {
                                 BadgedBox(
                                     badge = {

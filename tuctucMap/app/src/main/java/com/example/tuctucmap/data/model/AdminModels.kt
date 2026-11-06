@@ -207,3 +207,32 @@ data class DeleteUserByAdminRpcParams(
     val targetUserId: String
 )
 
+
+@Serializable
+data class AdminCrashLog(
+    val id: String = "",
+    @SerialName("user_id") val userId: String? = null,
+    @SerialName("user_email") val userEmail: String? = null,
+    val role: String? = null,
+    @SerialName("device_brand") val deviceBrand: String = "",
+    @SerialName("device_model") val deviceModel: String = "",
+    @SerialName("device_manufacturer") val deviceManufacturer: String = "",
+    @SerialName("android_version") val androidVersion: String = "",
+    @SerialName("sdk_int") val sdkInt: Int = 0,
+    @SerialName("app_version") val appVersion: String = "",
+    @SerialName("build_number") val buildNumber: Int = 0,
+    @SerialName("build_type") val buildType: String = "",
+    @SerialName("error_type") val errorType: String = "",
+    @SerialName("error_message") val errorMessage: String? = null,
+    @SerialName("stack_trace") val stackTrace: String = "",
+    @SerialName("thread_name") val threadName: String? = null,
+    val resolved: Boolean = false,
+    @SerialName("resolved_at") val resolvedAt: String? = null,
+    @SerialName("resolved_by") val resolvedBy: String? = null,
+    @SerialName("created_at") val createdAt: String = ""
+) {
+    val createdAtEpoch: Long get() = parseIsoTimestamp(createdAt)
+    val displayDevice: String get() = if (deviceManufacturer.isNotBlank() && deviceModel.isNotBlank()) {
+        "$deviceManufacturer $deviceModel"
+    } else deviceModel.ifBlank { deviceBrand }
+}

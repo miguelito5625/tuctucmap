@@ -14,6 +14,7 @@ import com.example.tuctucmap.ui.screens.passenger.PassengerMapScreen
 import com.example.tuctucmap.ui.screens.admin.AdminMainScreen
 import com.example.tuctucmap.ui.screens.admin.AdminTripsScreen
 import com.example.tuctucmap.ui.screens.admin.AdminPassengersScreen
+import com.example.tuctucmap.ui.screens.admin.AdminCrashLogsScreen
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.filter
@@ -45,6 +46,7 @@ sealed class Screen {
     object AdminHome : Screen()
     object AdminTrips : Screen()
     object AdminPassengers : Screen()
+    object AdminCrashLogs : Screen()
 }
 
 // Mapea el perfil del conductor a la pantalla correspondiente
@@ -452,6 +454,9 @@ fun AppNavigation(
                 onNavigateToPassengers = {
                     navigate(Screen.AdminPassengers)
                 },
+                onNavigateToCrashLogs = {
+                    navigate(Screen.AdminCrashLogs)
+                },
                 onExploreMapAsPassenger = {
                     navigate(Screen.PassengerMap)
                 }
@@ -468,6 +473,14 @@ fun AppNavigation(
         }
         is Screen.AdminPassengers -> {
             AdminPassengersScreen(
+                adminRepo = repository.adminRepository,
+                onBack = {
+                    backStack.removeAt(backStack.lastIndex)
+                }
+            )
+        }
+        is Screen.AdminCrashLogs -> {
+            AdminCrashLogsScreen(
                 adminRepo = repository.adminRepository,
                 onBack = {
                     backStack.removeAt(backStack.lastIndex)

@@ -29,6 +29,9 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
     private val _pendingCounts = MutableStateFlow(Pair(0, 0))
     val pendingCounts: StateFlow<Pair<Int, Int>> = _pendingCounts.asStateFlow()
 
+    private val _unresolvedCrashesCount = MutableStateFlow(0)
+    val unresolvedCrashesCount: StateFlow<Int> = _unresolvedCrashesCount.asStateFlow()
+
     val currentAdminUid: String?
         get() = supabase.auth.currentUserOrNull()?.id
 
@@ -740,6 +743,13 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
                 filter { eq("status", "pendiente") }
             }.decodeList<PendingCountIdDto>().size
 
+            val pendingCrashes = try {
+                supabase.postgrest["app_crash_logs"].select(Columns.list("id")) {
+                    filter { eq("resolved", false) }
+                }.decodeList<PendingCountIdDto>().size
+            } catch (_: Exception) { 0 }
+            _unresolvedCrashesCount.value = pendingCrashes
+
             val result = Pair(pendingDrivers, pendingRequests)
             _pendingCounts.value = result
             result
@@ -755,5 +765,57 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
      * (conductores pendientes, solicitudes de pago pendientes).
      */
     fun observePendingCounts(): Flow<Pair<Int, Int>> = _pendingCounts.asStateFlow()
+
+    // --- Telemetría y Reportes de Errores (Crash Logs) ---
+
+    suspend fun getCrashLogs(filterResolved: Boolean? = null): Result<List<AdminCrashLog>> = withContext(Dispatchers.IO) {
+        try {
+            val list = supabase.postgrest["app_crash_logs"].select {
+                if (filterResolved != null) {
+                    filter { eq("resolved", filterResolved) }
+                }
+                order("created_at", Order.DESCENDING)
+            }.decodeList<AdminCrashLog>()
+            Result.success(list)
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Result.failure(e)
+        }
+    }
+
+    suspend fun setCrashLogResolved(id: String, resolved: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val nowIso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }.format(Date())
+
+            val payload = mapOf(
+                "resolved" to resolved.toString(),
+                "resolved_at" to if (resolved) nowIso else null,
+                "resolved_by" to if (resolved) currentAdminUid else null
+            )
+            supabase.postgrest["app_crash_logs"].update(payload) {
+                filter { eq("id", id) }
+            }
+            refreshPendingCounts()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteCrashLog(id: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            supabase.postgrest["app_crash_logs"].delete {
+                filter { eq("id", id) }
+            }
+            refreshPendingCounts()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Result.failure(e)
+        }
+    }
 }
 
