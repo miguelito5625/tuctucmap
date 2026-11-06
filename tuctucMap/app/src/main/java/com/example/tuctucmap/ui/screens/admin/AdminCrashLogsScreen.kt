@@ -61,6 +61,9 @@ fun AdminCrashLogsScreen(
 
     var selectedCrashForDetail by remember { mutableStateOf<AdminCrashLog?>(null) }
     var crashToDelete by remember { mutableStateOf<AdminCrashLog?>(null) }
+    var crashToResolve by remember { mutableStateOf<AdminCrashLog?>(null) }
+    var crashToReopen by remember { mutableStateOf<AdminCrashLog?>(null) }
+    var solutionInput by remember { mutableStateOf("") }
 
     fun loadCrashes() {
         scope.launch {
@@ -96,6 +99,7 @@ fun AdminCrashLogsScreen(
                         c.androidVersion.lowercase().contains(q) ||
                         c.errorType.lowercase().contains(q) ||
                         (c.errorMessage ?: "").lowercase().contains(q) ||
+                        (c.solution ?: "").lowercase().contains(q) ||
                         (c.userEmail ?: "").lowercase().contains(q)
             }
             matchesFilter && matchesSearch
@@ -358,19 +362,11 @@ fun AdminCrashLogsScreen(
                                     crash = crash,
                                     onViewDetail = { selectedCrashForDetail = crash },
                                     onToggleResolved = {
-                                        scope.launch {
-                                            val nextStatus = !crash.resolved
-                                            val res = adminRepo.setCrashLogResolved(crash.id, nextStatus)
-                                            if (res.isSuccess) {
-                                                loadCrashes()
-                                                Toast.makeText(
-                                                    context,
-                                                    if (nextStatus) "Incidencia marcada como resuelta" else "Incidencia reabierta",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            } else {
-                                                Toast.makeText(context, "Error al actualizar estado", Toast.LENGTH_SHORT).show()
-                                            }
+                                        if (crash.resolved) {
+                                            crashToReopen = crash
+                                        } else {
+                                            crashToResolve = crash
+                                            solutionInput = crash.solution ?: ""
                                         }
                                     },
                                     onDelete = { crashToDelete = crash }
@@ -406,23 +402,176 @@ fun AdminCrashLogsScreen(
                     Toast.makeText(context, "Stack trace copiado al portapapeles", Toast.LENGTH_SHORT).show()
                 },
                 onToggleResolved = {
-                    scope.launch {
-                        val nextStatus = !detail.resolved
-                        val res = adminRepo.setCrashLogResolved(detail.id, nextStatus)
-                        if (res.isSuccess) {
-                            selectedCrashForDetail = detail.copy(resolved = nextStatus)
-                            loadCrashes()
-                            Toast.makeText(
-                                context,
-                                if (nextStatus) "Marcado como resuelto" else "Reabierto como pendiente",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
+                    if (detail.resolved) {
+                        crashToReopen = detail
+                    } else {
+                        crashToResolve = detail
+                        solutionInput = detail.solution ?: ""
                     }
                 },
                 onClose = { selectedCrashForDetail = null }
             )
         }
+    }
+
+    // ─── Diálogo para Explicar Solución al Resolver ─────────────────────────
+    if (crashToResolve != null) {
+        val targetCrash = crashToResolve!!
+        AlertDialog(
+            onDismissRequest = { crashToResolve = null },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.TaskAlt,
+                        contentDescription = null,
+                        tint = Color(0xFF34D399),
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Explicación de la Solución",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        fontSize = 16.sp
+                    )
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .imePadding()
+                ) {
+                    Text(
+                        text = "Explica brevemente qué causaba el fallo y cómo fue solucionado (máx. 300 caracteres):",
+                        fontSize = 12.sp,
+                        color = Color(0xFF94A3B8)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = solutionInput,
+                        onValueChange = { if (it.length <= 300) solutionInput = it },
+                        placeholder = {
+                            Text("Describe la solución técnica aplicada...", fontSize = 12.sp, color = Color(0xFF64748B))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        maxLines = 5,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedContainerColor = Color(0xFF0F172A),
+                            unfocusedContainerColor = Color(0xFF0F172A),
+                            focusedBorderColor = Color(0xFF10B981),
+                            unfocusedBorderColor = Color(0xFF334155)
+                        ),
+                        supportingText = {
+                            Text(
+                                text = "${solutionInput.length} / 300 caracteres",
+                                fontSize = 11.sp,
+                                color = if (solutionInput.length >= 300) Color(0xFFF87171) else Color(0xFF94A3B8)
+                            )
+                        }
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val trimmed = solutionInput.trim()
+                        if (trimmed.isEmpty()) {
+                            Toast.makeText(context, "Debes ingresar una explicación de la solución", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        scope.launch {
+                            val res = adminRepo.setCrashLogResolved(targetCrash.id, true, trimmed)
+                            if (res.isSuccess) {
+                                loadCrashes()
+                                if (selectedCrashForDetail?.id == targetCrash.id) {
+                                    selectedCrashForDetail = selectedCrashForDetail?.copy(resolved = true, solution = trimmed)
+                                }
+                                Toast.makeText(context, "Incidencia resuelta y solución guardada", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Error al guardar solución", Toast.LENGTH_SHORT).show()
+                            }
+                            crashToResolve = null
+                        }
+                    },
+                    enabled = solutionInput.trim().isNotEmpty(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF059669),
+                        disabledContainerColor = Color(0xFF334155)
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Guardar y Resolver", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { crashToResolve = null }) {
+                    Text("Cancelar", color = Color(0xFF94A3B8))
+                }
+            },
+            containerColor = Color(0xFF1E293B)
+        )
+    }
+
+    // ─── Diálogo de Confirmación para Reabrir ──────────────────────────────
+    if (crashToReopen != null) {
+        val targetCrash = crashToReopen!!
+        AlertDialog(
+            onDismissRequest = { crashToReopen = null },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Replay,
+                        contentDescription = null,
+                        tint = Color(0xFFF59E0B),
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("¿Reabrir Incidencia?", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
+                }
+            },
+            text = {
+                Text(
+                    text = "La incidencia volverá a estado PENDIENTE y la solución registrada se limpiará.",
+                    color = Color(0xFFCBD5E1),
+                    fontSize = 13.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            val res = adminRepo.setCrashLogResolved(targetCrash.id, false)
+                            if (res.isSuccess) {
+                                loadCrashes()
+                                if (selectedCrashForDetail?.id == targetCrash.id) {
+                                    selectedCrashForDetail = selectedCrashForDetail?.copy(resolved = false, solution = null)
+                                }
+                                Toast.makeText(context, "Incidencia reabierta como pendiente", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Error al reabrir", Toast.LENGTH_SHORT).show()
+                            }
+                            crashToReopen = null
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Reabrir", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { crashToReopen = null }) {
+                    Text("Cancelar", color = Color(0xFF94A3B8))
+                }
+            },
+            containerColor = Color(0xFF1E293B)
+        )
     }
 
     // ─── Diálogo de Confirmación para Eliminar ────────────────────────────
@@ -631,6 +780,46 @@ private fun CleanCrashLogCard(
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
+                    }
+                }
+            }
+
+            if (crash.resolved && !crash.solution.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color(0x1A10B981),
+                    border = BorderStroke(1.dp, Color(0x3310B981)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.TaskAlt,
+                            contentDescription = null,
+                            tint = Color(0xFF34D399),
+                            modifier = Modifier
+                                .size(16.dp)
+                                .padding(top = 1.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Solución Registrada:",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF34D399)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = crash.solution,
+                                fontSize = 12.sp,
+                                color = Color(0xFFE2E8F0),
+                                lineHeight = 16.sp
+                            )
+                        }
                     }
                 }
             }
@@ -1138,6 +1327,41 @@ private fun CrashDetailContent(
                     color = Color(0xFFFCA5A5),
                     modifier = Modifier.padding(10.dp)
                 )
+            }
+        }
+
+        if (crash.resolved && !crash.solution.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = Color(0x1A10B981),
+                border = BorderStroke(1.dp, Color(0x4D10B981)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.TaskAlt,
+                            contentDescription = null,
+                            tint = Color(0xFF34D399),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "SOLUCIÓN APLICADA",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF34D399)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = crash.solution,
+                        fontSize = 13.sp,
+                        color = Color(0xFFF1F5F9),
+                        lineHeight = 18.sp
+                    )
+                }
             }
         }
 

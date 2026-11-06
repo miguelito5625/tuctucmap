@@ -229,6 +229,7 @@ data class AdminCrashLog(
     val resolved: Boolean = false,
     @SerialName("resolved_at") val resolvedAt: String? = null,
     @SerialName("resolved_by") val resolvedBy: String? = null,
+    val solution: String? = null,
     @SerialName("created_at") val createdAt: String = ""
 ) {
     val createdAtEpoch: Long get() = parseIsoTimestamp(createdAt)

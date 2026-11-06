@@ -783,16 +783,21 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
         }
     }
 
-    suspend fun setCrashLogResolved(id: String, resolved: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun setCrashLogResolved(id: String, resolved: Boolean, solution: String? = null): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val nowIso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
                 timeZone = TimeZone.getTimeZone("UTC")
             }.format(Date())
 
+            val trimmedSolution = if (resolved && !solution.isNullOrBlank()) {
+                solution.trim().take(300)
+            } else null
+
             val payload = mapOf(
                 "resolved" to resolved.toString(),
                 "resolved_at" to if (resolved) nowIso else null,
-                "resolved_by" to if (resolved) currentAdminUid else null
+                "resolved_by" to if (resolved) currentAdminUid else null,
+                "solution" to trimmedSolution
             )
             supabase.postgrest["app_crash_logs"].update(payload) {
                 filter { eq("id", id) }

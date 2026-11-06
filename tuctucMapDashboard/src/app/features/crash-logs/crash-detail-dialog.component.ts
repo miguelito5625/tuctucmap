@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,6 +14,7 @@ import { SupabaseService } from '../../services/supabase.service';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatDialogModule,
     MatIconModule,
     MatButtonModule,
@@ -45,6 +47,17 @@ import { SupabaseService } from '../../services/supabase.service';
         <div class="error-message-box">
           <mat-icon>warning</mat-icon>
           <span class="error-msg-text">{{ data.crash.error_message }}</span>
+        </div>
+      }
+
+      <!-- Solución Registrada (si ya fue resuelto) -->
+      @if (data.crash.resolved && data.crash.solution) {
+        <div class="solution-box">
+          <div class="solution-title">
+            <mat-icon>task_alt</mat-icon>
+            <span>Solución Registrada</span>
+          </div>
+          <p class="solution-text">{{ data.crash.solution }}</p>
         </div>
       }
 
@@ -93,18 +106,58 @@ import { SupabaseService } from '../../services/supabase.service';
         </div>
         <pre class="stacktrace-container"><code>{{ data.crash.stack_trace }}</code></pre>
       </div>
+
+      <!-- Cuadro para ingresar solución si se está resolviendo -->
+      @if (isResolving) {
+        <div class="solution-input-card">
+          <div class="input-card-header">
+            <mat-icon>rate_review</mat-icon>
+            <span>Explicación de la Solución Aplicada (máx. 300 caracteres)</span>
+          </div>
+          <textarea
+            class="solution-textarea"
+            [(ngModel)]="solutionText"
+            maxlength="300"
+            rows="3"
+            placeholder="Explica qué causaba el fallo y cómo fue resuelto..."
+          ></textarea>
+          <div class="input-card-footer">
+            <span class="char-counter" [class.counter-full]="solutionText.length >= 300">
+              {{ solutionText.length }} / 300 caracteres
+            </span>
+            <div class="confirm-actions">
+              <button mat-button class="btn-cancel" (click)="cancelResolving()">
+                Cancelar
+              </button>
+              <button
+                mat-flat-button
+                class="btn-save-solution"
+                [disabled]="!solutionText.trim()"
+                (click)="confirmResolve()"
+              >
+                <mat-icon>check_circle</mat-icon>
+                Guardar y Marcar Resuelto
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </mat-dialog-content>
 
     <mat-dialog-actions align="end" class="dialog-actions">
-      <button
-        mat-flat-button
-        [class.btn-resolve]="!data.crash.resolved"
-        [class.btn-reopen]="data.crash.resolved"
-        (click)="toggleResolved()"
-      >
-        <mat-icon>{{ data.crash.resolved ? 'replay' : 'task_alt' }}</mat-icon>
-        {{ data.crash.resolved ? 'Reabrir Incidencia' : 'Marcar como Resuelto' }}
-      </button>
+      @if (!isResolving) {
+        @if (!data.crash.resolved) {
+          <button mat-flat-button class="btn-resolve" (click)="startResolving()">
+            <mat-icon>task_alt</mat-icon>
+            Marcar como Resuelto
+          </button>
+        } @else {
+          <button mat-flat-button class="btn-reopen" (click)="reopenCrash()">
+            <mat-icon>replay</mat-icon>
+            Reabrir Incidencia
+          </button>
+        }
+      }
       <button mat-stroked-button mat-dialog-close>
         Cerrar
       </button>
@@ -172,6 +225,103 @@ import { SupabaseService } from '../../services/supabase.service';
       font-family: monospace;
       font-size: 0.9rem;
       word-break: break-all;
+    }
+    .solution-box {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .solution-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #34d399;
+      margin-bottom: 6px;
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+    .solution-text {
+      margin: 0;
+      color: #e2e8f0;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .solution-input-card {
+      margin-top: 16px;
+      background: #1e293b;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .input-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #34d399;
+      margin-bottom: 10px;
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+    .solution-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: #f8fafc;
+      font-family: inherit;
+      font-size: 0.88rem;
+      resize: vertical;
+      &:focus {
+        outline: none;
+        border-color: #10b981;
+      }
+    }
+    .input-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .char-counter {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      &.counter-full {
+        color: #f87171;
+        font-weight: 600;
+      }
+    }
+    .confirm-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-save-solution {
+      background: #059669 !important;
+      color: #ffffff !important;
+      font-size: 0.82rem;
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+    .btn-cancel {
+      color: #94a3b8 !important;
     }
     .metadata-grid {
       display: grid;
@@ -276,6 +426,9 @@ export class CrashDetailDialogComponent {
   readonly dialogRef = inject(MatDialogRef<CrashDetailDialogComponent>);
   readonly data = inject<{ crash: CrashLog }>(MAT_DIALOG_DATA);
 
+  isResolving = false;
+  solutionText = '';
+
   copyStackTrace(): void {
     if (this.data.crash.stack_trace) {
       navigator.clipboard.writeText(this.data.crash.stack_trace).then(() => {
@@ -288,20 +441,49 @@ export class CrashDetailDialogComponent {
     }
   }
 
-  async toggleResolved(): Promise<void> {
+  startResolving(): void {
+    this.isResolving = true;
+    this.solutionText = this.data.crash.solution || '';
+  }
+
+  cancelResolving(): void {
+    this.isResolving = false;
+  }
+
+  async confirmResolve(): Promise<void> {
+    const trimmed = this.solutionText.trim();
+    if (!trimmed) {
+      this.snackBar.open('Debes ingresar una explicación de la solución', 'Cerrar', { duration: 3000 });
+      return;
+    }
+
     try {
-      const newStatus = !this.data.crash.resolved;
-      await this.supabaseService.setCrashLogResolved(this.data.crash.id, newStatus);
-      this.data.crash.resolved = newStatus;
-      this.snackBar.open(
-        newStatus ? 'Incidencia marcada como resuelta' : 'Incidencia reabierta como pendiente',
-        'Cerrar',
-        { duration: 3000 }
-      );
+      const finalSolution = trimmed.substring(0, 300);
+      await this.supabaseService.setCrashLogResolved(this.data.crash.id, true, finalSolution);
+      this.data.crash.resolved = true;
+      this.data.crash.solution = finalSolution;
+      this.isResolving = false;
+      this.snackBar.open('Incidencia marcada como resuelta con solución guardada', 'Cerrar', { duration: 3000 });
       this.dialogRef.close({ updated: true });
     } catch {
-      this.snackBar.open('Error al actualizar el estado de la incidencia', 'Cerrar', { duration: 3000 });
+      this.snackBar.open('Error al resolver la incidencia', 'Cerrar', { duration: 3000 });
+    }
+  }
+
+  async reopenCrash(): Promise<void> {
+    const confirmed = window.confirm('¿Deseas reabrir esta incidencia como pendiente? La solución actual quedará limpia.');
+    if (!confirmed) return;
+
+    try {
+      await this.supabaseService.setCrashLogResolved(this.data.crash.id, false);
+      this.data.crash.resolved = false;
+      this.data.crash.solution = null;
+      this.snackBar.open('Incidencia reabierta como pendiente', 'Cerrar', { duration: 3000 });
+      this.dialogRef.close({ updated: true });
+    } catch {
+      this.snackBar.open('Error al reabrir la incidencia', 'Cerrar', { duration: 3000 });
     }
   }
 }
+
 

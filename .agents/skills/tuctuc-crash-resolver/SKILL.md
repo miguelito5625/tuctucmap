@@ -1,7 +1,7 @@
 ---
 name: tuctuc-crash-resolver
 description: >-
-  Skill especializado en auditar, diagnosticar y resolver reportes automáticos de errores y crashes almacenados en public.app_crash_logs. Consulta fallos pendientes en Supabase, genera un diagnóstico estructurado con soluciones propuestas, consulta confirmación al usuario, aplica las correcciones de código, verifica la compilación y actualiza el estado a resuelto en la base de datos.
+  Skill especializado en auditar, diagnosticar y resolver reportes automáticos de errores y crashes almacenados en public.app_crash_logs. Consulta fallos pendientes en Supabase, genera un diagnóstico estructurado con soluciones propuestas, consulta confirmación al usuario, aplica las correcciones de código, verifica la compilación, registra la explicación de la solución (máx. 300 caracteres) en la columna 'solution' y actualiza el estado a resuelto en la base de datos.
 ---
 
 # Skill: Resolución y Auditoría de Crashes (TucTuc Map)
@@ -110,21 +110,26 @@ Una vez que el usuario responde afirmativamente (*"sí"*, *"adelante"*, *"hazlo"
 
 ---
 
-### Paso 5: Marcar Incidencias como Resueltas en Supabase
+### Paso 5: Marcar Incidencias como Resueltas y Registrar la Solución en Supabase
 
 Una vez verificado que el parche de código compila correctamente:
 
-1. Ejecutar el script SQL para actualizar las incidencias resueltas:
+1. **Obligatorio: Llenar la columna `solution` (máximo 300 caracteres):**
+   El agente debe redactar una explicación técnica sintética y concisa de la causa y la corrección aplicada (sin superar 300 caracteres) y guardarla junto con el estado resuelto.
+
+   Ejecutar el script SQL para actualizar las incidencias resueltas:
    ```powershell
-   node databaseTuctucApp/run_sql.js "UPDATE public.app_crash_logs SET resolved = true, resolved_at = NOW() WHERE id IN ('<uuid-1>', '<uuid-2>');"
+   node databaseTuctucApp/run_sql.js "UPDATE public.app_crash_logs SET resolved = true, resolved_at = NOW(), solution = 'Se agrego validacion defensiva de puntero nulo antes de invocar el centrado de mapa en PassengerMapScreen.kt' WHERE id = '<uuid-1>';"
    ```
+
 2. Si había crashes intencionales de prueba (Easter Egg) que el usuario solicitó limpiar o cerrar:
    ```powershell
-   node databaseTuctucApp/run_sql.js "UPDATE public.app_crash_logs SET resolved = true, resolved_at = NOW() WHERE error_message LIKE '%Crash intencional%';"
+   node databaseTuctucApp/run_sql.js "UPDATE public.app_crash_logs SET resolved = true, resolved_at = NOW(), solution = 'Prueba intencional de telemetria validada y cerrada por desarrollo' WHERE error_message LIKE '%Crash intencional%' AND resolved = false;"
    ```
-3. Verificar que el conteo de no resueltos disminuyó:
+
+3. Verificar que el conteo de no resueltos disminuyó y que la solución quedó registrada:
    ```powershell
-   node databaseTuctucApp/run_sql.js "SELECT COUNT(*) as pendientes FROM public.app_crash_logs WHERE resolved = false;"
+   node databaseTuctucApp/run_sql.js "SELECT id, resolved, solution, created_at FROM public.app_crash_logs ORDER BY created_at DESC LIMIT 5;"
    ```
 
 ---

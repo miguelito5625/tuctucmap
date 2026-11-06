@@ -689,6 +689,7 @@ CREATE TABLE IF NOT EXISTS public.app_crash_logs (
     resolved BOOLEAN DEFAULT FALSE,
     resolved_at TIMESTAMPTZ,
     resolved_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    solution VARCHAR(300),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

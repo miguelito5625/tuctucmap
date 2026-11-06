@@ -196,6 +196,23 @@ import { CrashDetailDialogComponent } from './crash-detail-dialog.component';
               </td>
             </ng-container>
 
+            <!-- Solución Column -->
+            <ng-container matColumnDef="solution">
+              <th mat-header-cell *matHeaderCellDef> Solución Registrada </th>
+              <td mat-cell *matCellDef="let c" class="solution-cell">
+                @if (c.resolved && c.solution) {
+                  <div class="solution-pill" [matTooltip]="c.solution">
+                    <mat-icon>task_alt</mat-icon>
+                    <span class="solution-snippet">{{ c.solution }}</span>
+                  </div>
+                } @else if (c.resolved) {
+                  <span class="solution-none">Resuelto sin nota</span>
+                } @else {
+                  <span class="solution-pending">Pendiente</span>
+                }
+              </td>
+            </ng-container>
+
             <!-- Usuario Column -->
             <ng-container matColumnDef="user">
               <th mat-header-cell *matHeaderCellDef> Usuario / Rol </th>
@@ -499,6 +516,43 @@ import { CrashDetailDialogComponent } from './crash-detail-dialog.component';
         text-overflow: ellipsis;
       }
     }
+    .solution-cell {
+      max-width: 260px;
+    }
+    .solution-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 6px;
+      color: #34d399;
+      font-size: 0.78rem;
+      mat-icon {
+        font-size: 15px;
+        width: 15px;
+        height: 15px;
+        color: #10b981;
+      }
+    }
+    .solution-snippet {
+      max-width: 210px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .solution-none {
+      font-size: 0.76rem;
+      color: #64748b;
+      font-style: italic;
+    }
+    .solution-pending {
+      font-size: 0.76rem;
+      color: #f87171;
+      opacity: 0.75;
+      font-style: italic;
+    }
     .user-cell {
       display: flex;
       flex-direction: column;
@@ -568,6 +622,7 @@ export class CrashLogsComponent implements OnInit {
     'device',
     'app_version',
     'error',
+    'solution',
     'user',
     'actions',
   ];
@@ -650,16 +705,32 @@ export class CrashLogsComponent implements OnInit {
 
   async toggleResolved(crash: CrashLog): Promise<void> {
     try {
-      const newStatus = !crash.resolved;
-      await this.supabaseService.setCrashLogResolved(crash.id, newStatus);
-      crash.resolved = newStatus;
+      if (!crash.resolved) {
+        const solution = window.prompt(
+          `Explica brevemente la solución aplicada al fallo (máx. 300 caracteres):`,
+          crash.solution || ''
+        );
+        if (solution === null) return; // Cancelado por el usuario
+        const trimmed = solution.trim();
+        if (!trimmed) {
+          this.snackBar.open('Debes ingresar una breve explicación de la solución', 'Cerrar', { duration: 3000 });
+          return;
+        }
+        const finalSolution = trimmed.substring(0, 300);
+        await this.supabaseService.setCrashLogResolved(crash.id, true, finalSolution);
+        crash.resolved = true;
+        crash.solution = finalSolution;
+        this.snackBar.open('Incidencia marcada como resuelta con solución registrada', 'Cerrar', { duration: 3000 });
+      } else {
+        const confirmed = window.confirm('¿Deseas reabrir esta incidencia como pendiente? Se limpiará la solución registrada.');
+        if (!confirmed) return;
+        await this.supabaseService.setCrashLogResolved(crash.id, false);
+        crash.resolved = false;
+        crash.solution = null;
+        this.snackBar.open('Incidencia reabierta como pendiente', 'Cerrar', { duration: 3000 });
+      }
       this.updateCounts();
       this.applyCurrentFilter();
-      this.snackBar.open(
-        newStatus ? 'Incidencia marcada como resuelta' : 'Incidencia reabierta como pendiente',
-        'Cerrar',
-        { duration: 3000 }
-      );
     } catch {
       this.snackBar.open('Error al actualizar estado', 'Cerrar', { duration: 3000 });
     }

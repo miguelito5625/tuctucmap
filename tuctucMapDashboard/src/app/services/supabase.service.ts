@@ -698,15 +698,22 @@ export class SupabaseService {
     return count || 0;
   }
 
-  async setCrashLogResolved(id: string, resolved: boolean): Promise<void> {
+  async setCrashLogResolved(id: string, resolved: boolean, solution?: string): Promise<void> {
     const { data: { user } } = await this.supabase.auth.getUser();
+    const updatePayload: Record<string, any> = {
+      resolved,
+      resolved_at: resolved ? new Date().toISOString() : null,
+      resolved_by: resolved ? user?.id : null
+    };
+    if (resolved) {
+      updatePayload['solution'] = solution ? solution.substring(0, 300) : null;
+    } else {
+      updatePayload['solution'] = null;
+    }
+
     const { error } = await this.supabase
       .from('app_crash_logs')
-      .update({
-        resolved,
-        resolved_at: resolved ? new Date().toISOString() : null,
-        resolved_by: resolved ? user?.id : null
-      })
+      .update(updatePayload)
       .eq('id', id);
 
     if (error) {

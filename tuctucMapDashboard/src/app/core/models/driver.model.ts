@@ -129,6 +129,7 @@ export interface CrashLog {
   resolved: boolean;
   resolved_at: string | null;
   resolved_by: string | null;
+  solution?: string | null;
   created_at: string;
 }
 
