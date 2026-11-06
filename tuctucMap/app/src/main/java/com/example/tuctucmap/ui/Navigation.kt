@@ -1,6 +1,7 @@
 package com.example.tuctucmap.ui
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import com.example.tuctucmap.data.model.Driver
@@ -119,6 +120,11 @@ fun AppNavigation(
                         if (role == "admin") {
                             saveRole("admin")
                             navigate(Screen.AdminHome, clearStack = true)
+                        } else if (role == "driver") {
+                            repository.logout()
+                            saveRole("")
+                            Toast.makeText(context, "Esta cuenta pertenece a un conductor. Inicia sesión en el modo conductor.", Toast.LENGTH_LONG).show()
+                            navigate(Screen.DriverLogin, clearStack = true)
                         } else {
                             saveRole("passenger")
                             navigate(Screen.PassengerMap, clearStack = true)
@@ -237,6 +243,11 @@ fun AppNavigation(
                         if (role == "admin") {
                             saveRole("admin")
                             navigate(Screen.AdminHome, clearStack = true)
+                        } else if (role == "passenger") {
+                            repository.logout()
+                            saveRole("")
+                            Toast.makeText(context, "Esta cuenta pertenece a un pasajero. Inicia sesión en el modo pasajero.", Toast.LENGTH_LONG).show()
+                            navigate(Screen.PassengerLogin, clearStack = true)
                         } else {
                             saveRole("driver")
                             repository.getDriverProfileOnce(uid) { driver ->

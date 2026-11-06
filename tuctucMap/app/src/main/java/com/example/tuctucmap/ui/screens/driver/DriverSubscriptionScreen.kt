@@ -65,7 +65,7 @@ fun DriverSubscriptionScreen(
                     driver = d
                 }
                 val res = repository.getDriverRenewalRequests()
-                requests = res.getOrDefault(emptyList())
+                requests = res.getOrDefault(emptyList()).sortedByDescending { it.createdAtEpoch }
             }
             isLoading = false
         }
@@ -123,7 +123,7 @@ fun DriverSubscriptionScreen(
                 referenceInput = ""
                 // Refrescar historial de solicitudes
                 val reqs = repository.getDriverRenewalRequests()
-                requests = reqs.getOrDefault(emptyList())
+                requests = reqs.getOrDefault(emptyList()).sortedByDescending { it.createdAtEpoch }
             }.onFailure { err ->
                 Toast.makeText(context, "Error: ${err.message}", Toast.LENGTH_SHORT).show()
             }
@@ -489,23 +489,38 @@ fun DriverSubscriptionScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(
+                            modifier = Modifier.weight(1f),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Icon(Icons.Default.History, contentDescription = null, tint = Color(0xFF38BDF8))
-                            Text(
-                                text = "Mis Solicitudes de Renovación",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        }
-                        if (requests.isNotEmpty()) {
-                            Text(
-                                text = "Últimas ${requests.size} solicitudes",
-                                fontSize = 12.sp,
-                                color = Color(0xFF94A3B8)
-                            )
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0x2238BDF8),
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.History,
+                                        contentDescription = null,
+                                        tint = Color(0xFF38BDF8),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Column {
+                                Text(
+                                    text = "Mis Solicitudes de Renovación",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = if (requests.isEmpty()) "Sin solicitudes registradas"
+                                           else "Últimas ${requests.size} ${if (requests.size == 1) "solicitud" else "solicitudes"}",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF94A3B8)
+                                )
+                            }
                         }
                     }
 
@@ -552,7 +567,7 @@ fun DriverSubscriptionScreen(
                             }
                         }
                     } else {
-                        requests.forEach { req ->
+                        requests.sortedByDescending { it.createdAtEpoch }.forEach { req ->
                             RenewalRequestItem(
                                 request = req,
                                 onChatWhatsApp = { openWhatsApp(req) }
@@ -579,21 +594,22 @@ private fun RenewalRequestItem(
         } else ""
     }
 
-    val (statusLabel, statusColor, statusBg, statusIcon) = when (request.status) {
-        "aprobado" -> Quadruple(
+    val normalizedStatus = request.status.lowercase().trim()
+    val (statusLabel, statusColor, statusBg, statusIcon) = when {
+        normalizedStatus.startsWith("aprob") -> Quadruple(
             "Aprobada",
             Color(0xFF4ADE80),
             Color(0x2210B981),
             Icons.Default.CheckCircle
         )
-        "rechazado" -> Quadruple(
+        normalizedStatus.startsWith("rechaz") -> Quadruple(
             "Rechazada",
             Color(0xFFF87171),
             Color(0x22EF4444),
             Icons.Default.Cancel
         )
         else -> Quadruple(
-            "Pendiente de Revisión",
+            "Pendiente",
             Color(0xFFFBBF24),
             Color(0x22F59E0B),
             Icons.Default.HourglassTop
@@ -610,12 +626,13 @@ private fun RenewalRequestItem(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            // Fila 1: Plan y Estado
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Plan ${request.planType.replaceFirstChar { it.uppercase() }}",
                         fontSize = 15.sp,
@@ -631,13 +648,15 @@ private fun RenewalRequestItem(
                     }
                 }
 
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Surface(
                     shape = RoundedCornerShape(20.dp),
                     color = statusBg,
                     border = BorderStroke(1.dp, statusColor.copy(alpha = 0.5f))
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
@@ -649,12 +668,13 @@ private fun RenewalRequestItem(
 
             HorizontalDivider(color = Color(0x15FFFFFF))
 
+            // Fila 2: Monto / Boleta y WhatsApp
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Monto: Q${String.format(Locale.US, "%.2f", request.amount)}",
                         fontSize = 13.sp,
@@ -670,7 +690,8 @@ private fun RenewalRequestItem(
                     }
                 }
 
-                if (request.status != "aprobado") {
+                if (!normalizedStatus.startsWith("aprob")) {
+                    Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = onChatWhatsApp,
                         shape = RoundedCornerShape(8.dp),
@@ -689,23 +710,35 @@ private fun RenewalRequestItem(
             }
 
             // Si está pendiente, mensaje informativo
-            if (request.status == "pendiente") {
+            if (!normalizedStatus.startsWith("aprob") && !normalizedStatus.startsWith("rechaz")) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = Color(0x15FBBF24),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "El administrador está validando tu comprobante por WhatsApp para activar tu renovación.",
-                        fontSize = 11.sp,
-                        color = Color(0xFFFBBF24),
-                        modifier = Modifier.padding(8.dp)
-                    )
+                    Row(
+                        modifier = Modifier.padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.HourglassTop,
+                            contentDescription = null,
+                            tint = Color(0xFFFBBF24),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = "El administrador está validando tu comprobante por WhatsApp para activar tu renovación.",
+                            fontSize = 11.sp,
+                            color = Color(0xFFFBBF24),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
 
             // Si fue rechazada, mostrar motivo
-            if (request.status == "rechazado" && !request.rejectionReason.isNullOrBlank()) {
+            if (normalizedStatus.startsWith("rechaz") && !request.rejectionReason.isNullOrBlank()) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = Color(0x22EF4444),
@@ -713,13 +746,15 @@ private fun RenewalRequestItem(
                 ) {
                     Row(
                         modifier = Modifier.padding(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(Icons.Default.Info, contentDescription = null, tint = Color(0xFFF87171), modifier = Modifier.size(16.dp))
                         Text(
                             text = "Motivo: ${request.rejectionReason}",
                             fontSize = 11.sp,
-                            color = Color(0xFFFF8A80)
+                            color = Color(0xFFFF8A80),
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }

@@ -42,6 +42,8 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.math.*
 
+class RoleMismatchException(message: String) : Exception(message)
+
 class SupabaseRepository {
 
     companion object {
@@ -60,9 +62,11 @@ class SupabaseRepository {
 
         fun formatAuthError(error: Throwable?): String {
             if (error == null) return "Error de autenticación"
+            if (error is RoleMismatchException) return error.message ?: "Rol no autorizado para este modo."
             val msg = error.message ?: error.localizedMessage ?: ""
             val lower = msg.lowercase()
             return when {
+                lower.contains("esta cuenta está registrada como") -> msg
                 lower.contains("timeout") -> "No se pudo conectar al servidor. Revisa tu conexión a internet e inténtalo de nuevo."
                 lower.contains("unknownhost") || lower.contains("unresolvedaddress") || lower.contains("failed to connect") || lower.contains("connection refused") -> "Sin conexión a internet. Verifica tu red Wi-Fi o datos móviles."
                 lower.contains("invalid login credentials") || lower.contains("invalid_credentials") || lower.contains("invalid_grant") -> "Correo o contraseña incorrectos."
@@ -317,6 +321,27 @@ class SupabaseRepository {
                 this.email = email
                 this.password = contrasena
             }
+            val uid = currentUserUid ?: supabase.auth.currentUserOrNull()?.id
+            if (uid.isNullOrBlank()) {
+                supabase.auth.signOut()
+                return Result.failure(Exception("No se pudo obtener la sesión del usuario"))
+            }
+
+            val roleResult = fetchUserRole(uid)
+            if (roleResult.isFailure) {
+                supabase.auth.signOut()
+                return Result.failure(roleResult.exceptionOrNull() ?: Exception("No se pudo verificar el rol de la cuenta"))
+            }
+
+            val role = roleResult.getOrNull()
+            if (role == "passenger") {
+                supabase.auth.signOut()
+                return Result.failure(RoleMismatchException("Esta cuenta está registrada como pasajero. Por favor inicia sesión en el modo pasajero."))
+            } else if (role != "driver" && role != "admin") {
+                supabase.auth.signOut()
+                return Result.failure(RoleMismatchException("Esta cuenta no tiene permisos de conductor."))
+            }
+
             syncServerTimeAndExpire()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -330,6 +355,27 @@ class SupabaseRepository {
                 this.email = email
                 this.password = password
             }
+            val uid = currentUserUid ?: supabase.auth.currentUserOrNull()?.id
+            if (uid.isNullOrBlank()) {
+                supabase.auth.signOut()
+                return Result.failure(Exception("No se pudo obtener la sesión del usuario"))
+            }
+
+            val roleResult = fetchUserRole(uid)
+            if (roleResult.isFailure) {
+                supabase.auth.signOut()
+                return Result.failure(roleResult.exceptionOrNull() ?: Exception("No se pudo verificar el rol de la cuenta"))
+            }
+
+            val role = roleResult.getOrNull()
+            if (role == "driver") {
+                supabase.auth.signOut()
+                return Result.failure(RoleMismatchException("Esta cuenta está registrada como conductor. Por favor inicia sesión en el modo conductor."))
+            } else if (role != "passenger" && role != "admin") {
+                supabase.auth.signOut()
+                return Result.failure(RoleMismatchException("Esta cuenta no tiene permisos de pasajero."))
+            }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -378,16 +424,18 @@ class SupabaseRepository {
 
     val adminRepository: AdminRepository by lazy { AdminRepository(this) }
 
-    suspend fun getUserRole(uid: String): String? {
+    suspend fun fetchUserRole(uid: String): Result<String?> {
         return try {
             val res = supabase.postgrest["profiles"].select {
                 filter { eq("id", uid) }
             }.decodeSingleOrNull<com.example.tuctucmap.data.model.UserRoleDto>()
-            res?.role
-        } catch (_: Exception) {
-            null
+            Result.success(res?.role)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
+
+    suspend fun getUserRole(uid: String): String? = fetchUserRole(uid).getOrNull()
 
     fun getDriverProfileOnce(uid: String, onResult: (Driver?) -> Unit) {
         repositoryIoScope.launch {
