@@ -3,6 +3,7 @@ package com.example.tuctucmap.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
@@ -386,11 +387,8 @@ fun PassengerDrawerSheet(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                Text(
-                    text = "TucTuc Map • v1.0",
-                    fontSize = 11.sp,
-                    color = Color.White.copy(alpha = 0.4f),
-                    modifier = Modifier.padding(start = 12.dp)
+                DrawerEasterEggVersionText(
+                    text = "TucTuc Map • v${com.example.tuctucmap.BuildConfig.VERSION_NAME}"
                 )
             }
         }
@@ -705,11 +703,8 @@ fun DriverDrawerSheet(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = "TucTuc Map • v1.0",
-                    fontSize = 11.sp,
-                    color = Color.White.copy(alpha = 0.4f),
-                    modifier = Modifier.padding(start = 12.dp)
+                DrawerEasterEggVersionText(
+                    text = "TucTuc Map • v${com.example.tuctucmap.BuildConfig.VERSION_NAME}"
                 )
             }
         }
@@ -909,15 +904,52 @@ fun AdminDrawerSheet(
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "TucTuc Map Admin • Móvil",
-                    fontSize = 11.sp,
-                    color = Color.White.copy(alpha = 0.4f),
-                    modifier = Modifier.padding(start = 12.dp)
+                DrawerEasterEggVersionText(
+                    text = "TucTuc Map Admin • v${com.example.tuctucmap.BuildConfig.VERSION_NAME}"
                 )
             }
         }
     }
+}
+
+@Composable
+private fun DrawerEasterEggVersionText(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var tapCount by remember { mutableIntStateOf(0) }
+    var lastTapTime by remember { mutableLongStateOf(0L) }
+
+    Text(
+        text = text,
+        fontSize = 11.sp,
+        color = Color.White.copy(alpha = 0.4f),
+        modifier = modifier
+            .padding(start = 12.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .clickable {
+                val now = System.currentTimeMillis()
+                if (now - lastTapTime > 1500L) {
+                    tapCount = 1
+                } else {
+                    tapCount++
+                }
+                lastTapTime = now
+
+                if (tapCount in 3..4) {
+                    val remaining = 5 - tapCount
+                    android.widget.Toast.makeText(
+                        context,
+                        "Estás a $remaining toque(s) de generar crash de prueba...",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                } else if (tapCount >= 5) {
+                    tapCount = 0
+                    throw RuntimeException("Prueba de Telemetría TucTuc Map - Crash intencional")
+                }
+            }
+    )
 }
 
 @Composable

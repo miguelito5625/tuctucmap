@@ -680,3 +680,4 @@ export class CrashLogsComponent implements OnInit {
     }
   }
 }
+

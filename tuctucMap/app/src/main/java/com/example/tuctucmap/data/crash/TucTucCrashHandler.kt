@@ -105,3 +105,4 @@ class TucTucCrashHandler(
         const val CRASH_DIR_NAME = "tuctuc_crashes"
     }
 }
+

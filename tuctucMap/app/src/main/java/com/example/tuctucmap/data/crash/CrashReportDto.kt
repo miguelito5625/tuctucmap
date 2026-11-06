@@ -22,3 +22,4 @@ data class CrashReportDto(
     @SerialName("thread_name") val threadName: String? = null,
     @SerialName("created_at") val createdAt: String
 )
+

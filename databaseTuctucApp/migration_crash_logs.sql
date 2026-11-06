@@ -53,3 +53,4 @@ CREATE POLICY "Admins can delete app_crash_logs" ON public.app_crash_logs
 -- Índices de consulta rápida
 CREATE INDEX IF NOT EXISTS idx_crash_logs_created_at ON public.app_crash_logs (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_crash_logs_resolved ON public.app_crash_logs (resolved);
+
