@@ -2,6 +2,7 @@ package com.example.tuctucmap
 
 import android.app.Application
 import android.content.Context
+import com.example.tuctucmap.data.crash.CrashReporterManager
 import com.example.tuctucmap.data.supabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,11 +24,14 @@ class TucTucApplication : Application() {
         super.onCreate()
         _instance = this
 
-        // Precalentar Supabase y dependencias de red/reflexión en segundo plano (Dispatchers.IO)
-        // para evitar congelar el hilo principal durante el arranque inicial.
+        // Inicializar interceptor global de errores no capturados
+        CrashReporterManager.init(this)
+
+        // Precalentar Supabase y despachar reportes pendientes de errores en segundo plano
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
                 supabase
+                CrashReporterManager.checkAndSendPendingReports(applicationContext)
             } catch (_: Exception) {}
         }
     }

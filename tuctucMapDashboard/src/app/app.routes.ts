@@ -54,6 +54,12 @@ export const routes: Routes = [
           import('./features/business-config/business-config.component').then((m) => m.BusinessConfigComponent),
         title: 'Configuración Comercial — TucTucMap Admin',
       },
+      {
+        path: 'crash-logs',
+        loadComponent: () =>
+          import('./features/crash-logs/crash-logs.component').then((m) => m.CrashLogsComponent),
+        title: 'Reportes de Errores Móvil — TucTucMap Admin',
+      },
     ]
   },
   {

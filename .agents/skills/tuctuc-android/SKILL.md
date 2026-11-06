@@ -126,7 +126,14 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
 
 ---
 
-## 7. Verificación y Compilación Obligatoria
+## 8. Telemetría y Reporte Automático de Errores (Crash Reporting)
+1. **Patrón Crash-Capture-Persist-Report (`data/crash/`):**
+   - **`TucTucCrashHandler.kt`:** Implementa `Thread.UncaughtExceptionHandler`. Captura de forma síncrona excepciones no controladas antes del cierre del proceso, recopilando stack trace, mensaje, hardware (`Build.MANUFACTURER`, `Build.MODEL`, `Build.BRAND`), SO (`Build.VERSION.RELEASE`, `Build.VERSION.SDK_INT`), versión de app (`BuildConfig.VERSION_NAME`, `BuildConfig.VERSION_CODE`), hilo y usuario. Escribe el volcado JSON en `context.filesDir/tuctuc_crashes/` y cede el control al manejador original de Android para un cierre limpio.
+   - **`CrashReporterManager.kt`:** Inicializado en `TucTucApplication.onCreate()`. En segundo plano (`Dispatchers.IO`), inspecciona la carpeta local en busca de volcados previos, los envía a Supabase (`app_crash_logs`) y los elimina tras recibir confirmación de red exitosa.
+
+---
+
+## 9. Verificación y Compilación Obligatoria
 Antes de dar por terminada cualquier tarea en el módulo Android, compilar y verificar:
 
 ```powershell

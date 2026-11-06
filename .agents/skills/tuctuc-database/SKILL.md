@@ -19,6 +19,7 @@ Esta guía define los estándares, esquemas y procedimientos de ejecución SQL p
   - `app_config`: Configuración comercial dinámica (fila única `id = 1`) con teléfono de WhatsApp del administrador, cuentas bancarias (`bank_1_*`, `bank_2_*`), titular, precios de planes y radio de geocerca (`search_radius_km`).
   - `subscription_payment_requests`: Solicitudes de renovación y comprobantes bancarios registrados por los conductores. Incluye `driver_id`, `plan_type`, `amount_paid`, `reference_number` (opcional si envían captura), `status` (`pendiente`, `aprobado`, `rechazado`), `rejection_reason`, `reviewed_at` y `reviewed_by`.
   - `driver_locations`: Coordenadas persistentes de respaldo en PostgreSQL (mientras que la telemetría en tiempo real de alta frecuencia se opera en Firebase Realtime Database).
+  - `app_crash_logs`: Telemetría de excepciones y fallos no controlados de la app móvil. Contiene metadatos de hardware (`device_brand`, `device_model`, `device_manufacturer`), sistema (`android_version`, `sdk_int`), aplicación (`app_version`, `build_number`, `build_type`), error (`error_type`, `error_message`, `stack_trace`, `thread_name`), estado (`resolved`, `resolved_at`, `resolved_by`) y RLS público para INSERT y exclusivo de admin para SELECT/UPDATE/DELETE.
 
 ---
 

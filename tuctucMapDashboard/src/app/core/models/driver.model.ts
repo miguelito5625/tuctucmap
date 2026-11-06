@@ -108,3 +108,28 @@ export interface SubscriptionPaymentRequest {
   created_at: number;
 }
 
+export interface CrashLog {
+  id: string;
+  user_id: string | null;
+  user_email: string | null;
+  role: string | null;
+  device_brand: string;
+  device_model: string;
+  device_manufacturer: string;
+  android_version: string;
+  sdk_int: number;
+  app_version: string;
+  build_number: number;
+  build_type: string;
+  error_type: string;
+  error_message: string | null;
+  stack_trace: string;
+  thread_name: string | null;
+  extra_metadata?: Record<string, any>;
+  resolved: boolean;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  created_at: string;
+}
+
+

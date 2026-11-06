@@ -50,6 +50,7 @@ export class ShellComponent implements OnInit, OnDestroy {
   adminName = signal<string>('Cargando...');
   readonly pendingRenewalsCount = signal<number>(0);
   readonly pendingDriversCount = signal<number>(0);
+  readonly unresolvedCrashesCount = signal<number>(0);
 
   ngOnInit(): void {
     this.subs.add(
@@ -75,14 +76,25 @@ export class ShellComponent implements OnInit, OnDestroy {
     );
 
     this.loadProfile();
+    this.loadCrashCount();
 
     if (typeof document !== 'undefined') {
       this.visibilityHandler = () => {
         if (document.visibilityState === 'visible') {
           this.supabaseService.refreshPendingPaymentRequestsCount();
+          this.loadCrashCount();
         }
       };
       document.addEventListener('visibilitychange', this.visibilityHandler);
+    }
+  }
+
+  async loadCrashCount() {
+    try {
+      const count = await this.supabaseService.getUnresolvedCrashLogsCount();
+      this.unresolvedCrashesCount.set(count);
+    } catch {
+      // Ignorar fallback
     }
   }
 

@@ -11,7 +11,8 @@ import {
   FinancialKPIs,
   PassengerProfile,
   LiveDriverLocation,
-  SubscriptionPaymentRequest
+  SubscriptionPaymentRequest,
+  CrashLog
 } from '../core/models/driver.model';
 
 @Injectable({
@@ -663,5 +664,68 @@ export class SupabaseService {
   async getPendingPaymentRequestsCount(): Promise<number> {
     return await this.refreshPendingPaymentRequestsCount();
   }
+
+  // --- Telemetría y Reportes de Errores Móvil (Crash Logs) ---
+
+  async getCrashLogs(filterResolved?: boolean): Promise<CrashLog[]> {
+    let query = this.supabase
+      .from('app_crash_logs')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (filterResolved !== undefined) {
+      query = query.eq('resolved', filterResolved);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error('Error al obtener reportes de crash:', error);
+      throw error;
+    }
+    return data || [];
+  }
+
+  async getUnresolvedCrashLogsCount(): Promise<number> {
+    const { count, error } = await this.supabase
+      .from('app_crash_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('resolved', false);
+
+    if (error) {
+      console.error('Error al contar crashes no resueltos:', error);
+      return 0;
+    }
+    return count || 0;
+  }
+
+  async setCrashLogResolved(id: string, resolved: boolean): Promise<void> {
+    const { data: { user } } = await this.supabase.auth.getUser();
+    const { error } = await this.supabase
+      .from('app_crash_logs')
+      .update({
+        resolved,
+        resolved_at: resolved ? new Date().toISOString() : null,
+        resolved_by: resolved ? user?.id : null
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error al actualizar estado del crash log:', error);
+      throw error;
+    }
+  }
+
+  async deleteCrashLog(id: string): Promise<void> {
+    const { error } = await this.supabase
+      .from('app_crash_logs')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error al eliminar crash log:', error);
+      throw error;
+    }
+  }
 }
+
 

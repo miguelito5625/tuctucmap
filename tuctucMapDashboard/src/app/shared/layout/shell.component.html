@@ -102,6 +102,23 @@
         <mat-icon matListItemIcon>tune</mat-icon>
         <span matListItemTitle>Configuración Negocio</span>
       </a>
+
+      <div class="nav-section-label" style="margin-top: 12px;">Monitoreo</div>
+
+      <a
+        mat-list-item
+        routerLink="/crash-logs"
+        routerLinkActive="active-nav-item"
+        (click)="onNavItemClick()"
+        matTooltip="Reportes de errores y fallos de la app móvil"
+        matTooltipPosition="right"
+      >
+        <mat-icon matListItemIcon>bug_report</mat-icon>
+        <span matListItemTitle>Errores Móvil</span>
+        @if (unresolvedCrashesCount() > 0) {
+          <span matListItemMeta class="nav-badge-pending">{{ unresolvedCrashesCount() }}</span>
+        }
+      </a>
     </mat-nav-list>
 
     <!-- Footer -->
