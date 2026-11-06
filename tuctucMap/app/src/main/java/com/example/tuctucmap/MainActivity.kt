@@ -29,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.osmdroid.config.Configuration
 
@@ -99,130 +100,126 @@ class MainActivity : ComponentActivity() {
                 var isSplashFinished by remember { mutableStateOf(false) }
 
                 LaunchedEffect(Unit) {
-                    // Precargar configuración dinámica en paralelo sin bloquear la resolución de pantalla
-                    launch(Dispatchers.IO) {
-                        try {
-                            withTimeoutOrNull(2500L) {
-                                repository.getAppConfig()
-                            }
-                        } catch (_: Exception) {}
-                    }
-
-                    var savedRole = SecurePrefs.getUserRole(this@MainActivity)
-                    val hasStoredSession = SecurePrefs.loadUserSession(this@MainActivity) != null
-
-                    // Si no hay ninguna sesión persistida en SecurePrefs ni rol guardado:
-                    // usuario nuevo o invitado, acceso público directo al mapa como invitado.
-                    if (!hasStoredSession && savedRole.isNullOrBlank()) {
-                        initialScreen = Screen.PassengerMap
-                        return@LaunchedEffect
-                    }
-
-                    // Esperar a que Supabase resuelva o restaure la sesión persistida desde almacenamiento seguro
-                    val status = try {
-                        withTimeoutOrNull(3000L) {
-                            supabase.auth.sessionStatus
-                                .filter { it !is SessionStatus.Initializing }
-                                .first()
-                        }
-                    } catch (_: Exception) { null }
-
-                    val uid = repository.currentUserUid
-                        ?: (status as? SessionStatus.Authenticated)?.session?.user?.id
-                        ?: SecurePrefs.loadUserSession(this@MainActivity)?.user?.id
-                        ?: ""
-
-                    val isAuthed = status is SessionStatus.Authenticated ||
-                            status is SessionStatus.RefreshFailure ||
-                            repository.isUserLoggedIn ||
-                            (hasStoredSession && uid.isNotBlank())
-
-                    if (isAuthed) {
-                        // [SEC-05] Verificar rol real en Supabase profiles.
-                        // Para acceder al rol admin se exige validación estricta en el servidor para evitar spoofing local.
-                        val verifiedRole = if (uid.isNotBlank()) {
+                    val resolvedScreen = withContext(Dispatchers.IO) {
+                        // Precargar configuración dinámica en paralelo sin bloquear la resolución de pantalla
+                        launch {
                             try {
                                 withTimeoutOrNull(2500L) {
-                                    repository.getUserRole(uid)
+                                    repository.getAppConfig()
                                 }
-                            } catch (_: Exception) { null }
-                        } else null
-
-                        val effectiveRole = verifiedRole ?: savedRole
-
-                        if (effectiveRole == "admin") {
-                            if (verifiedRole == "admin") {
-                                SecurePrefs.saveUserRole(this@MainActivity, "admin")
-                                initialScreen = Screen.AdminHome
-                                return@LaunchedEffect
-                            } else {
-                                // No verificado por el servidor: degradar rol y bloquear acceso al panel admin
-                                SecurePrefs.saveUserRole(this@MainActivity, "passenger")
-                                initialScreen = Screen.PassengerMap
-                                return@LaunchedEffect
-                            }
+                            } catch (_: Exception) {}
                         }
 
-                        if (!verifiedRole.isNullOrBlank() && verifiedRole != savedRole) {
-                            SecurePrefs.saveUserRole(this@MainActivity, verifiedRole)
-                            savedRole = verifiedRole
+                        var savedRole = SecurePrefs.getUserRole(this@MainActivity)
+                        val hasStoredSession = SecurePrefs.loadUserSession(this@MainActivity) != null
+
+                        // Si no hay ninguna sesión persistida en SecurePrefs ni rol guardado:
+                        // usuario nuevo o invitado, acceso público directo al mapa como invitado.
+                        if (!hasStoredSession && savedRole.isNullOrBlank()) {
+                            return@withContext Screen.PassengerMap
                         }
 
-                        when (effectiveRole) {
-                            "passenger" -> {
-                                initialScreen = Screen.PassengerMap
+                        // Esperar a que Supabase resuelva o restaure la sesión persistida desde almacenamiento seguro
+                        val status = try {
+                            withTimeoutOrNull(3000L) {
+                                supabase.auth.sessionStatus
+                                    .filter { it !is SessionStatus.Initializing }
+                                    .first()
                             }
-                            "driver" -> {
-                                val cachedApproval = SecurePrefs.getDriverApprovalStatusCache(this@MainActivity)
-                                val cachedSubEnd = SecurePrefs.getDriverSubEndCache(this@MainActivity)
+                        } catch (_: Exception) { null }
 
-                                val isSubExpiredCached = cachedSubEnd?.let {
-                                    val expiryMs = parseIsoTimestamp(it)
-                                    expiryMs > 0L && ServerClock.nowMillis() > expiryMs
-                                } ?: false
+                        val uid = repository.currentUserUid
+                            ?: (status as? SessionStatus.Authenticated)?.session?.user?.id
+                            ?: SecurePrefs.loadUserSession(this@MainActivity)?.user?.id
+                            ?: ""
 
-                                // Intentar refrescar perfil del conductor en tiempo real (timeout rápido)
-                                val driver = if (uid.isNotBlank()) {
-                                    try {
-                                        withTimeoutOrNull(2500L) {
-                                            kotlinx.coroutines.suspendCancellableCoroutine<Driver?> { continuation ->
-                                                repository.getDriverProfileOnce(uid) { d ->
-                                                    if (continuation.isActive) continuation.resumeWith(Result.success(d))
+                        val isAuthed = status is SessionStatus.Authenticated ||
+                                status is SessionStatus.RefreshFailure ||
+                                repository.isUserLoggedIn ||
+                                (hasStoredSession && uid.isNotBlank())
+
+                        if (isAuthed) {
+                            // [SEC-05] Verificar rol real en Supabase profiles.
+                            // Para acceder al rol admin se exige validación estricta en el servidor para evitar spoofing local.
+                            val verifiedRole = if (uid.isNotBlank()) {
+                                try {
+                                    withTimeoutOrNull(2500L) {
+                                        repository.getUserRole(uid)
+                                    }
+                                } catch (_: Exception) { null }
+                            } else null
+
+                            val effectiveRole = verifiedRole ?: savedRole
+
+                            if (effectiveRole == "admin") {
+                                return@withContext if (verifiedRole == "admin") {
+                                    SecurePrefs.saveUserRole(this@MainActivity, "admin")
+                                    Screen.AdminHome
+                                } else {
+                                    // No verificado por el servidor: degradar rol y bloquear acceso al panel admin
+                                    SecurePrefs.saveUserRole(this@MainActivity, "passenger")
+                                    Screen.PassengerMap
+                                }
+                            }
+
+                            if (!verifiedRole.isNullOrBlank() && verifiedRole != savedRole) {
+                                SecurePrefs.saveUserRole(this@MainActivity, verifiedRole)
+                                savedRole = verifiedRole
+                            }
+
+                            when (effectiveRole) {
+                                "passenger" -> Screen.PassengerMap
+                                "driver" -> {
+                                    val cachedApproval = SecurePrefs.getDriverApprovalStatusCache(this@MainActivity)
+                                    val cachedSubEnd = SecurePrefs.getDriverSubEndCache(this@MainActivity)
+
+                                    val isSubExpiredCached = cachedSubEnd?.let {
+                                        val expiryMs = parseIsoTimestamp(it)
+                                        expiryMs > 0L && ServerClock.nowMillis() > expiryMs
+                                    } ?: false
+
+                                    // Intentar refrescar perfil del conductor en tiempo real (timeout rápido)
+                                    val driver = if (uid.isNotBlank()) {
+                                        try {
+                                            withTimeoutOrNull(2500L) {
+                                                kotlinx.coroutines.suspendCancellableCoroutine<Driver?> { continuation ->
+                                                    repository.getDriverProfileOnce(uid) { d ->
+                                                        if (continuation.isActive) continuation.resumeWith(Result.success(d))
+                                                    }
                                                 }
                                             }
-                                        }
-                                    } catch (_: Exception) { null }
-                                } else null
+                                        } catch (_: Exception) { null }
+                                    } else null
 
-                                if (driver != null) {
-                                    SecurePrefs.saveDriverSubscriptionCache(
-                                        this@MainActivity,
-                                        driver.estadoAprobacion,
-                                        driver.subscriptionEndDate
-                                    )
-                                    initialScreen = com.example.tuctucmap.ui.resolveDriverScreen(driver)
-                                } else {
-                                    // Si no hubo respuesta inmediata de red pero el conductor está autenticado:
-                                    // Entrar según caché cifrada o DriverHome (DriverHomeScreen vigila el estado en tiempo real)
-                                    initialScreen = when {
-                                        isSubExpiredCached -> Screen.DriverSubscriptionExpired
-                                        cachedApproval == "pendiente" || cachedApproval == "rechazado" -> Screen.DriverPending
-                                        else -> Screen.DriverHome
+                                    if (driver != null) {
+                                        SecurePrefs.saveDriverSubscriptionCache(
+                                            this@MainActivity,
+                                            driver.estadoAprobacion,
+                                            driver.subscriptionEndDate
+                                        )
+                                        com.example.tuctucmap.ui.resolveDriverScreen(driver)
+                                    } else {
+                                        // Si no hubo respuesta inmediata de red pero el conductor está autenticado:
+                                        // Entrar según caché cifrada o DriverHome (DriverHomeScreen vigila el estado en tiempo real)
+                                        when {
+                                            isSubExpiredCached -> Screen.DriverSubscriptionExpired
+                                            cachedApproval == "pendiente" || cachedApproval == "rechazado" -> Screen.DriverPending
+                                            else -> Screen.DriverHome
+                                        }
                                     }
                                 }
+                                else -> Screen.PassengerMap
                             }
-                            else -> {
-                                initialScreen = Screen.PassengerMap
+                        } else {
+                            // Sesión explícitamente no autenticada en Supabase (expirada definitivamente o revocada)
+                            when (savedRole) {
+                                "admin" -> Screen.PassengerLogin
+                                "driver" -> Screen.DriverLogin
+                                else -> Screen.PassengerMap
                             }
-                        }
-                    } else {
-                        // Sesión explícitamente no autenticada en Supabase (expirada definitivamente o revocada)
-                        when (savedRole) {
-                            "admin" -> initialScreen = Screen.PassengerLogin
-                            "driver" -> initialScreen = Screen.DriverLogin
-                            else -> initialScreen = Screen.PassengerMap
                         }
                     }
+                    initialScreen = resolvedScreen
                 }
 
                 Crossfade(
