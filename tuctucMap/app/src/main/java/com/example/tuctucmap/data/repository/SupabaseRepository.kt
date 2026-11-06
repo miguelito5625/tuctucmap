@@ -42,7 +42,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.math.*
 
-class RoleMismatchException(message: String) : Exception(message)
+class RoleMismatchException(message: String = "Correo o contraseña incorrectos.") : Exception(message)
 
 class SupabaseRepository {
 
@@ -62,14 +62,13 @@ class SupabaseRepository {
 
         fun formatAuthError(error: Throwable?): String {
             if (error == null) return "Error de autenticación"
-            if (error is RoleMismatchException) return error.message ?: "Rol no autorizado para este modo."
+            if (error is RoleMismatchException) return error.message ?: "Correo o contraseña incorrectos."
             val msg = error.message ?: error.localizedMessage ?: ""
             val lower = msg.lowercase()
             return when {
-                lower.contains("esta cuenta está registrada como") -> msg
+                lower.contains("invalid login credentials") || lower.contains("invalid_credentials") || lower.contains("invalid_grant") -> "Correo o contraseña incorrectos."
                 lower.contains("timeout") -> "No se pudo conectar al servidor. Revisa tu conexión a internet e inténtalo de nuevo."
                 lower.contains("unknownhost") || lower.contains("unresolvedaddress") || lower.contains("failed to connect") || lower.contains("connection refused") -> "Sin conexión a internet. Verifica tu red Wi-Fi o datos móviles."
-                lower.contains("invalid login credentials") || lower.contains("invalid_credentials") || lower.contains("invalid_grant") -> "Correo o contraseña incorrectos."
                 lower.contains("email not confirmed") -> "El correo no ha sido confirmado."
                 else -> "Error al iniciar sesión: ${msg.take(80)}"
             }
@@ -334,12 +333,9 @@ class SupabaseRepository {
             }
 
             val role = roleResult.getOrNull()
-            if (role == "passenger") {
+            if (role == "passenger" || (role != "driver" && role != "admin")) {
                 supabase.auth.signOut()
-                return Result.failure(RoleMismatchException("Esta cuenta está registrada como pasajero. Por favor inicia sesión en el modo pasajero."))
-            } else if (role != "driver" && role != "admin") {
-                supabase.auth.signOut()
-                return Result.failure(RoleMismatchException("Esta cuenta no tiene permisos de conductor."))
+                return Result.failure(RoleMismatchException("Correo o contraseña incorrectos."))
             }
 
             syncServerTimeAndExpire()
@@ -368,12 +364,9 @@ class SupabaseRepository {
             }
 
             val role = roleResult.getOrNull()
-            if (role == "driver") {
+            if (role == "driver" || (role != "passenger" && role != "admin")) {
                 supabase.auth.signOut()
-                return Result.failure(RoleMismatchException("Esta cuenta está registrada como conductor. Por favor inicia sesión en el modo conductor."))
-            } else if (role != "passenger" && role != "admin") {
-                supabase.auth.signOut()
-                return Result.failure(RoleMismatchException("Esta cuenta no tiene permisos de pasajero."))
+                return Result.failure(RoleMismatchException("Correo o contraseña incorrectos."))
             }
 
             Result.success(Unit)

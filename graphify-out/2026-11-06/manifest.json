@@ -222,8 +222,8 @@
     "semantic_hash": "bd7d8d4dcf7261c37c6a35a892af2f35"
   },
   "tuctucMap/app/build.gradle.kts": {
-    "mtime": 1793992130.311967,
-    "seen": 1793992288.655735,
+    "mtime": 1793993434.9950395,
+    "seen": 1794005774.49394,
     "ast_hash": "b70a1f7747a70b23ed03f9741d481384",
     "semantic_hash": ""
   },
@@ -294,9 +294,9 @@
     "semantic_hash": "25a59d33cee61cb7205f10a5621a3523"
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt": {
-    "mtime": 1793929260.6398482,
-    "seen": 1793930262.0899804,
-    "ast_hash": "a2ce21ae1a99b0885021b7af298f753b",
+    "mtime": 1794005600.1747923,
+    "seen": 1794005774.493967,
+    "ast_hash": "b39d8d4f4108662028ffae6612c1c144",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/data/service/OsrmRoutingService.kt": {
@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/Navigation.kt": {
-    "mtime": 1793983991.7942417,
-    "seen": 1793984196.8182654,
-    "ast_hash": "2573b33581d421d9cbc9cfcc92c41d2e",
+    "mtime": 1794005628.8852675,
+    "seen": 1794005774.4939718,
+    "ast_hash": "37f705a72d5e1f476651399373d630fc",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/AppDrawer.kt": {
@@ -384,9 +384,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverSubscriptionScreen.kt": {
-    "mtime": 1793239348.0498133,
-    "seen": 1793239351.4034789,
-    "ast_hash": "24cf02f3bf89ad2bbd148a0d879a627c",
+    "mtime": 1794005696.1172287,
+    "seen": 1794005774.494001,
+    "ast_hash": "402976aa5188ca7ffcd75c5923d6b862",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverTripHistoryScreen.kt": {
@@ -849,6 +849,12 @@
     "mtime": 1793991577.1654854,
     "seen": 1793992288.65565,
     "ast_hash": "3d23d659ae21c01bd9ab51a9f70e14eb",
+    "semantic_hash": ""
+  },
+  "reportes/GUIA_REGULATORIA_SAT_Y_FORMALIZACION.md": {
+    "mtime": 1793994136.7360108,
+    "seen": 1794005774.494057,
+    "ast_hash": "94403b9ffa375a94c6ef8dd33806cee4",
     "semantic_hash": ""
   }
 }

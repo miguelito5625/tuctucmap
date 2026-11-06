@@ -123,8 +123,8 @@ fun AppNavigation(
                         } else if (role == "driver") {
                             repository.logout()
                             saveRole("")
-                            Toast.makeText(context, "Esta cuenta pertenece a un conductor. Inicia sesión en el modo conductor.", Toast.LENGTH_LONG).show()
-                            navigate(Screen.DriverLogin, clearStack = true)
+                            Toast.makeText(context, "Correo o contraseña incorrectos.", Toast.LENGTH_LONG).show()
+                            navigate(Screen.PassengerLogin, clearStack = true)
                         } else {
                             saveRole("passenger")
                             navigate(Screen.PassengerMap, clearStack = true)
@@ -246,8 +246,8 @@ fun AppNavigation(
                         } else if (role == "passenger") {
                             repository.logout()
                             saveRole("")
-                            Toast.makeText(context, "Esta cuenta pertenece a un pasajero. Inicia sesión en el modo pasajero.", Toast.LENGTH_LONG).show()
-                            navigate(Screen.PassengerLogin, clearStack = true)
+                            Toast.makeText(context, "Correo o contraseña incorrectos.", Toast.LENGTH_LONG).show()
+                            navigate(Screen.DriverLogin, clearStack = true)
                         } else {
                             saveRole("driver")
                             repository.getDriverProfileOnce(uid) { driver ->
