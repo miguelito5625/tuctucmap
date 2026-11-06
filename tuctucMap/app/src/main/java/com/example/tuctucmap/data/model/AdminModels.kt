@@ -104,12 +104,15 @@ data class AdminSubscriptionHistory(
     val endDate: String = "",
     @SerialName("created_at")
     val createdAt: String = "",
+    var status: String = "aprobado",
+    @SerialName("rejection_reason")
+    var rejectionReason: String? = null,
     var driverName: String = "Conductor",
     var driverPlate: String = ""
 ) {
     val createdAtEpoch: Long get() = parseIsoTimestamp(createdAt)
     val endDateEpoch: Long get() = parseIsoTimestamp(endDate)
-    val isCurrentlyActive: Boolean get() = endDateEpoch >= ServerClock.nowMillis()
+    val isCurrentlyActive: Boolean get() = status != "rechazado" && endDateEpoch >= ServerClock.nowMillis()
 }
 
 @Serializable

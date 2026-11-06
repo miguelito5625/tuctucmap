@@ -1,16 +1,16 @@
 # Graph Report - tuctucmap  (2026-11-05)
 
 ## Corpus Check
-- 124 files · ~138,177 words
+- 124 files · ~138,748 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1208 nodes · 2001 edges · 99 communities (72 shown, 27 thin omitted)
+- 1208 nodes · 2001 edges · 100 communities (72 shown, 28 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8defdb14`
+- Built from commit: `5631fb3d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -85,7 +85,7 @@
 - login.component.ts
 - AppDrawer.kt
 - PassengerDestinationPreferences
-- getOperationalCalendar
+- DriverReportsScreen.kt
 - 2. El Flujo de Trabajo en 3 Fases (El Ciclo Consultivo)
 - AdminBusinessConfigTab.kt
 - AdminTripPeriodFilter
@@ -101,6 +101,7 @@
 - public.app_config
 - public.subscription_payment_requests
 - public.trips
+- .observeDriverProfile
 - AdminPassengersScreen.kt
 - SubscriptionHistory
 - @angular/common
@@ -133,7 +134,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (99 total, 27 thin omitted)
+## Communities (100 total, 28 thin omitted)
 
 ### Community 2 - "💰 Reporte de Costos Operativos y Rentabilidad en Producción: TucTuc Map"
 Cohesion: 0.10
@@ -201,7 +202,7 @@ Nodes (8): Application, SecretKey, SessionManager, Context, SecurePrefs, Context
 
 ### Community 18 - "SupabaseRepository"
 Cohesion: 0.09
-Nodes (13): kotlinx, CompletedTripDto, DriverTodaySummary, AppConfig, Driver, Result, PaymentRequestInsertDto, RoutePoint (+5 more)
+Nodes (13): kotlinx, getOperationalCalendar(), CompletedTripDto, CompletedTripResponseDto, DriverTodaySummary, Result, PaymentRequestInsertDto, RoutePoint (+5 more)
 
 ### Community 19 - "db.sql"
 Cohesion: 0.12
@@ -359,9 +360,9 @@ Nodes (13): 1. Resumen Ejecutivo, 2. Vulnerabilidades Identificadas y Remediaci�
 Cohesion: 0.09
 Nodes (31): ImageVector, AdminDrawerItem, CONFIG, DRIVERS, FLEET_MAP, PASSENGERS, SUBSCRIPTIONS, TRIPS (+23 more)
 
-### Community 78 - "getOperationalCalendar"
-Cohesion: 0.31
-Nodes (7): getOperationalCalendar(), CompletedTripResponseDto, DailyReportGroup, DriverReportsScreen(), DriverWeeklyBarChart(), Modifier, WeeklyDayStat
+### Community 78 - "DriverReportsScreen.kt"
+Cohesion: 0.67
+Nodes (5): DailyReportGroup, DriverReportsScreen(), DriverWeeklyBarChart(), Modifier, WeeklyDayStat
 
 ### Community 79 - "2. El Flujo de Trabajo en 3 Fases (El Ciclo Consultivo)"
 Cohesion: 0.33
@@ -390,12 +391,12 @@ Nodes (6): AdminPassenger, AdminPassengersScreen(), formatDateShort(), Context, 
 ## Knowledge Gaps
 - **370 isolated node(s):** `{ Client }`, `{ dbConfig }`, `public.app_config`, `fs`, `path` (+365 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **27 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **28 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `SupabaseRepository` connect `SupabaseRepository` to `AdminDriversTab.kt`, `DriverTripHistoryScreen.kt`, `Intent`, `SupabaseRepository.kt`, `MainActivity.kt`, `AdminSubscriptionsTab.kt`, `AdminRepository`, `AppDrawer.kt`, `DataSnapshot`, `getOperationalCalendar`, `AdminBusinessConfigTab.kt`, `PassengerMapScreen.kt`, `AdminTripsScreen.kt`, `AppNavigation`?**
+- **Why does `SupabaseRepository` connect `SupabaseRepository` to `AdminDriversTab.kt`, `DriverTripHistoryScreen.kt`, `Intent`, `SupabaseRepository.kt`, `MainActivity.kt`, `AdminSubscriptionsTab.kt`, `AdminRepository`, `AppDrawer.kt`, `DataSnapshot`, `DriverReportsScreen.kt`, `AdminBusinessConfigTab.kt`, `PassengerMapScreen.kt`, `AdminTripsScreen.kt`, `AppNavigation`, `.observeDriverProfile`?**
   _High betweenness centrality (0.099) - this node is a cross-community bridge._
 - **Why does `AdminRepository` connect `AdminRepository` to `AdminDriversTab.kt`, `AdminPassengersScreen.kt`, `AdminSubscriptionsTab.kt`, `AppDrawer.kt`, `AdminBusinessConfigTab.kt`, `AdminTripsScreen.kt`, `SupabaseRepository`, `AdminRepository.kt`?**
   _High betweenness centrality (0.038) - this node is a cross-community bridge._

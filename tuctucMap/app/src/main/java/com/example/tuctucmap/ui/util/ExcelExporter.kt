@@ -70,9 +70,14 @@ object ExcelExporter {
             val rowsData = mutableListOf<List<String>>()
 
             for (h in history) {
+                val isRejected = h.status == "rechazado"
                 val dateStr = if (h.createdAtEpoch > 0) sdf.format(Date(h.createdAtEpoch)) else "N/A"
-                val endStr = if (h.endDateEpoch > 0) sdf.format(Date(h.endDateEpoch)) else "N/A"
-                val status = if (h.isCurrentlyActive) "Activo" else "Expirado"
+                val endStr = if (!isRejected && h.endDateEpoch > 0) sdf.format(Date(h.endDateEpoch)) else if (isRejected) "N/A (Rechazado)" else "N/A"
+                val status = when {
+                    isRejected -> if (!h.rejectionReason.isNullOrBlank()) "Rechazado: ${h.rejectionReason}" else "Rechazado"
+                    h.isCurrentlyActive -> "Activo"
+                    else -> "Expirado"
+                }
                 val plate = h.driverPlate.ifBlank { "N/D" }
                 val driverName = h.driverName.ifBlank { "Conductor" }
                 val method = when (h.paymentMethod) {

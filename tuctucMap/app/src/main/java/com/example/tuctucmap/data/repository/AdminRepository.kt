@@ -329,7 +329,8 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
         limit: Long = 300
     ): Result<List<AdminSubscriptionHistory>> = withContext(Dispatchers.IO) {
         try {
-            val list = supabase.postgrest["driver_subscriptions"].select {
+            // 1. Membresías aprobadas / registradas
+            val approvedList = supabase.postgrest["driver_subscriptions"].select {
                 filter {
                     if (!startDateIso.isNullOrBlank()) {
                         gte("created_at", startDateIso)
@@ -342,7 +343,44 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
                 limit(limit)
             }.decodeList<AdminSubscriptionHistory>()
 
-            val driverIds = list.map { it.driverId }.filter { it.isNotBlank() }.distinct()
+            // 2. Solicitudes de pago rechazadas
+            val rejectedRequests = supabase.postgrest["subscription_payment_requests"].select {
+                filter {
+                    eq("status", "rechazado")
+                    if (!startDateIso.isNullOrBlank()) {
+                        gte("created_at", startDateIso)
+                    }
+                    if (!endDateIso.isNullOrBlank()) {
+                        lte("created_at", endDateIso)
+                    }
+                }
+                order("created_at", Order.DESCENDING)
+                limit(limit)
+            }.decodeList<AdminPaymentRequest>()
+
+            val rejectedItems = rejectedRequests.map { req ->
+                AdminSubscriptionHistory(
+                    id = req.id,
+                    driverId = req.driverId,
+                    planType = req.planType,
+                    amountPaid = req.amount,
+                    paymentMethod = req.paymentMethod,
+                    referenceNumber = req.referenceNumber,
+                    startDate = req.createdAt,
+                    endDate = "",
+                    createdAt = req.createdAt,
+                    status = "rechazado",
+                    rejectionReason = req.rejectionReason,
+                    driverName = req.driverName,
+                    driverPlate = req.driverPlate
+                )
+            }
+
+            // 3. Obtener nombres y placas de conductores para todos los registros
+            val driverIds = (approvedList.map { it.driverId } + rejectedItems.map { it.driverId })
+                .filter { it.isNotBlank() }
+                .distinct()
+
             val map = if (driverIds.isNotEmpty()) {
                 val drivers = supabase.postgrest["profiles"].select {
                     filter { isIn("id", driverIds) }
@@ -352,7 +390,8 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
                 emptyMap()
             }
 
-            for (item in list) {
+            for (item in approvedList) {
+                item.status = "aprobado"
                 val d = map[item.driverId]
                 if (d != null) {
                     item.driverName = d.nombre.ifBlank { "Conductor" }
@@ -360,7 +399,16 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
                 }
             }
 
-            Result.success(list)
+            for (item in rejectedItems) {
+                val d = map[item.driverId]
+                if (d != null) {
+                    item.driverName = d.nombre.ifBlank { "Conductor" }
+                    item.driverPlate = d.displayIdentifier
+                }
+            }
+
+            val combined = (approvedList + rejectedItems).sortedByDescending { it.createdAtEpoch }
+            Result.success(combined)
         } catch (e: Exception) {
             Result.failure(e)
         }

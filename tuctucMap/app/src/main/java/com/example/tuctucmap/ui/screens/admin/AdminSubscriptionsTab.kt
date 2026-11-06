@@ -120,8 +120,9 @@ fun AdminSubscriptionsTab(
     var isLoadingRequests by remember { mutableStateOf(true) }
     var isLoadingHistory by remember { mutableStateOf(false) }
 
-    // Filtros del Historial Global (Por defecto: Hoy)
+    // Filtros del Historial Global (Por defecto: Hoy y Todos)
     var historyPeriodFilter by remember { mutableStateOf(SubscriptionHistoryPeriodFilter.TODAY) }
+    var historyStatusFilter by remember { mutableStateOf("todos") } // "todos", "aprobado", "rechazado"
     var customHistoryStartUtcMillis by remember { mutableStateOf<Long?>(null) }
     var customHistoryEndUtcMillis by remember { mutableStateOf<Long?>(null) }
     var showHistoryDateRangePickerDialog by remember { mutableStateOf(false) }
@@ -174,6 +175,17 @@ fun AdminSubscriptionsTab(
     }
 
     val pendingCount = requests.size
+
+    val approvedHistoryCount = remember(history) { history.count { it.status != "rechazado" } }
+    val rejectedHistoryCount = remember(history) { history.count { it.status == "rechazado" } }
+
+    val filteredHistory = remember(history, historyStatusFilter) {
+        when (historyStatusFilter) {
+            "aprobado" -> history.filter { it.status != "rechazado" }
+            "rechazado" -> history.filter { it.status == "rechazado" }
+            else -> history
+        }
+    }
 
     val customRangeLabel = remember(customHistoryStartUtcMillis, customHistoryEndUtcMillis) {
         if (customHistoryStartUtcMillis != null && customHistoryEndUtcMillis != null) {
@@ -420,6 +432,39 @@ fun AdminSubscriptionsTab(
                     }
                 }
 
+                // Filtros de Estado en Historial (Todos, Aprobados, Rechazados)
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        item {
+                            FilterChip(
+                                selected = historyStatusFilter == "todos",
+                                onClick = { historyStatusFilter = "todos" },
+                                label = { Text("Todos (${history.size})") },
+                                colors = filterChipColors()
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = historyStatusFilter == "aprobado",
+                                onClick = { historyStatusFilter = "aprobado" },
+                                label = { Text("Aprobados ($approvedHistoryCount)") },
+                                colors = filterChipColors()
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = historyStatusFilter == "rechazado",
+                                onClick = { historyStatusFilter = "rechazado" },
+                                label = { Text("Rechazados ($rejectedHistoryCount)") },
+                                colors = filterChipColors()
+                            )
+                        }
+                    }
+                }
+
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -427,7 +472,7 @@ fun AdminSubscriptionsTab(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${history.size} Registros (${historyPeriodFilter.label})",
+                            text = "${filteredHistory.size} Registros (${historyPeriodFilter.label})",
                             color = Color(0xFF94A3B8),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
@@ -437,7 +482,7 @@ fun AdminSubscriptionsTab(
                             onClick = {
                                 ExcelExporter.exportAndShareSubscriptionsExcel(
                                     context = context,
-                                    history = history,
+                                    history = filteredHistory,
                                     currencySymbol = appConfig.currencySymbol,
                                     periodLabel = if (historyPeriodFilter == SubscriptionHistoryPeriodFilter.CUSTOM && customHistoryStartUtcMillis != null)
                                         customRangeLabel
@@ -470,7 +515,7 @@ fun AdminSubscriptionsTab(
                             )
                         }
                     }
-                } else if (history.isEmpty()) {
+                } else if (filteredHistory.isEmpty()) {
                     item {
                         Card(
                             modifier = Modifier
@@ -499,8 +544,13 @@ fun AdminSubscriptionsTab(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
+                                val emptyNotice = when (historyStatusFilter) {
+                                    "rechazado" -> "No se encontraron solicitudes rechazadas para el filtro: ${historyPeriodFilter.label}."
+                                    "aprobado" -> "No se encontraron suscripciones aprobadas para el filtro: ${historyPeriodFilter.label}."
+                                    else -> "No se encontraron pagos ni solicitudes para el filtro: ${historyPeriodFilter.label}."
+                                }
                                 Text(
-                                    text = "No se encontraron pagos confirmados para el filtro: ${historyPeriodFilter.label}.",
+                                    text = emptyNotice,
                                     color = Color(0xFF94A3B8),
                                     fontSize = 12.sp,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -520,7 +570,7 @@ fun AdminSubscriptionsTab(
                         }
                     }
                 } else {
-                    items(history, key = { it.id }) { item ->
+                    items(filteredHistory, key = { "${it.status}_${it.id}" }) { item ->
                         SubscriptionHistoryCard(item = item, currencySymbol = appConfig.currencySymbol)
                     }
                 }
@@ -925,58 +975,119 @@ private fun SubscriptionHistoryCard(
     item: AdminSubscriptionHistory,
     currencySymbol: String
 ) {
+    val isRejected = item.status == "rechazado"
+
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isRejected) Color(0xFF1E212D) else Color(0xFF1E293B)
+        ),
+        border = if (isRejected) BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.35f)) else null,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = item.driverName,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = "${item.driverPlate.ifBlank { "Sin placa" }} • Plan ${item.planType.uppercase()}",
+                        fontSize = 12.sp,
+                        color = Color(0xFF94A3B8)
+                    )
+                    val dateLabel = if (isRejected) {
+                        "Fecha solicitud: ${formatEpochDate(item.createdAtEpoch)}"
+                    } else {
+                        "Vigencia: ${formatEpochDate(item.createdAtEpoch)} al ${formatEpochDate(item.endDateEpoch)}"
+                    }
+                    Text(
+                        text = dateLabel,
+                        fontSize = 10.sp,
+                        color = Color(0xFF64748B)
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "$currencySymbol ${item.amountPaid}",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (isRejected) Color(0xFFEF4444) else Color(0xFFF59E0B)
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = when {
+                            isRejected -> Color(0x22EF4444)
+                            item.isCurrentlyActive -> Color(0x2210B981)
+                            else -> Color(0x22F43F5E)
+                        }
+                    ) {
+                        Text(
+                            text = when {
+                                isRejected -> "Rechazado"
+                                item.isCurrentlyActive -> "Activo"
+                                else -> "Expirado"
+                            },
+                            color = when {
+                                isRejected -> Color(0xFFEF4444)
+                                item.isCurrentlyActive -> Color(0xFF10B981)
+                                else -> Color(0xFFF43F5E)
+                            },
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
+
+            if (isRejected && !item.rejectionReason.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color(0x1AEF4444),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = Color(0xFFEF4444),
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Motivo: ${item.rejectionReason}",
+                            fontSize = 11.sp,
+                            color = Color(0xFFFCA5A5),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+
+            if (isRejected && item.referenceNumber.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = item.driverName,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "${item.driverPlate} • Plan ${item.planType.uppercase()}",
-                    fontSize = 12.sp,
-                    color = Color(0xFF94A3B8)
-                )
-                Text(
-                    text = "Vigencia: ${formatEpochDate(item.createdAtEpoch)} al ${formatEpochDate(item.endDateEpoch)}",
+                    text = "Ref / Boleta: ${item.referenceNumber}",
                     fontSize = 10.sp,
                     color = Color(0xFF64748B)
                 )
-            }
-
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "$currencySymbol ${item.amountPaid}",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFFF59E0B)
-                )
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = if (item.isCurrentlyActive) Color(0x2210B981) else Color(0x22EF4444)
-                ) {
-                    Text(
-                        text = if (item.isCurrentlyActive) "Activo" else "Expirado",
-                        color = if (item.isCurrentlyActive) Color(0xFF10B981) else Color(0xFFEF4444),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
             }
         }
     }
@@ -1021,9 +1132,14 @@ private fun exportAndShareCsv(
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
 
         for (h in history) {
+            val isRejected = h.status == "rechazado"
             val dateStr = if (h.createdAtEpoch > 0) sdf.format(Date(h.createdAtEpoch)) else ""
-            val endStr = if (h.endDateEpoch > 0) sdf.format(Date(h.endDateEpoch)) else ""
-            val status = if (h.isCurrentlyActive) "Activo" else "Expirado"
+            val endStr = if (!isRejected && h.endDateEpoch > 0) sdf.format(Date(h.endDateEpoch)) else if (isRejected) "Rechazado" else ""
+            val status = when {
+                isRejected -> if (!h.rejectionReason.isNullOrBlank()) "Rechazado: ${h.rejectionReason}" else "Rechazado"
+                h.isCurrentlyActive -> "Activo"
+                else -> "Expirado"
+            }
             sb.append(CsvSecurityUtils.escapeCsvCell(h.id)).append(",")
             sb.append(CsvSecurityUtils.escapeCsvCell(h.driverName)).append(",")
             sb.append(CsvSecurityUtils.escapeCsvCell(h.driverPlate)).append(",")
