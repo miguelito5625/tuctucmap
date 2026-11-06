@@ -241,17 +241,31 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
         }
     }
 
-    suspend fun getPaymentRequests(): Result<List<AdminPaymentRequest>> = withContext(Dispatchers.IO) {
+    suspend fun getPaymentRequests(
+        status: String? = "pendiente",
+        limit: Long = 100
+    ): Result<List<AdminPaymentRequest>> = withContext(Dispatchers.IO) {
         try {
             val requests = supabase.postgrest["subscription_payment_requests"].select {
+                filter {
+                    if (!status.isNullOrBlank()) {
+                        eq("status", status)
+                    }
+                }
                 order("created_at", Order.DESCENDING)
+                limit(limit)
             }.decodeList<AdminPaymentRequest>()
 
-            // Obtener lista de perfiles de conductores para cruzar nombres y placas
-            val drivers = supabase.postgrest["profiles"].select {
-                filter { eq("role", "driver") }
-            }.decodeList<AdminDriver>()
-            val driverMap = drivers.associateBy { it.id }
+            // Obtener únicamente los perfiles de los conductores involucrados en estas solicitudes
+            val driverIds = requests.map { it.driverId }.filter { it.isNotBlank() }.distinct()
+            val driverMap = if (driverIds.isNotEmpty()) {
+                val drivers = supabase.postgrest["profiles"].select {
+                    filter { isIn("id", driverIds) }
+                }.decodeList<AdminDriver>()
+                drivers.associateBy { it.id }
+            } else {
+                emptyMap()
+            }
 
             for (req in requests) {
                 val driver = driverMap[req.driverId]
@@ -309,16 +323,34 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
         }
     }
 
-    suspend fun getAllSubscriptionsHistory(): Result<List<AdminSubscriptionHistory>> = withContext(Dispatchers.IO) {
+    suspend fun getAllSubscriptionsHistory(
+        startDateIso: String? = null,
+        endDateIso: String? = null,
+        limit: Long = 300
+    ): Result<List<AdminSubscriptionHistory>> = withContext(Dispatchers.IO) {
         try {
             val list = supabase.postgrest["driver_subscriptions"].select {
+                filter {
+                    if (!startDateIso.isNullOrBlank()) {
+                        gte("created_at", startDateIso)
+                    }
+                    if (!endDateIso.isNullOrBlank()) {
+                        lte("created_at", endDateIso)
+                    }
+                }
                 order("created_at", Order.DESCENDING)
+                limit(limit)
             }.decodeList<AdminSubscriptionHistory>()
 
-            val drivers = supabase.postgrest["profiles"].select {
-                filter { eq("role", "driver") }
-            }.decodeList<AdminDriver>()
-            val map = drivers.associateBy { it.id }
+            val driverIds = list.map { it.driverId }.filter { it.isNotBlank() }.distinct()
+            val map = if (driverIds.isNotEmpty()) {
+                val drivers = supabase.postgrest["profiles"].select {
+                    filter { isIn("id", driverIds) }
+                }.decodeList<AdminDriver>()
+                drivers.associateBy { it.id }
+            } else {
+                emptyMap()
+            }
 
             for (item in list) {
                 val d = map[item.driverId]

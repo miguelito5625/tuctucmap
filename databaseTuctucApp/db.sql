@@ -171,6 +171,8 @@ ALTER TABLE public.trips ADD CONSTRAINT trips_message_max_length_check
 CREATE INDEX IF NOT EXISTS idx_trips_driver_created ON public.trips(driver_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_trips_passenger_created ON public.trips(passenger_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_driver_created ON public.driver_subscriptions(driver_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_created_at ON public.driver_subscriptions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_payment_requests_status_created ON public.subscription_payment_requests(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_trips_route_points_cleanup ON public.trips(created_at) WHERE route_points IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_profiles_active_driver_sub ON public.profiles(subscription_end_date) WHERE role = 'driver' AND approval_status = 'aprobado';
 

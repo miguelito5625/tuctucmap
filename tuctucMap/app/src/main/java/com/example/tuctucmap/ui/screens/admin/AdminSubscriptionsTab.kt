@@ -49,11 +49,15 @@ enum class SubscriptionHistoryPeriodFilter(val label: String) {
     CUSTOM("Rango personalizado")
 }
 
-private fun getSubscriptionPeriodRange(
+private fun getSubscriptionPeriodRangeIso(
     filter: SubscriptionHistoryPeriodFilter,
     customStartUtcMillis: Long? = null,
     customEndUtcMillis: Long? = null
-): Pair<Long, Long> {
+): Pair<String, String> {
+    val isoSdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }
+
     if (filter == SubscriptionHistoryPeriodFilter.CUSTOM && customStartUtcMillis != null && customEndUtcMillis != null) {
         val startCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
             timeInMillis = minOf(customStartUtcMillis, customEndUtcMillis)
@@ -69,7 +73,7 @@ private fun getSubscriptionPeriodRange(
             set(Calendar.SECOND, 59)
             set(Calendar.MILLISECOND, 999)
         }
-        return Pair(startCal.timeInMillis, endCal.timeInMillis)
+        return Pair(isoSdf.format(startCal.time), isoSdf.format(endCal.time))
     }
 
     val daysBack = when (filter) {
@@ -96,7 +100,7 @@ private fun getSubscriptionPeriodRange(
         set(Calendar.MILLISECOND, 999)
     }
 
-    return Pair(startCal.timeInMillis, endCal.timeInMillis)
+    return Pair(isoSdf.format(startCal.time), isoSdf.format(endCal.time))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -113,9 +117,8 @@ fun AdminSubscriptionsTab(
     var requests by remember { mutableStateOf<List<AdminPaymentRequest>>(emptyList()) }
     var history by remember { mutableStateOf<List<AdminSubscriptionHistory>>(emptyList()) }
     var appConfig by remember { mutableStateOf(AppConfig()) }
-    var isLoading by remember { mutableStateOf(true) }
-
-    var selectedFilter by remember { mutableStateOf("pendiente") } // "pendiente", "aprobado", "rechazado", "todos"
+    var isLoadingRequests by remember { mutableStateOf(true) }
+    var isLoadingHistory by remember { mutableStateOf(false) }
 
     // Filtros del Historial Global (Por defecto: Hoy)
     var historyPeriodFilter by remember { mutableStateOf(SubscriptionHistoryPeriodFilter.TODAY) }
@@ -128,47 +131,49 @@ fun AdminSubscriptionsTab(
     var requestToReject by remember { mutableStateOf<AdminPaymentRequest?>(null) }
     var rejectionReasonText by remember { mutableStateOf("") }
 
-    fun loadData() {
+    fun loadRequests() {
         scope.launch {
-            isLoading = true
-            appConfig = supabaseRepo.getAppConfig()
-            val reqRes = adminRepo.getPaymentRequests()
+            isLoadingRequests = true
+            val reqRes = adminRepo.getPaymentRequests(status = "pendiente")
             if (reqRes.isSuccess) {
                 requests = reqRes.getOrDefault(emptyList())
             }
-            val histRes = adminRepo.getAllSubscriptionsHistory()
-            if (histRes.isSuccess) {
-                history = histRes.getOrDefault(emptyList())
-            }
-            isLoading = false
+            isLoadingRequests = false
             adminRepo.refreshPendingCounts()
         }
     }
 
-    LaunchedEffect(Unit) {
-        loadData()
-    }
-
-    val pendingCount = remember(requests) { requests.count { it.status == "pendiente" } }
-
-    val filteredRequests = remember(requests, selectedFilter) {
-        if (selectedFilter == "todos") requests
-        else requests.filter { it.status == selectedFilter }
-    }
-
-    val filteredHistory = remember(history, historyPeriodFilter, customHistoryStartUtcMillis, customHistoryEndUtcMillis) {
-        val (startMs, endMs) = getSubscriptionPeriodRange(
-            filter = historyPeriodFilter,
-            customStartUtcMillis = customHistoryStartUtcMillis,
-            customEndUtcMillis = customHistoryEndUtcMillis
-        )
-        history.filter { item ->
-            val epoch = item.createdAtEpoch
-            if (epoch > 0L) {
-                epoch in startMs..endMs
-            } else false
+    fun loadHistory() {
+        scope.launch {
+            isLoadingHistory = true
+            val (startIso, endIso) = getSubscriptionPeriodRangeIso(
+                filter = historyPeriodFilter,
+                customStartUtcMillis = customHistoryStartUtcMillis,
+                customEndUtcMillis = customHistoryEndUtcMillis
+            )
+            val histRes = adminRepo.getAllSubscriptionsHistory(
+                startDateIso = startIso,
+                endDateIso = endIso
+            )
+            if (histRes.isSuccess) {
+                history = histRes.getOrDefault(emptyList())
+            }
+            isLoadingHistory = false
         }
     }
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            appConfig = supabaseRepo.getAppConfig()
+        }
+        loadRequests()
+    }
+
+    LaunchedEffect(historyPeriodFilter, customHistoryStartUtcMillis, customHistoryEndUtcMillis) {
+        loadHistory()
+    }
+
+    val pendingCount = requests.size
 
     val customRangeLabel = remember(customHistoryStartUtcMillis, customHistoryEndUtcMillis) {
         if (customHistoryStartUtcMillis != null && customHistoryEndUtcMillis != null) {
@@ -238,87 +243,120 @@ fun AdminSubscriptionsTab(
             )
         }
 
-        if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Color(0xFFF59E0B))
-            }
-        } else if (selectedTabIndex == 0) {
-            // ── PESTAÑA 1: SOLICITUDES DE RENOVACIÓN ──────────────────────────
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .imePadding(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Filtros de estado
-                item {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        item {
-                            FilterChip(
-                                selected = selectedFilter == "pendiente",
-                                onClick = { selectedFilter = "pendiente" },
-                                label = { Text("Pendientes ($pendingCount)") },
-                                colors = filterChipColors()
-                            )
-                        }
-                        item {
-                            FilterChip(
-                                selected = selectedFilter == "aprobado",
-                                onClick = { selectedFilter = "aprobado" },
-                                label = { Text("Aprobadas") },
-                                colors = filterChipColors()
-                            )
-                        }
-                        item {
-                            FilterChip(
-                                selected = selectedFilter == "rechazado",
-                                onClick = { selectedFilter = "rechazado" },
-                                label = { Text("Rechazadas") },
-                                colors = filterChipColors()
-                            )
-                        }
-                        item {
-                            FilterChip(
-                                selected = selectedFilter == "todos",
-                                onClick = { selectedFilter = "todos" },
-                                label = { Text("Todas (${requests.size})") },
-                                colors = filterChipColors()
-                            )
-                        }
-                    }
+        if (selectedTabIndex == 0) {
+            // ── PESTAÑA 1: SOLICITUDES DE RENOVACIÓN (BANDEJA ACTIVA) ──────────
+            if (isLoadingRequests) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color(0xFFF59E0B))
                 }
-
-                if (filteredRequests.isEmpty()) {
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .imePadding(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Encabezado descriptivo de la bandeja de acción
                     item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 50.dp),
-                            contentAlignment = Alignment.Center
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color(0xFF1E293B),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("No hay solicitudes en esta categoría", color = Color(0xFF94A3B8), fontSize = 14.sp)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.PendingActions,
+                                        contentDescription = null,
+                                        tint = Color(0xFFF59E0B),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Bandeja de Solicitudes",
+                                        color = Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (pendingCount > 0) Color(0x22F59E0B) else Color(0x2210B981)
+                                ) {
+                                    Text(
+                                        text = if (pendingCount > 0) "$pendingCount Pendientes" else "Al día",
+                                        color = if (pendingCount > 0) Color(0xFFF59E0B) else Color(0xFF10B981),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
                         }
                     }
-                } else {
-                    items(filteredRequests, key = { it.id }) { req ->
-                        PaymentRequestCard(
-                            request = req,
-                            currencySymbol = appConfig.currencySymbol,
-                            onOpenWhatsApp = {
-                                openWhatsAppChat(context, req.driverPhone, req.driverName)
-                            },
-                            onApprove = {
-                                requestToApprove = req
-                            },
-                            onReject = {
-                                requestToReject = req
-                                rejectionReasonText = ""
+
+                    if (requests.isEmpty()) {
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 30.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = Color(0xFF10B981),
+                                        modifier = Modifier.size(44.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Text(
+                                        text = "¡Bandeja al día!",
+                                        color = Color.White,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "No hay solicitudes de renovación pendientes por atender.",
+                                        color = Color(0xFF94A3B8),
+                                        fontSize = 12.sp,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
+                                }
                             }
-                        )
+                        }
+                    } else {
+                        items(requests, key = { it.id }) { req ->
+                            PaymentRequestCard(
+                                request = req,
+                                currencySymbol = appConfig.currencySymbol,
+                                onOpenWhatsApp = {
+                                    openWhatsAppChat(context, req.driverPhone, req.driverName)
+                                },
+                                onApprove = {
+                                    requestToApprove = req
+                                },
+                                onReject = {
+                                    requestToReject = req
+                                    rejectionReasonText = ""
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -389,7 +427,7 @@ fun AdminSubscriptionsTab(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${filteredHistory.size} Registros (${historyPeriodFilter.label})",
+                            text = "${history.size} Registros (${historyPeriodFilter.label})",
                             color = Color(0xFF94A3B8),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
@@ -399,7 +437,7 @@ fun AdminSubscriptionsTab(
                             onClick = {
                                 ExcelExporter.exportAndShareSubscriptionsExcel(
                                     context = context,
-                                    history = filteredHistory,
+                                    history = history,
                                     currencySymbol = appConfig.currencySymbol,
                                     periodLabel = if (historyPeriodFilter == SubscriptionHistoryPeriodFilter.CUSTOM && customHistoryStartUtcMillis != null)
                                         customRangeLabel
@@ -417,7 +455,22 @@ fun AdminSubscriptionsTab(
                     }
                 }
 
-                if (filteredHistory.isEmpty()) {
+                if (isLoadingHistory) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 30.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(32.dp),
+                                color = Color(0xFFF59E0B),
+                                strokeWidth = 2.5.dp
+                            )
+                        }
+                    }
+                } else if (history.isEmpty()) {
                     item {
                         Card(
                             modifier = Modifier
@@ -467,7 +520,7 @@ fun AdminSubscriptionsTab(
                         }
                     }
                 } else {
-                    items(filteredHistory, key = { it.id }) { item ->
+                    items(history, key = { it.id }) { item ->
                         SubscriptionHistoryCard(item = item, currencySymbol = appConfig.currencySymbol)
                     }
                 }
@@ -511,7 +564,8 @@ fun AdminSubscriptionsTab(
                             val res = adminRepo.approvePaymentRequest(id)
                             if (res.isSuccess) {
                                 Toast.makeText(context, "Solicitud aprobada y vigencia extendida", Toast.LENGTH_LONG).show()
-                                loadData()
+                                loadRequests()
+                                loadHistory()
                             } else {
                                 Toast.makeText(context, "Error al aprobar solicitud", Toast.LENGTH_SHORT).show()
                             }
@@ -569,7 +623,8 @@ fun AdminSubscriptionsTab(
                             val res = adminRepo.rejectPaymentRequest(id, reason)
                             if (res.isSuccess) {
                                 Toast.makeText(context, "Solicitud rechazada", Toast.LENGTH_SHORT).show()
-                                loadData()
+                                loadRequests()
+                                loadHistory()
                             } else {
                                 Toast.makeText(context, "Error al rechazar solicitud", Toast.LENGTH_SHORT).show()
                             }
