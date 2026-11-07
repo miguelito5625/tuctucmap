@@ -70,7 +70,18 @@ object GoogleAuthHelper {
         } catch (e: GetCredentialCancellationException) {
             Result.failure(GoogleAuthCancellationException())
         } catch (e: Exception) {
-            Result.failure(e)
+            val msg = e.message ?: ""
+            val exceptionName = e.javaClass.simpleName
+            val friendlyError = when {
+                exceptionName.contains("NoCredential", ignoreCase = true) ||
+                msg.contains("No credentials", ignoreCase = true) ->
+                    Exception("No se encontró una cuenta de Google activa en este dispositivo. Puedes ingresar con correo y contraseña.")
+                exceptionName.contains("GetCredentialProviderConfiguration", ignoreCase = true) ||
+                msg.contains("provider", ignoreCase = true) ->
+                    Exception("Los servicios de Google no están disponibles o actualizados en este dispositivo.")
+                else -> e
+            }
+            Result.failure(friendlyError)
         }
     }
 }

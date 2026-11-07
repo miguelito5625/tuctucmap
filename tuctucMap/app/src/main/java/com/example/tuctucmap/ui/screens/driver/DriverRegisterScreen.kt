@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,7 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -123,6 +126,44 @@ fun DriverRegisterScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
+            val focusManager = LocalFocusManager.current
+            val handleRegister: () -> Unit = {
+                if (nombre.isBlank() || telefono.isBlank() || placas.isBlank() || email.isBlank() || password.isBlank()) {
+                    errorMessage = "Todos los campos principales son obligatorios"
+                } else {
+                    val cleanDigits = telefono.replace(Regex("[^0-9]"), "")
+                    if (cleanDigits.length < 8) {
+                        errorMessage = "Ingresa un número de teléfono válido (al menos 8 dígitos)"
+                    } else if (password.length < 6) {
+                        errorMessage = "La contraseña debe tener al menos 6 caracteres"
+                    } else if (!isLoading) {
+                        isLoading = true
+                        scope.launch {
+                            try {
+                                val result = repository.registerDriver(
+                                    nombre = nombre.trim(),
+                                    telefono = telefono.trim(),
+                                    placas = placas.trim(),
+                                    email = email.trim(),
+                                    contrasena = password,
+                                    numeroUnidad = numeroUnidad.trim()
+                                )
+                                if (result.isSuccess) {
+                                    onRegisterSuccess()
+                                } else {
+                                    errorMessage =
+                                        com.example.tuctucmap.data.repository.SupabaseRepository.formatAuthError(result.exceptionOrNull())
+                                }
+                            } catch (e: Exception) {
+                                errorMessage = e.localizedMessage ?: "Error al registrar conductor"
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    }
+                }
+            }
+
             // Campo Nombre Completo
             OutlinedTextField(
                 value = nombre,
@@ -139,6 +180,7 @@ fun DriverRegisterScreen(
                     )
                 },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFFF9D423),
                     unfocusedBorderColor = Color.White,
@@ -169,7 +211,7 @@ fun DriverRegisterScreen(
                     )
                 },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFFF9D423),
                     unfocusedBorderColor = Color.White,
@@ -200,6 +242,7 @@ fun DriverRegisterScreen(
                     )
                 },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFFF9D423),
                     unfocusedBorderColor = Color.White,
@@ -230,6 +273,7 @@ fun DriverRegisterScreen(
                     )
                 },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFFF9D423),
                     unfocusedBorderColor = Color.White,
@@ -260,7 +304,7 @@ fun DriverRegisterScreen(
                     )
                 },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFFF9D423),
                     unfocusedBorderColor = Color.White,
@@ -292,7 +336,11 @@ fun DriverRegisterScreen(
                 },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = {
+                    focusManager.clearFocus()
+                    handleRegister()
+                }),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color(0xFFF9D423),
                     unfocusedBorderColor = Color.White,
@@ -320,43 +368,7 @@ fun DriverRegisterScreen(
 
             // Botón de Registro con estado de carga uniforme
             Button(
-                onClick = {
-                    if (nombre.isBlank() || telefono.isBlank() || placas.isBlank() || email.isBlank() || password.isBlank()) {
-                        errorMessage = "Todos los campos principales son obligatorios"
-                        return@Button
-                    }
-                    val cleanDigits = telefono.replace(Regex("[^0-9]"), "")
-                    if (cleanDigits.length < 8) {
-                        errorMessage = "Ingresa un número de teléfono válido (al menos 8 dígitos)"
-                        return@Button
-                    }
-                    if (password.length < 6) {
-                        errorMessage = "La contraseña debe tener al menos 6 caracteres"
-                        return@Button
-                    }
-                    isLoading = true
-                    scope.launch {
-                        try {
-                            val result = repository.registerDriver(
-                                nombre = nombre.trim(),
-                                telefono = telefono.trim(),
-                                placas = placas.trim(),
-                                email = email.trim(),
-                                contrasena = password,
-                                numeroUnidad = numeroUnidad.trim()
-                            )
-                            if (result.isSuccess) {
-                                onRegisterSuccess()
-                            } else {
-                                errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Error al registrarse"
-                            }
-                        } catch (e: Exception) {
-                            errorMessage = e.localizedMessage ?: "Error al registrarse"
-                        } finally {
-                            isLoading = false
-                        }
-                    }
-                },
+                onClick = handleRegister,
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()

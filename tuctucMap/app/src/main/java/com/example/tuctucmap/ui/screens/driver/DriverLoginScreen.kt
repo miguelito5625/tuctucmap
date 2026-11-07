@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -18,7 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -121,6 +124,30 @@ fun DriverLoginScreen(
 
                 Spacer(modifier = Modifier.height(36.dp))
 
+                val focusManager = LocalFocusManager.current
+                val handleLogin: () -> Unit = {
+                    if (email.isBlank() || password.isBlank()) {
+                        errorMessage = "Por favor completa todos los campos"
+                    } else if (!isLoading) {
+                        isLoading = true
+                        scope.launch {
+                            try {
+                                val result = repository.loginDriver(email.trim(), password)
+                                if (result.isSuccess) {
+                                    onLoginSuccess()
+                                } else {
+                                    errorMessage =
+                                        com.example.tuctucmap.data.repository.SupabaseRepository.formatAuthError(result.exceptionOrNull())
+                                }
+                            } catch (e: Exception) {
+                                errorMessage = e.localizedMessage ?: "Error al iniciar sesión"
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    }
+                }
+
                 // Campo de Correo Electrónico
                 OutlinedTextField(
                     value = email,
@@ -137,7 +164,7 @@ fun DriverLoginScreen(
                         )
                     },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFFF9D423),
                         unfocusedBorderColor = Color.White,
@@ -169,7 +196,11 @@ fun DriverLoginScreen(
                     },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        focusManager.clearFocus()
+                        handleLogin()
+                    }),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFFF9D423),
                         unfocusedBorderColor = Color.White,
@@ -197,28 +228,7 @@ fun DriverLoginScreen(
 
                 // Botón de Iniciar Sesión con estado de carga uniforme
                 Button(
-                    onClick = {
-                        if (email.isBlank() || password.isBlank()) {
-                            errorMessage = "Por favor completa todos los campos"
-                            return@Button
-                        }
-                        isLoading = true
-                        scope.launch {
-                            try {
-                                val result = repository.loginDriver(email.trim(), password)
-                                if (result.isSuccess) {
-                                    onLoginSuccess()
-                                } else {
-                                    errorMessage =
-                                        com.example.tuctucmap.data.repository.SupabaseRepository.formatAuthError(result.exceptionOrNull())
-                                }
-                            } catch (e: Exception) {
-                                errorMessage = e.localizedMessage ?: "Error al iniciar sesión"
-                            } finally {
-                                isLoading = false
-                            }
-                        }
-                    },
+                    onClick = handleLogin,
                     enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()

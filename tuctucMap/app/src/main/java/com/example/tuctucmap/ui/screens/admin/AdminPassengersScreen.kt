@@ -123,7 +123,12 @@ fun AdminPassengersScreen(
                 }
             } else if (filteredPassengers.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No se encontraron pasajeros registrados", color = Color(0xFF94A3B8), fontSize = 14.sp)
+                    val emptyMessage = if (searchQuery.isNotBlank()) {
+                        "No se encontraron pasajeros para \"$searchQuery\""
+                    } else {
+                        "No se encontraron pasajeros registrados"
+                    }
+                    Text(emptyMessage, color = Color(0xFF94A3B8), fontSize = 14.sp)
                 }
             } else {
                 LazyColumn(
@@ -132,8 +137,13 @@ fun AdminPassengersScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {
+                        val counterText = if (searchQuery.isNotBlank()) {
+                            "${filteredPassengers.size} de ${passengers.size} pasajeros encontrados"
+                        } else {
+                            "${passengers.size} Pasajeros Registrados en Supabase"
+                        }
                         Text(
-                            text = "${passengers.size} Pasajeros Registrados en Supabase",
+                            text = counterText,
                             fontSize = 12.sp,
                             color = Color(0xFF94A3B8),
                             fontWeight = FontWeight.Medium

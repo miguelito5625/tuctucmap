@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -19,7 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -110,6 +113,31 @@ fun PassengerRegisterScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                val focusManager = LocalFocusManager.current
+                val handleRegister: () -> Unit = {
+                    if (nombre.isBlank() || telefono.isBlank() || email.isBlank() || password.isBlank()) {
+                        errorMessage = "Por favor completa todos los campos"
+                    } else if (password.length < 6) {
+                        errorMessage = "La contraseña debe tener al menos 6 caracteres"
+                    } else if (!isLoading) {
+                        isLoading = true
+                        scope.launch {
+                            try {
+                                val result = repository.registerPassengerWithEmail(nombre.trim(), telefono.trim(), email.trim(), password)
+                                if (result.isSuccess) {
+                                    onRegisterSuccess()
+                                } else {
+                                    errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Error al registrar"
+                                }
+                            } catch (e: Exception) {
+                                errorMessage = e.localizedMessage ?: "Error inesperado"
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    }
+                }
+
                 OutlinedTextField(
                     value = nombre,
                     onValueChange = { nombre = it; errorMessage = null },
@@ -118,6 +146,7 @@ fun PassengerRegisterScreen(
                         Icon(Icons.Default.Person, contentDescription = null, tint = Color(0xFF78909C))
                     },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
@@ -141,7 +170,7 @@ fun PassengerRegisterScreen(
                         Icon(Icons.Default.Phone, contentDescription = null, tint = Color(0xFF78909C))
                     },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
@@ -165,7 +194,7 @@ fun PassengerRegisterScreen(
                         Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFF78909C))
                     },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
@@ -190,7 +219,11 @@ fun PassengerRegisterScreen(
                     },
                     singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        focusManager.clearFocus()
+                        handleRegister()
+                    }),
                     trailingIcon = {
                         TextButton(onClick = { passwordVisible = !passwordVisible }) {
                             Text(
@@ -226,31 +259,7 @@ fun PassengerRegisterScreen(
                 }
 
                 Button(
-                    onClick = {
-                        if (nombre.isBlank() || telefono.isBlank() || email.isBlank() || password.isBlank()) {
-                            errorMessage = "Por favor completa todos los campos"
-                            return@Button
-                        }
-                        if (password.length < 6) {
-                            errorMessage = "La contraseña debe tener al menos 6 caracteres"
-                            return@Button
-                        }
-                        isLoading = true
-                        scope.launch {
-                            try {
-                                val result = repository.registerPassengerWithEmail(nombre.trim(), telefono.trim(), email.trim(), password)
-                                if (result.isSuccess) {
-                                    onRegisterSuccess()
-                                } else {
-                                    errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Error al registrar"
-                                }
-                            } catch (e: Exception) {
-                                errorMessage = e.localizedMessage ?: "Error al registrar"
-                            } finally {
-                                isLoading = false
-                            }
-                        }
-                    },
+                    onClick = handleRegister,
                     enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()

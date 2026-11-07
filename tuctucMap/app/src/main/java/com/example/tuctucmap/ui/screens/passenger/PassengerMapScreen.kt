@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -204,6 +205,11 @@ fun PassengerMapScreen(
     val driverAnimators = remember { mutableMapOf<String, ValueAnimator>() }
     var lastMapRenderSignature by remember { mutableStateOf<Any?>(null) }
     val coroutineScope = rememberCoroutineScope()
+
+    // Cerrar el drawer lateral al presionar Atrás en lugar de salir de la aplicación (MED-01)
+    BackHandler(enabled = drawerState.isOpen) {
+        coroutineScope.launch { drawerState.close() }
+    }
 
     DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
@@ -926,7 +932,7 @@ fun PassengerMapScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.MyLocation,
-                            contentDescription = "Mi ubicación",
+                            contentDescription = "Centrar mi ubicación en el mapa",
                             modifier = Modifier.size(22.dp)
                         )
                     }

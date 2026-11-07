@@ -58,6 +58,7 @@ tuctucMapDashboard/src/environments/environment.development.ts
 .sass-cache/
 graphify-out/cache/
 graphify-out/.graphify_*
+graphify-out/[0-9]*/
 connect.lock
 coverage/
 libpeerconnection.log

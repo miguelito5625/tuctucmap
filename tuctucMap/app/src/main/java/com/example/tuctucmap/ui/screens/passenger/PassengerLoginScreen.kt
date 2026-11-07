@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -18,7 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -138,6 +141,29 @@ fun PassengerLoginScreen(
 
                 Spacer(modifier = Modifier.height(36.dp))
 
+                val focusManager = LocalFocusManager.current
+                val handleLogin: () -> Unit = {
+                    if (email.isBlank() || password.isBlank()) {
+                        errorMessage = "Por favor completa todos los campos"
+                    } else if (!isLoading) {
+                        isLoading = true
+                        scope.launch {
+                            try {
+                                val result = repository.loginPassengerWithEmail(email.trim(), password)
+                                if (result.isSuccess) {
+                                    onLoginSuccess()
+                                } else {
+                                    errorMessage = com.example.tuctucmap.data.repository.SupabaseRepository.formatAuthError(result.exceptionOrNull())
+                                }
+                            } catch (e: Exception) {
+                                errorMessage = e.localizedMessage ?: "Error al iniciar sesión"
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    }
+                }
+
                 // ── Campo Correo ─────────────────────────────────────────────
                 OutlinedTextField(
                     value = email,
@@ -147,7 +173,7 @@ fun PassengerLoginScreen(
                         Icon(Icons.Default.Email, contentDescription = null, tint = Color(0xFF78909C))
                     },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
@@ -173,7 +199,11 @@ fun PassengerLoginScreen(
                     },
                     singleLine = true,
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        focusManager.clearFocus()
+                        handleLogin()
+                    }),
                     trailingIcon = {
                         TextButton(onClick = { passwordVisible = !passwordVisible }) {
                             Text(
@@ -211,27 +241,7 @@ fun PassengerLoginScreen(
 
                 // ── Botón Iniciar Sesión ──────────────────────────────────────────────
                 Button(
-                    onClick = {
-                        if (email.isBlank() || password.isBlank()) {
-                            errorMessage = "Por favor completa todos los campos"
-                            return@Button
-                        }
-                        isLoading = true
-                        scope.launch {
-                            try {
-                                val result = repository.loginPassengerWithEmail(email.trim(), password)
-                                if (result.isSuccess) {
-                                    onLoginSuccess()
-                                } else {
-                                    errorMessage = com.example.tuctucmap.data.repository.SupabaseRepository.formatAuthError(result.exceptionOrNull())
-                                }
-                            } catch (e: Exception) {
-                                errorMessage = e.localizedMessage ?: "Error al iniciar sesión"
-                            } finally {
-                                isLoading = false
-                            }
-                        }
-                    },
+                    onClick = handleLogin,
                     enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()

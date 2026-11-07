@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Build
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -79,6 +80,11 @@ fun DriverHomeScreen(
 
     val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+
+    // Cerrar el drawer lateral al presionar Atrás en lugar de salir de la aplicación (MED-01)
+    BackHandler(enabled = drawerState.isOpen) {
+        coroutineScope.launch { drawerState.close() }
+    }
     val pendingTrips by LocationTrackingService.pendingTripsFlow.collectAsState()
     var showRenewalDialog by remember { mutableStateOf(false) }
 
@@ -469,7 +475,7 @@ fun DriverHomeScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Menu,
-                                contentDescription = "Menú",
+                                contentDescription = "Abrir menú lateral",
                                 tint = Color.White,
                                 modifier = Modifier.size(22.dp)
                             )
