@@ -71,4 +71,5 @@ Thumbs.db
 # Media & local assets
 *.mp4
 screenshots/
+databaseTuctucApp/backups/
 
