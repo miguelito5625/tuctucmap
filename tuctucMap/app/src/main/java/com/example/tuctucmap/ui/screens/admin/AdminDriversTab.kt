@@ -65,6 +65,8 @@ fun AdminDriversTab(
     // Estado para diálogo de confirmación de eliminación
     var driverToDelete by remember { mutableStateOf<AdminDriver?>(null) }
     var isDeletingDriver by remember { mutableStateOf(false) }
+    var approvingDriverIds by remember { mutableStateOf(emptySet<String>()) }
+    var rejectingDriverIds by remember { mutableStateOf(emptySet<String>()) }
 
     fun loadData() {
         scope.launch {
@@ -280,25 +282,45 @@ fun AdminDriversTab(
                         AdminDriverCard(
                             driver = driver,
                             appConfig = appConfig,
+                            isApproving = approvingDriverIds.contains(driver.id),
+                            isRejecting = rejectingDriverIds.contains(driver.id),
                             onApprove = {
+                                val driverId = driver.id
+                                approvingDriverIds = approvingDriverIds + driverId
                                 scope.launch {
-                                    val res = adminRepo.approveDriver(driver.id)
-                                    if (res.isSuccess) {
-                                        Toast.makeText(context, "Conductor aprobado con éxito", Toast.LENGTH_SHORT).show()
-                                        loadData()
-                                    } else {
-                                        Toast.makeText(context, "Error al aprobar", Toast.LENGTH_SHORT).show()
+                                    try {
+                                        val res = adminRepo.approveDriver(driverId)
+                                        if (res.isSuccess) {
+                                            Toast.makeText(context, "Conductor aprobado con éxito", Toast.LENGTH_SHORT).show()
+                                            loadData()
+                                        } else {
+                                            val err = res.exceptionOrNull()?.localizedMessage ?: "Error al aprobar"
+                                            Toast.makeText(context, "Error: $err", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                                    } finally {
+                                        approvingDriverIds = approvingDriverIds - driverId
                                     }
                                 }
                             },
                             onReject = {
+                                val driverId = driver.id
+                                rejectingDriverIds = rejectingDriverIds + driverId
                                 scope.launch {
-                                    val res = adminRepo.rejectDriver(driver.id)
-                                    if (res.isSuccess) {
-                                        Toast.makeText(context, "Conductor rechazado", Toast.LENGTH_SHORT).show()
-                                        loadData()
-                                    } else {
-                                        Toast.makeText(context, "Error al rechazar", Toast.LENGTH_SHORT).show()
+                                    try {
+                                        val res = adminRepo.rejectDriver(driverId)
+                                        if (res.isSuccess) {
+                                            Toast.makeText(context, "Conductor rechazado", Toast.LENGTH_SHORT).show()
+                                            loadData()
+                                        } else {
+                                            val err = res.exceptionOrNull()?.localizedMessage ?: "Error al rechazar"
+                                            Toast.makeText(context, "Error: $err", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                                    } finally {
+                                        rejectingDriverIds = rejectingDriverIds - driverId
                                     }
                                 }
                             },
@@ -440,6 +462,8 @@ private fun KpiCard(
 private fun AdminDriverCard(
     driver: AdminDriver,
     appConfig: AppConfig,
+    isApproving: Boolean = false,
+    isRejecting: Boolean = false,
     onApprove: () -> Unit,
     onReject: () -> Unit,
     onOpenRenew: () -> Unit,
@@ -592,8 +616,11 @@ private fun AdminDriverCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (driver.estadoAprobacion == "pendiente") {
+                    val isActionRunning = isApproving || isRejecting
+
                     Button(
                         onClick = onApprove,
+                        enabled = !isActionRunning,
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier
@@ -601,19 +628,28 @@ private fun AdminDriverCard(
                             .height(42.dp),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
                     ) {
-                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Aprobar",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            softWrap = false
-                        )
+                        if (isApproving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Aprobar",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
                     }
 
                     OutlinedButton(
                         onClick = onReject,
+                        enabled = !isActionRunning,
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = Color(0x14EF4444),
                             contentColor = Color(0xFFEF4444)
@@ -625,15 +661,23 @@ private fun AdminDriverCard(
                             .height(42.dp),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
                     ) {
-                        Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Rechazar",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            softWrap = false
-                        )
+                        if (isRejecting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = Color(0xFFEF4444),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Rechazar",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
                     }
                 } else {
                     OutlinedButton(

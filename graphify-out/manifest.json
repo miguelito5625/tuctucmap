@@ -6,8 +6,8 @@
     "semantic_hash": "7daf02761977558e589ecb5a5cb7835c"
   },
   "databaseTuctucApp/db.sql": {
-    "mtime": 1794023344.0733192,
-    "seen": 1794023443.3904183,
+    "mtime": 1794023560.9482293,
+    "seen": 1794024041.695794,
     "ast_hash": "f28a3ee8ef2edd54e17ab2574d18a45d",
     "semantic_hash": ""
   },
@@ -276,8 +276,8 @@
     "semantic_hash": "fac4859d89bce0d85be7675f8ef600fa"
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt": {
-    "mtime": 1794023256.36556,
-    "seen": 1794023443.3905,
+    "mtime": 1794023561.2999713,
+    "seen": 1794024041.695862,
     "ast_hash": "e01aae0767bf1fa1744238a326dcc509",
     "semantic_hash": ""
   },
@@ -294,8 +294,8 @@
     "semantic_hash": "25a59d33cee61cb7205f10a5621a3523"
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt": {
-    "mtime": 1794023327.064494,
-    "seen": 1794023443.3905056,
+    "mtime": 1794023561.7720346,
+    "seen": 1794024041.6958663,
     "ast_hash": "e8a02b14f6949980a9afa12ae82c24a4",
     "semantic_hash": ""
   },
@@ -312,8 +312,8 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/Navigation.kt": {
-    "mtime": 1794023308.8815272,
-    "seen": 1794023443.3905106,
+    "mtime": 1794023562.2348309,
+    "seen": 1794024041.6958704,
     "ast_hash": "574d9ad3bfcc5048551db555b2893bad",
     "semantic_hash": ""
   },
@@ -684,9 +684,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminDriversTab.kt": {
-    "mtime": 1794011420.5233376,
-    "seen": 1794011453.9091353,
-    "ast_hash": "edbaac48ee72f13d87afb082a791a14a",
+    "mtime": 1794024007.1481173,
+    "seen": 1794024041.69588,
+    "ast_hash": "64495a7379e62b93fc140c2604dbb07e",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminFleetMapTab.kt": {
