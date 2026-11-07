@@ -1,5 +1,9 @@
 package com.example.tuctucmap.ui.screens.driver
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -16,12 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.platform.LocalContext
-import android.content.Context
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.tuctucmap.data.model.AppConfig
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import kotlinx.coroutines.flow.collectLatest
 
@@ -35,6 +39,13 @@ fun DriverPendingScreen(
     val context = LocalContext.current
     val uid = repository.currentUserUid ?: ""
     var driverName by remember { mutableStateOf("") }
+    var appConfig by remember { mutableStateOf(SupabaseRepository.cachedAppConfig) }
+
+    // Consultar siempre la configuración comercial más reciente desde la base de datos
+    LaunchedEffect(Unit) {
+        val latestConfig = repository.getAppConfig(force = true)
+        appConfig = latestConfig
+    }
 
     // Escuchar el perfil del conductor en tiempo real
     LaunchedEffect(uid) {
@@ -161,9 +172,35 @@ fun DriverPendingScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
+            // Botón para contactar al Administrador por WhatsApp
+            Button(
+                onClick = {
+                    val driverNameForMsg = driverName.ifBlank { "Conductor" }
+                    val message = "Hola Administrador de TucTuc Map, soy $driverNameForMsg. Acabo de registrarme en la app y mi cuenta de conductor se encuentra en revisión. Solicito amablemente la validación y aprobación de mi cuenta para poder iniciar labores."
+                    val targetPhone = appConfig.adminWhatsappPhone.ifBlank { appConfig.adminWhatsapp }
+                    openAdminWhatsApp(context, targetPhone, message)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF25D366),
+                    contentColor = Color.White
+                )
+            ) {
+                Text(text = "💬", fontSize = 18.sp)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Contactar al Administrador",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Botón para cerrar sesión
             OutlinedButton(
@@ -186,3 +223,31 @@ fun DriverPendingScreen(
         }
     }
 }
+
+private fun openAdminWhatsApp(context: Context, phone: String, message: String) {
+    val digits = phone.replace(Regex("[^0-9]"), "")
+    if (digits.isBlank()) {
+        Toast.makeText(context, "No se encontró el teléfono del administrador configurado.", Toast.LENGTH_SHORT).show()
+        return
+    }
+    val formattedPhone = if (digits.length == 8) "502$digits" else digits
+    try {
+        val url = "https://api.whatsapp.com/send?phone=$formattedPhone&text=${Uri.encode(message)}"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+            setPackage("com.whatsapp")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    } catch (_: Exception) {
+        try {
+            val fallbackUrl = "https://wa.me/$formattedPhone?text=${Uri.encode(message)}"
+            val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse(fallbackUrl)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(fallbackIntent)
+        } catch (_: Exception) {
+            Toast.makeText(context, "No se pudo abrir WhatsApp en este dispositivo.", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
