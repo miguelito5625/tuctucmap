@@ -54,10 +54,12 @@ android {
         val supabaseUrl = getSecretProperty("SUPABASE_URL", "")
         val supabaseKey = getSecretProperty("SUPABASE_ANON_KEY", "")
         val firebaseRtdbUrl = getSecretProperty("FIREBASE_RTDB_URL", "")
+        val googleWebClientId = getSecretProperty("GOOGLE_WEB_CLIENT_ID", "852556047656-emb09iv0hqp01b46r0tc57gao8n4eoc3.apps.googleusercontent.com")
 
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_KEY", "\"$supabaseKey\"")
         buildConfigField("String", "FIREBASE_RTDB_URL", "\"$firebaseRtdbUrl\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
     }
 
     signingConfigs {

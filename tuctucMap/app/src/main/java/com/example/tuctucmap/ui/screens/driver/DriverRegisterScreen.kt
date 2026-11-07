@@ -20,13 +20,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.tuctucmap.data.repository.DriverGoogleLoginResult
 import com.example.tuctucmap.data.repository.SupabaseRepository
+import com.example.tuctucmap.data.service.GoogleAuthCancellationException
+import com.example.tuctucmap.data.service.GoogleAuthHelper
+import com.example.tuctucmap.ui.components.CompleteDriverGoogleRegistrationDialog
+import com.example.tuctucmap.ui.components.GoogleSignInButton
 import kotlinx.coroutines.launch
 
 @Composable
@@ -36,6 +42,7 @@ fun DriverRegisterScreen(
     onRegisterSuccess: () -> Unit,
     onBackToOnboarding: () -> Unit
 ) {
+    val context = LocalContext.current
     var nombre by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
     var placas by remember { mutableStateOf("") }
@@ -45,6 +52,10 @@ fun DriverRegisterScreen(
     
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+    var isGoogleLoading by remember { mutableStateOf(false) }
+    var pendingGoogleProfile by remember { mutableStateOf<DriverGoogleLoginResult.NeedsProfile?>(null) }
+    var dialogLoading by remember { mutableStateOf(false) }
+    var dialogError by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
@@ -367,6 +378,72 @@ fun DriverRegisterScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF37474F))
+                Text(
+                    text = " O ",
+                    color = Color(0xFF90A4AE),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF37474F))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            GoogleSignInButton(
+                onClick = {
+                    isGoogleLoading = true
+                    errorMessage = null
+                    scope.launch {
+                        try {
+                            val googleResult = GoogleAuthHelper.getGoogleCredentials(context)
+                            if (googleResult.isSuccess) {
+                                val userData = googleResult.getOrThrow()
+                                val loginResult = repository.loginDriverWithGoogle(
+                                    idToken = userData.idToken,
+                                    rawNonce = userData.rawNonce,
+                                    googleEmail = userData.email,
+                                    googleDisplayName = userData.displayName
+                                )
+                                if (loginResult.isSuccess) {
+                                    when (val status = loginResult.getOrThrow()) {
+                                        is DriverGoogleLoginResult.Success -> {
+                                            onRegisterSuccess()
+                                        }
+                                        is DriverGoogleLoginResult.NeedsProfile -> {
+                                            pendingGoogleProfile = status
+                                        }
+                                    }
+                                } else {
+                                    errorMessage = SupabaseRepository.formatAuthError(loginResult.exceptionOrNull())
+                                }
+                            } else {
+                                val err = googleResult.exceptionOrNull()
+                                if (err !is GoogleAuthCancellationException) {
+                                    errorMessage = err?.localizedMessage ?: "No se pudo conectar con Google."
+                                }
+                            }
+                        } catch (e: Exception) {
+                            if (e !is GoogleAuthCancellationException) {
+                                errorMessage = e.localizedMessage ?: "Error al autenticar con Google."
+                            }
+                        } finally {
+                            isGoogleLoading = false
+                        }
+                    }
+                },
+                text = "Registrarse con Google",
+                isLoading = isGoogleLoading,
+                enabled = !isLoading && !isGoogleLoading
+            )
+
             Spacer(modifier = Modifier.height(24.dp))
 
             // Enlace para volver a Iniciar Sesión
@@ -388,5 +465,47 @@ fun DriverRegisterScreen(
                 )
             }
         }
+
+        // Diálogo de Registro Rápido para Nuevos Conductores con Google
+        pendingGoogleProfile?.let { pending ->
+            CompleteDriverGoogleRegistrationDialog(
+                initialName = pending.displayName,
+                googleEmail = pending.email,
+                isLoading = dialogLoading,
+                errorMessage = dialogError,
+                onDismiss = {
+                    scope.launch {
+                        repository.cancelGooglePendingSession()
+                        pendingGoogleProfile = null
+                        dialogError = null
+                    }
+                },
+                onConfirm = { nombre, telefono, placas, numeroUnidad ->
+                    dialogLoading = true
+                    dialogError = null
+                    scope.launch {
+                        try {
+                            val regResult = repository.completeDriverGoogleRegistration(
+                                nombre = nombre,
+                                telefono = telefono,
+                                placas = placas,
+                                numeroUnidad = numeroUnidad
+                            )
+                            if (regResult.isSuccess) {
+                                pendingGoogleProfile = null
+                                onRegisterSuccess()
+                            } else {
+                                dialogError = SupabaseRepository.formatAuthError(regResult.exceptionOrNull())
+                            }
+                        } catch (e: Exception) {
+                            dialogError = e.localizedMessage ?: "Error al guardar el perfil de conductor."
+                        } finally {
+                            dialogLoading = false
+                        }
+                    }
+                }
+            )
+        }
     }
 }
+

@@ -1,16 +1,16 @@
 # Graph Report - tuctucmap  (2026-11-06)
 
 ## Corpus Check
-- 134 files · ~152,366 words
+- 134 files · ~151,411 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1296 nodes · 2180 edges · 94 communities (70 shown, 24 thin omitted)
+- 1296 nodes · 2180 edges · 93 communities (69 shown, 24 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `bf5b54bc`
+- Built from commit: `f8e47fae`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -31,7 +31,7 @@
 - db_config.js
 - SupabaseRepository.kt
 - SubscriptionsComponent
-- supabase.service.ts
+- app.routes.ts
 - SecurePrefs
 - SupabaseRepository
 - db.sql
@@ -46,7 +46,7 @@
 - Skill: Android App (TucTuc Map)
 - TucTucMap Dashboard — Plan de Implementación
 - ShellComponent
-- drivers.component.ts
+- supabase.service.ts
 - DriverTripHistoryScreen.kt
 - TucTucMap Dashboard — Tasks
 - TuctucMapDashboard
@@ -88,7 +88,6 @@
 - SelectableDates
 - @angular/cdk
 - DriverSubscriptionScreen.kt
-- CrashDetailDialogComponent
 - public.app_crash_logs
 - @angular/platform-browser
 - DriverHistoryPeriodFilter
@@ -127,10 +126,10 @@
 ## Import Cycles
 - None detected.
 
-## Communities (94 total, 24 thin omitted)
+## Communities (93 total, 24 thin omitted)
 
 ### Community 0 - "SupabaseService"
-Cohesion: 0.10
+Cohesion: 0.09
 Nodes (3): Injectable, AppConfig, SupabaseService
 
 ### Community 2 - "💰 Reporte de Costos Operativos y Rentabilidad en Producción: TucTuc Map"
@@ -189,9 +188,9 @@ Nodes (16): DatabaseError, DataSnapshot, MutableData, DriverLocation, AcceptTrip
 Cohesion: 0.15
 Nodes (5): SubscriptionPaymentRequest, ApproveRenewalDialogComponent, RejectRenewalDialogComponent, SubscriptionsComponent, Component
 
-### Community 16 - "supabase.service.ts"
-Cohesion: 0.23
-Nodes (7): leaflet, allowedCommonJsDependencies, CrashLog, FinancialKPIs, LiveDriverLocation, PassengerProfile, RenewalRequestStatus
+### Community 16 - "app.routes.ts"
+Cohesion: 0.33
+Nodes (3): authGuard(), LoginComponent, Component
 
 ### Community 17 - "SecurePrefs"
 Cohesion: 0.11
@@ -245,9 +244,9 @@ Nodes (10): 1. Stack Tecnológico & Dependencias, 2. Convenciones Críticas de U
 Cohesion: 0.25
 Nodes (7): Decisiones Técnicas, Estructura de Archivos a Crear/Modificar, Flujo de Datos, Módulos de Angular Material a Importar, Objetivo, TucTucMap Dashboard — Plan de Implementación, Verificación
 
-### Community 31 - "drivers.component.ts"
+### Community 31 - "supabase.service.ts"
 Cohesion: 0.21
-Nodes (6): authGuard(), PaymentMethod, SubscriptionPlan, LoginComponent, Component, sanitizeCsvCell()
+Nodes (10): leaflet, allowedCommonJsDependencies, FinancialKPIs, LiveDriverLocation, PaymentMethod, RenewalRequestStatus, SubscriptionPlan, DriverHistoryDialogComponent (+2 more)
 
 ### Community 32 - "DriverTripHistoryScreen.kt"
 Cohesion: 0.70
@@ -278,8 +277,8 @@ Cohesion: 0.18
 Nodes (11): 1. Activación del Skill, 2. Protocolo de Ejecución en 6 Pasos, 3. Ejemplo Práctico de Interacción, Clasificación Inicial:, Paso 1: Consultar Incidencias Pendientes en Supabase, Paso 2: Análisis y Diagnóstico de Causa Raíz, Paso 3: Presentar Resumen y Solicitar Confirmación (Obligatorio), Paso 4: Aplicar Cambios y Compilar (Tras Aprobación) (+3 more)
 
 ### Community 40 - "CrashLogsComponent"
-Cohesion: 0.30
-Nodes (3): CrashLogsComponent, Component, ViewChild
+Cohesion: 0.15
+Nodes (6): CrashLog, CrashDetailDialogComponent, Component, CrashLogsComponent, Component, ViewChild
 
 ### Community 41 - "Skill: Angular Dashboard (TucTuc Map)"
 Cohesion: 0.33
@@ -321,17 +320,13 @@ Nodes (15): Brush, AppNavigation(), DriverRouteToPassenger, DriverLoginScreen(),
 Cohesion: 0.33
 Nodes (6): scripts, build, ng, start, test, watch
 
-### Community 64 - "SubscriptionHistory"
-Cohesion: 0.32
-Nodes (3): SubscriptionHistory, DriverHistoryDialogComponent, Component
-
 ### Community 65 - "tuctucMapDashboard/package.json"
 Cohesion: 0.40
 Nodes (4): name, packageManager, private, version
 
 ### Community 66 - "PassengersComponent"
-Cohesion: 0.33
-Nodes (3): PassengersComponent, Component, ViewChild
+Cohesion: 0.24
+Nodes (4): PassengerProfile, PassengersComponent, Component, ViewChild
 
 ### Community 67 - "2. Recomendaciones Estratégicas y Técnicas (Contextualizadas para TucTuc Map)"
 Cohesion: 0.12
@@ -386,7 +381,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `{ Client }`, `{ dbConfig }`, `public.app_config` to the rest of the system?**
   _387 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `SupabaseService` be split into smaller, more focused modules?**
-  _Cohesion score 0.09659090909090909 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09269162210338681 - nodes in this community are weakly interconnected._
 - **Should `💰 Reporte de Costos Operativos y Rentabilidad en Producción: TucTuc Map` be split into smaller, more focused modules?**
   _Cohesion score 0.1 - nodes in this community are weakly interconnected._
 - **Should `tuctucMapDashboard` be split into smaller, more focused modules?**

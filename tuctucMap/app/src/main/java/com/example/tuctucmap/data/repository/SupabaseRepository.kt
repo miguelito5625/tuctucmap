@@ -8,7 +8,9 @@ import com.example.tuctucmap.data.model.ServerClock
 import com.example.tuctucmap.data.model.getOperationalCalendar
 import com.example.tuctucmap.data.supabase
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
@@ -43,6 +45,15 @@ import kotlin.coroutines.resume
 import kotlin.math.*
 
 class RoleMismatchException(message: String = "Correo o contraseña incorrectos.") : Exception(message)
+
+sealed class DriverGoogleLoginResult {
+    object Success : DriverGoogleLoginResult()
+    data class NeedsProfile(
+        val uid: String,
+        val email: String,
+        val displayName: String
+    ) : DriverGoogleLoginResult()
+}
 
 class SupabaseRepository {
 
@@ -413,6 +424,135 @@ class SupabaseRepository {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    suspend fun loginPassengerWithGoogle(
+        idToken: String,
+        rawNonce: String?,
+        googleEmail: String,
+        googleDisplayName: String
+    ): Result<Unit> {
+        return try {
+            supabase.auth.signInWith(IDToken) {
+                this.idToken = idToken
+                this.provider = Google
+                if (!rawNonce.isNullOrBlank()) {
+                    this.nonce = rawNonce
+                }
+            }
+
+            val uid = currentUserUid ?: supabase.auth.currentUserOrNull()?.id
+            if (uid.isNullOrBlank()) {
+                supabase.auth.signOut()
+                return Result.failure(Exception("No se pudo obtener la sesión de Google."))
+            }
+
+            val roleResult = fetchUserRole(uid)
+            val role = roleResult.getOrNull()
+
+            if (role != null) {
+                if (role == "driver") {
+                    supabase.auth.signOut()
+                    return Result.failure(RoleMismatchException("Esta cuenta de Google está registrada como conductor. Por favor inicia sesión en el Acceso a Conductores."))
+                }
+                // Si es passenger o admin
+                Result.success(Unit)
+            } else {
+                // Nuevo usuario de Google -> auto-registro en public.profiles
+                val finalEmail = currentUserEmail ?: googleEmail
+                val finalName = if (googleDisplayName.isNotBlank()) googleDisplayName.trim() else "Pasajero"
+                val profile = mapOf(
+                    "id" to uid,
+                    "email" to finalEmail.trim(),
+                    "name" to finalName,
+                    "phone" to "",
+                    "role" to "passenger"
+                )
+                supabase.postgrest["profiles"].insert(profile)
+                Result.success(Unit)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun loginDriverWithGoogle(
+        idToken: String,
+        rawNonce: String?,
+        googleEmail: String,
+        googleDisplayName: String
+    ): Result<DriverGoogleLoginResult> {
+        return try {
+            supabase.auth.signInWith(IDToken) {
+                this.idToken = idToken
+                this.provider = Google
+                if (!rawNonce.isNullOrBlank()) {
+                    this.nonce = rawNonce
+                }
+            }
+
+            val uid = currentUserUid ?: supabase.auth.currentUserOrNull()?.id
+            if (uid.isNullOrBlank()) {
+                supabase.auth.signOut()
+                return Result.failure(Exception("No se pudo obtener la sesión de Google."))
+            }
+
+            val roleResult = fetchUserRole(uid)
+            val role = roleResult.getOrNull()
+
+            if (role != null) {
+                if (role == "passenger") {
+                    supabase.auth.signOut()
+                    return Result.failure(RoleMismatchException("Esta cuenta de Google está registrada como pasajero. No puedes ingresar como conductor con esta cuenta."))
+                }
+                // Si es driver o admin
+                syncServerTimeAndExpire()
+                Result.success(DriverGoogleLoginResult.Success)
+            } else {
+                // Cuenta nueva en Supabase, necesita completar placas y teléfono
+                val finalEmail = currentUserEmail ?: googleEmail
+                val finalName = if (googleDisplayName.isNotBlank()) googleDisplayName.trim() else ""
+                Result.success(DriverGoogleLoginResult.NeedsProfile(uid = uid, email = finalEmail, displayName = finalName))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun completeDriverGoogleRegistration(
+        nombre: String,
+        telefono: String,
+        placas: String,
+        numeroUnidad: String = ""
+    ): Result<Unit> {
+        return try {
+            val uid = currentUserUid ?: supabase.auth.currentUserOrNull()?.id
+                ?: return Result.failure(Exception("No se encontró sesión activa de Google."))
+            val email = currentUserEmail ?: ""
+
+            val profile = mutableMapOf(
+                "id" to uid,
+                "email" to email.trim(),
+                "name" to nombre.trim(),
+                "phone" to telefono.trim(),
+                "role" to "driver",
+                "plate_number" to placas.trim().uppercase()
+            )
+            if (numeroUnidad.isNotBlank()) {
+                profile["unit_number"] = numeroUnidad.trim()
+            }
+            supabase.postgrest["profiles"].insert(profile)
+            syncServerTimeAndExpire()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun cancelGooglePendingSession() {
+        try {
+            supabase.auth.signOut()
+        } catch (_: Exception) {}
     }
 
     val adminRepository: AdminRepository by lazy { AdminRepository(this) }

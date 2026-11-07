@@ -25,3 +25,8 @@
 -dontwarn kotlinx.coroutines.**
 -dontwarn slf4j.**
 -dontwarn org.slf4j.**
+
+# Google Identity Services / Credential Manager
+-keep class androidx.credentials.** { *; }
+-keep class com.google.android.libraries.identity.googleid.** { *; }
+-dontwarn androidx.credentials.**

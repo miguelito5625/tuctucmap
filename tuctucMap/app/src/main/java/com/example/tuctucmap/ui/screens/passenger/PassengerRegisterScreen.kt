@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -26,6 +27,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tuctucmap.data.repository.SupabaseRepository
+import com.example.tuctucmap.data.service.GoogleAuthCancellationException
+import com.example.tuctucmap.data.service.GoogleAuthHelper
+import com.example.tuctucmap.ui.components.GoogleSignInButton
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,6 +42,7 @@ fun PassengerRegisterScreen(
     onBack: (() -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     var nombre by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
@@ -45,6 +50,7 @@ fun PassengerRegisterScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
+    var isGoogleLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
@@ -265,6 +271,65 @@ fun PassengerRegisterScreen(
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF37474F))
+                    Text(
+                        text = " O ",
+                        color = Color(0xFF90A4AE),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF37474F))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                GoogleSignInButton(
+                    onClick = {
+                        isGoogleLoading = true
+                        errorMessage = null
+                        scope.launch {
+                            try {
+                                val googleResult = GoogleAuthHelper.getGoogleCredentials(context)
+                                if (googleResult.isSuccess) {
+                                    val userData = googleResult.getOrThrow()
+                                    val loginResult = repository.loginPassengerWithGoogle(
+                                        idToken = userData.idToken,
+                                        rawNonce = userData.rawNonce,
+                                        googleEmail = userData.email,
+                                        googleDisplayName = userData.displayName
+                                    )
+                                    if (loginResult.isSuccess) {
+                                        onRegisterSuccess()
+                                    } else {
+                                        errorMessage = SupabaseRepository.formatAuthError(loginResult.exceptionOrNull())
+                                    }
+                                } else {
+                                    val err = googleResult.exceptionOrNull()
+                                    if (err !is GoogleAuthCancellationException) {
+                                        errorMessage = err?.localizedMessage ?: "No se pudo conectar con Google."
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                if (e !is GoogleAuthCancellationException) {
+                                    errorMessage = e.localizedMessage ?: "Error al autenticar con Google."
+                                }
+                            } finally {
+                                isGoogleLoading = false
+                            }
+                        }
+                    },
+                    text = "Registrarse con Google",
+                    isLoading = isGoogleLoading,
+                    enabled = !isLoading && !isGoogleLoading
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
