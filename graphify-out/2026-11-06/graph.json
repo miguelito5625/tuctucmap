@@ -3717,7 +3717,7 @@
       "file_type": "code",
       "norm_label": "analyticsbarchartcard()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1162"
+      "source_location": "L1198"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_analyticsdashboardview",
@@ -3729,7 +3729,7 @@
       "file_type": "code",
       "norm_label": "analyticsdashboardview()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L966"
+      "source_location": "L1002"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_cleancrashlogcard",
@@ -3741,7 +3741,7 @@
       "file_type": "code",
       "norm_label": "cleancrashlogcard()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L669"
+      "source_location": "L705"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_crashdetailcontent",
@@ -3753,7 +3753,7 @@
       "file_type": "code",
       "norm_label": "crashdetailcontent()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1299"
+      "source_location": "L1335"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_formatcrashdate",
@@ -3765,7 +3765,7 @@
       "file_type": "code",
       "norm_label": "formatcrashdate()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1494"
+      "source_location": "L1530"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_kpiminicard",
@@ -3777,7 +3777,7 @@
       "file_type": "code",
       "norm_label": "kpiminicard()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L634"
+      "source_location": "L670"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_driver_serverclock_nowmillis",
@@ -6786,17 +6786,6 @@
       "source_location": "L14"
     },
     {
-      "id": "tuctucmapdashboard_package_dependencies_angular_cdk",
-      "label": "@angular/cdk",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "dependencies",
-      "file_type": "code",
-      "norm_label": "@angular/cdk",
-      "source_file": "tuctucMapDashboard/package.json",
-      "source_location": "L15"
-    },
-    {
       "id": "tuctucmapdashboard_package_dependencies_angular_compiler",
       "label": "@angular/compiler",
       "_origin": "ast",
@@ -6817,6 +6806,17 @@
       "norm_label": "@angular/forms",
       "source_file": "tuctucMapDashboard/package.json",
       "source_location": "L19"
+    },
+    {
+      "id": "tuctucmapdashboard_package_dependencies_angular_material",
+      "label": "@angular/material",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "dependencies",
+      "file_type": "code",
+      "norm_label": "@angular/material",
+      "source_file": "tuctucMapDashboard/package.json",
+      "source_location": "L20"
     },
     {
       "id": "tuctucmapdashboard_package_dependencies_angular_router",
@@ -6863,17 +6863,6 @@
       "source_location": "L14"
     },
     {
-      "id": "angular_cdk",
-      "label": "@angular/cdk",
-      "_origin": "ast",
-      "community": 10,
-      "community_name": "dependencies",
-      "file_type": "concept",
-      "norm_label": "@angular/cdk",
-      "source_file": "tuctucMapDashboard/package.json",
-      "source_location": "L15"
-    },
-    {
       "id": "angular_compiler",
       "label": "@angular/compiler",
       "_origin": "ast",
@@ -6894,6 +6883,17 @@
       "norm_label": "@angular/forms",
       "source_file": "tuctucMapDashboard/package.json",
       "source_location": "L19"
+    },
+    {
+      "id": "angular_material",
+      "label": "@angular/material",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "dependencies",
+      "file_type": "concept",
+      "norm_label": "@angular/material",
+      "source_file": "tuctucMapDashboard/package.json",
+      "source_location": "L20"
     },
     {
       "id": "angular_router",
@@ -14708,26 +14708,26 @@
       "source_location": ""
     },
     {
-      "id": "tuctucmapdashboard_package_dependencies_angular_material",
-      "label": "@angular/material",
+      "id": "tuctucmapdashboard_package_dependencies_angular_cdk",
+      "label": "@angular/cdk",
       "_origin": "ast",
       "community": 79,
-      "community_name": "@angular/material",
+      "community_name": "@angular/cdk",
       "file_type": "code",
-      "norm_label": "@angular/material",
+      "norm_label": "@angular/cdk",
       "source_file": "tuctucMapDashboard/package.json",
-      "source_location": "L20"
+      "source_location": "L15"
     },
     {
-      "id": "angular_material",
-      "label": "@angular/material",
+      "id": "angular_cdk",
+      "label": "@angular/cdk",
       "_origin": "ast",
       "community": 79,
-      "community_name": "@angular/material",
+      "community_name": "@angular/cdk",
       "file_type": "concept",
-      "norm_label": "@angular/material",
+      "norm_label": "@angular/cdk",
       "source_file": "tuctucMapDashboard/package.json",
-      "source_location": "L20"
+      "source_location": "L15"
     },
     {
       "id": "tuctucmapdashboard_src_app_features_drivers_drivers_component_ts_component",
@@ -17153,7 +17153,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L231",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -17165,7 +17165,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L362",
+      "source_location": "L364",
       "weight": 1.0
     },
     {
@@ -17177,7 +17177,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L383",
+      "source_location": "L385",
       "weight": 1.0
     },
     {
@@ -17189,7 +17189,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L397",
+      "source_location": "L399",
       "weight": 1.0
     },
     {
@@ -17201,7 +17201,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1098",
+      "source_location": "L1134",
       "weight": 1.0
     },
     {
@@ -17213,7 +17213,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L725",
+      "source_location": "L761",
       "weight": 1.0
     },
     {
@@ -20285,7 +20285,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L966",
+      "source_location": "L1002",
       "weight": 1.0
     },
     {
@@ -26969,7 +26969,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1162",
+      "source_location": "L1198",
       "weight": 1.0
     },
     {
@@ -26981,7 +26981,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1162",
+      "source_location": "L1198",
       "weight": 1.0
     },
     {
@@ -26993,7 +26993,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L669",
+      "source_location": "L705",
       "weight": 1.0
     },
     {
@@ -27005,7 +27005,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1299",
+      "source_location": "L1335",
       "weight": 1.0
     },
     {
@@ -27017,7 +27017,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L634",
+      "source_location": "L670",
       "weight": 1.0
     },
     {
@@ -27029,7 +27029,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L634",
+      "source_location": "L670",
       "weight": 1.0
     },
     {
@@ -34043,13 +34043,24 @@
     },
     {
       "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_analyticsdashboardview",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
+      "source_location": "L1002",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen",
       "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_analyticsbarchartcard",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1162",
+      "source_location": "L1198",
       "weight": 1.0
     },
     {
@@ -34060,7 +34071,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1299",
+      "source_location": "L1335",
       "weight": 1.0
     },
     {
@@ -34071,7 +34082,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1494",
+      "source_location": "L1530",
       "weight": 1.0
     },
     {
@@ -34093,7 +34104,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L634",
+      "source_location": "L670",
       "weight": 1.0
     },
     {
@@ -34104,18 +34115,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L669",
-      "weight": 1.0
-    },
-    {
-      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen",
-      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_analyticsdashboardview",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L966",
+      "source_location": "L705",
       "weight": 1.0
     },
     {
@@ -41231,5 +41231,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "9ffb5101f10aea35c096dc37e9691dcd88730321"
+  "built_at_commit": "bf5b54bcf811727bd67535590b87ff49c5419552"
 }

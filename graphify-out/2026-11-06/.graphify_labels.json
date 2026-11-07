@@ -78,7 +78,7 @@
   "76": "2. El Flujo de Trabajo en 3 Fases (El Ciclo Consultivo)",
   "77": "PassengerDestinationPreferences",
   "78": "SelectableDates",
-  "79": "@angular/material",
+  "79": "@angular/cdk",
   "80": "DriverSubscriptionScreen.kt",
   "81": "CrashDetailDialogComponent",
   "82": "public.app_crash_logs",

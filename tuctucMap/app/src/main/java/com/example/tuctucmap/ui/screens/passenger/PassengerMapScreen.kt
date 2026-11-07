@@ -154,8 +154,6 @@ fun PassengerMapScreen(
     }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    var selectedDriver by remember { mutableStateOf<DriverLocation?>(null) }
-    var showBottomSheet by remember { mutableStateOf(false) }
     var showBroadcastDialog by remember { mutableStateOf(false) }
 
     var tripMessage by remember { mutableStateOf("") }
@@ -735,27 +733,16 @@ fun PassengerMapScreen(
                                 else -> com.example.tuctucmap.ui.util.MarkerIconUtils.getPausedTucTucIcon(context)
                             }
                             val targetAlpha = if (isAssignedToMyTrip || isAvail) 1.0f else 0.65f
-                            val statusTag = when {
-                                isAssignedToMyTrip -> "🛺 EN CAMINO A RECOGERTE"
-                                isAvail -> "🟢 DISPONIBLE"
-                                else -> "🟠 OCUPADO / EN PAUSA"
-                            }
-                            val markerTitle = if (isAssignedToMyTrip) "${driverLoc.nombre} (Tu TucTuc)" else driverLoc.nombre
 
                             if (marker == null) {
                                 val startLat = newGeoPoint.latitude + 0.002
                                 marker = Marker(mapView).apply {
                                     position = GeoPoint(startLat, newGeoPoint.longitude)
                                     setAlpha(0f)
-                                    title = markerTitle
-                                    snippet = "Placas: ${driverLoc.placas} • $statusTag"
                                     icon = createTargetIcon()
                                     relatedObject = iconStateKey
-                                    setOnMarkerClickListener { _, _ ->
-                                        selectedDriver = driverLoc
-                                        showBottomSheet = true
-                                        true
-                                    }
+                                    infoWindow = null
+                                    setOnMarkerClickListener { _, _ -> true }
                                 }
                                 driverMarkers[driverLoc.uid] = marker
                                 mapView.overlays.add(marker)
@@ -807,8 +794,8 @@ fun PassengerMapScreen(
                                 } else if (oldGeoPoint != newGeoPoint) {
                                     marker.position = newGeoPoint
                                 }
-                                marker.title = markerTitle
-                                marker.snippet = "Placas: ${driverLoc.placas} • $statusTag"
+                                marker.infoWindow = null
+                                marker.setOnMarkerClickListener { _, _ -> true }
                                 if (marker.relatedObject != iconStateKey) {
                                     marker.icon = createTargetIcon()
                                     marker.relatedObject = iconStateKey
@@ -964,302 +951,7 @@ fun PassengerMapScreen(
                 }
             }
 
-            // ══════════════════════════════════════════════════════════════════════
-            // Bottom Sheet: Detalle de Conductor Seleccionado (Marcador)
-            // ══════════════════════════════════════════════════════════════════════
-            if (showBottomSheet && selectedDriver != null) {
-                // Sincronizar reactivamente con el estado en tiempo real de Firebase
-                val driver = rawDriverLocations.find { it.uid == selectedDriver?.uid } ?: selectedDriver!!
-                val isMyAssignedDriver = activeTrip != null && activeTrip?.status == "accepted" && activeTrip?.driverId == driver.uid
-                val isDriverAvail = driver.isAvailable
 
-                ModalBottomSheet(
-                    onDismissRequest = {
-                        showBottomSheet = false
-                        selectedDriver = null
-                    },
-                    containerColor = Color(0xFF203A43),
-                    contentColor = Color.White,
-                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .navigationBarsPadding()
-                            .padding(horizontal = 24.dp, vertical = 16.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = if (isMyAssignedDriver) "${driver.nombre} (Tu Conductor)" else driver.nombre,
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = "Placas: ${driver.placas}",
-                                        fontSize = 15.sp,
-                                        color = Color(0xFFF9D423),
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    // Badge de distancia y ETA si está disponible
-                                    if (myLocGeo != null) {
-                                        val dist = driver.formattedDistance(myLocGeo.latitude, myLocGeo.longitude)
-                                        val eta = driver.estimatedArrivalMinutes(myLocGeo.latitude, myLocGeo.longitude)
-                                        Surface(
-                                            color = Color(0x334CAF50),
-                                            shape = RoundedCornerShape(6.dp)
-                                        ) {
-                                            Text(
-                                                text = "$dist • ~$eta min",
-                                                color = Color(0xFF81C784),
-                                                fontSize = 12.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                            )
-                                        }
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                // Badge distintivo: Tu conductor asignado vs Disponibilidad vs Ocupado/Pausa
-                                val badgeColor = when {
-                                    isMyAssignedDriver -> Color(0x3300E5FF)
-                                    isDriverAvail -> Color(0x334CAF50)
-                                    else -> Color(0x33EF6C00)
-                                }
-                                val badgeBorderColor = when {
-                                    isMyAssignedDriver -> Color(0xFF00E5FF)
-                                    isDriverAvail -> Color(0xFF4CAF50)
-                                    else -> Color(0xFFEF6C00)
-                                }
-                                val dotColor = when {
-                                    isMyAssignedDriver -> Color(0xFF00E5FF)
-                                    isDriverAvail -> Color(0xFF4ADE80)
-                                    else -> Color(0xFFFFB74D)
-                                }
-                                val badgeText = when {
-                                    isMyAssignedDriver -> "🛺 TU TUCTUC • EN CAMINO A RECOGERTE"
-                                    isDriverAvail -> "🟢 DISPONIBLE"
-                                    else -> "🟠 OCUPADO / EN SERVICIO"
-                                }
-
-                                Surface(
-                                    color = badgeColor,
-                                    shape = RoundedCornerShape(8.dp),
-                                    border = BorderStroke(1.dp, badgeBorderColor)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(8.dp)
-                                                .clip(CircleShape)
-                                                .background(dotColor)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = badgeText,
-                                            color = if (isMyAssignedDriver) Color(0xFF00E5FF) else if (isDriverAvail) Color(0xFF81C784) else Color(0xFFFFB74D),
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.ExtraBold
-                                        )
-                                    }
-                                }
-                            }
-                            Text(
-                                text = "🛺",
-                                fontSize = 38.sp
-                            )
-                        }
-
-                        // Banner de alerta informativa según el estado
-                        if (isMyAssignedDriver) {
-                            Spacer(modifier = Modifier.height(14.dp))
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = Color(0x2200E5FF)),
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, Color(0x6600E5FF))
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("🛺", fontSize = 20.sp)
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Column {
-                                        Text(
-                                            text = "¡Tu conductor viene en camino!",
-                                            color = Color(0xFF00E5FF),
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Text(
-                                            text = "Aceptó tu solicitud y está en ruta hacia ti. Puedes seguir su avance en el mapa o contactarlo directamente.",
-                                            color = Color(0xFFE2E8F0),
-                                            fontSize = 11.sp
-                                        )
-                                    }
-                                }
-                            }
-                        } else if (!isDriverAvail) {
-                            Spacer(modifier = Modifier.height(14.dp))
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = Color(0x33EF6C00)),
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, Color(0x66EF6C00))
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("⏸️", fontSize = 18.sp)
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Column {
-                                        Text(
-                                            text = "Conductor ocupado / en servicio",
-                                            color = Color(0xFFFFB74D),
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Text(
-                                            text = "Este tuctuc está realizando otro viaje o pausó temporalmente la recepción de solicitudes. Puedes contactarlo directamente si lo deseas.",
-                                            color = Color(0xFFCBD5E1),
-                                            fontSize = 11.sp
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = "Contacta al conductor directamente:",
-                            fontSize = 13.sp,
-                            color = Color.LightGray,
-                            modifier = Modifier.padding(bottom = 10.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(14.dp)
-                        ) {
-                            // Botón de llamada estándar
-                            Button(
-                                onClick = {
-                                    val dialIntent = Intent(
-                                        Intent.ACTION_DIAL,
-                                        Uri.parse("tel:${driver.telefono}")
-                                    )
-                                    context.startActivity(dialIntent)
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(52.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF4CAF50),
-                                    contentColor = Color.White
-                                )
-                            ) {
-                                Icon(imageVector = Icons.Default.Call, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Llamar", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            }
-
-                            // Botón de WhatsApp con ENLACE GPS INTELIGENTE
-                            Button(
-                                onClick = {
-                                    var formattedPhone = driver.telefono.replace(" ", "").replace("-", "")
-                                    if (formattedPhone.length == 8) {
-                                        formattedPhone = "502$formattedPhone"
-                                    }
-                                    val mapsLink = if (myLocGeo != null) {
-                                        "https://maps.google.com/?q=${myLocGeo.latitude},${myLocGeo.longitude}"
-                                    } else {
-                                        "mi ubicación actual"
-                                    }
-                                    val message = "¡Hola! Vi tu TucTuc en TucTucMap (Placas: ${driver.placas}). ¿Estás disponible? Te espero aquí: $mapsLink"
-                                    val waUrl = "https://api.whatsapp.com/send?phone=$formattedPhone&text=${Uri.encode(message)}"
-                                    val waIntent = Intent(Intent.ACTION_VIEW, Uri.parse(waUrl))
-                                    context.startActivity(waIntent)
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(52.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF25D366),
-                                    contentColor = Color.White
-                                )
-                            ) {
-                                Icon(imageVector = Icons.Default.Chat, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("WhatsApp", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(18.dp))
-
-                        Button(
-                            onClick = {
-                                showBottomSheet = false
-                                if (isMyAssignedDriver) {
-                                    if (routePointsToPassenger.isNotEmpty()) {
-                                        try {
-                                            val box = BoundingBox.fromGeoPoints(routePointsToPassenger)
-                                            mapViewInstance?.zoomToBoundingBox(box.increaseByScale(1.35f), true)
-                                        } catch (_: Exception) {}
-                                    }
-                                } else {
-                                    showBroadcastDialog = true
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isMyAssignedDriver) Color(0xFF00E5FF) else if (isDriverAvail) Color(0xFFF9D423) else Color(0xFF38BDF8),
-                                contentColor = Color(0xFF0F2027)
-                            )
-                        ) {
-                            Icon(
-                                if (isMyAssignedDriver) Icons.Default.Route else Icons.Default.ElectricRickshaw,
-                                contentDescription = null,
-                                tint = Color(0xFF0F2027)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = when {
-                                    isMyAssignedDriver -> "Centrar en la Ruta de tu TucTuc"
-                                    isDriverAvail -> "Solicitar TucTuc Cercano a Todos"
-                                    else -> "Buscar otro TucTuc Disponible"
-                                },
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                }
-            }
 
             // ══════════════════════════════════════════════════════════════════════
             // Bottom Sheet: Solicitar TucTuc a Todos los Conductores Cercanos

@@ -1,7 +1,7 @@
 # Graph Report - tuctucmap  (2026-11-06)
 
 ## Corpus Check
-- 134 files · ~152,250 words
+- 134 files · ~152,366 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9ffb5101`
+- Built from commit: `bf5b54bc`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -86,7 +86,7 @@
 - 2. El Flujo de Trabajo en 3 Fases (El Ciclo Consultivo)
 - PassengerDestinationPreferences
 - SelectableDates
-- @angular/material
+- @angular/cdk
 - DriverSubscriptionScreen.kt
 - CrashDetailDialogComponent
 - public.app_crash_logs
@@ -167,7 +167,7 @@ Nodes (29): Configuración del Proyecto y Dependencias, Manifiesto de Android y 
 
 ### Community 10 - "dependencies"
 Cohesion: 0.13
-Nodes (15): @angular/animations, @angular/cdk, @angular/compiler, @angular/forms, @angular/router, leaflet, dependencies, @angular/animations (+7 more)
+Nodes (15): @angular/animations, @angular/compiler, @angular/forms, @angular/material, @angular/router, leaflet, dependencies, @angular/animations (+7 more)
 
 ### Community 11 - "devDependencies"
 Cohesion: 0.13
