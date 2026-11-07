@@ -212,12 +212,17 @@ fun PassengerLoginScreen(
                         }
                         isLoading = true
                         scope.launch {
-                            val result = repository.loginPassengerWithEmail(email.trim(), password)
-                            isLoading = false
-                            if (result.isSuccess) {
-                                onLoginSuccess()
-                            } else {
-                                errorMessage = com.example.tuctucmap.data.repository.SupabaseRepository.formatAuthError(result.exceptionOrNull())
+                            try {
+                                val result = repository.loginPassengerWithEmail(email.trim(), password)
+                                if (result.isSuccess) {
+                                    onLoginSuccess()
+                                } else {
+                                    errorMessage = com.example.tuctucmap.data.repository.SupabaseRepository.formatAuthError(result.exceptionOrNull())
+                                }
+                            } catch (e: Exception) {
+                                errorMessage = e.localizedMessage ?: "Error al iniciar sesión"
+                            } finally {
+                                isLoading = false
                             }
                         }
                     },

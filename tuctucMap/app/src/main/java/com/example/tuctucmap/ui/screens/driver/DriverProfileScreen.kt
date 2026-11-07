@@ -433,19 +433,24 @@ fun DriverProfileScreen(
 
                                     isSavingData = true
                                     scope.launch {
-                                        val result = repository.updateDriverProfile(
-                                            name = nombre.trim(),
-                                            phone = telefono.trim(),
-                                            plateNumber = placas.trim(),
-                                            unitNumber = numeroUnidad.trim()
-                                        )
-                                        isSavingData = false
-                                        if (result.isSuccess) {
-                                            snackbarHostState.showSnackbar("¡Datos de conductor actualizados con éxito!")
-                                        } else {
-                                            snackbarHostState.showSnackbar(
-                                                "Error al actualizar datos: ${result.exceptionOrNull()?.message ?: "Error desconocido"}"
+                                        try {
+                                            val result = repository.updateDriverProfile(
+                                                name = nombre.trim(),
+                                                phone = telefono.trim(),
+                                                plateNumber = placas.trim(),
+                                                unitNumber = numeroUnidad.trim()
                                             )
+                                            if (result.isSuccess) {
+                                                snackbarHostState.showSnackbar("¡Datos de conductor actualizados con éxito!")
+                                            } else {
+                                                snackbarHostState.showSnackbar(
+                                                    "Error al actualizar datos: ${result.exceptionOrNull()?.message ?: "Error desconocido"}"
+                                                )
+                                            }
+                                        } catch (e: Exception) {
+                                            snackbarHostState.showSnackbar("Error al actualizar datos: ${e.localizedMessage ?: "Error desconocido"}")
+                                        } finally {
+                                            isSavingData = false
                                         }
                                     }
                                 },
@@ -572,16 +577,21 @@ fun DriverProfileScreen(
 
                                     isUpdatingPassword = true
                                     scope.launch {
-                                        val result = repository.updatePassword(newPassword)
-                                        isUpdatingPassword = false
-                                        if (result.isSuccess) {
-                                            newPassword = ""
-                                            confirmPassword = ""
-                                            snackbarHostState.showSnackbar("¡Contraseña actualizada correctamente!")
-                                        } else {
-                                            snackbarHostState.showSnackbar(
-                                                "Error al actualizar contraseña: ${result.exceptionOrNull()?.message ?: "Error desconocido"}"
-                                            )
+                                        try {
+                                            val result = repository.updatePassword(newPassword)
+                                            if (result.isSuccess) {
+                                                newPassword = ""
+                                                confirmPassword = ""
+                                                snackbarHostState.showSnackbar("¡Contraseña actualizada correctamente!")
+                                            } else {
+                                                snackbarHostState.showSnackbar(
+                                                    "Error al actualizar contraseña: ${result.exceptionOrNull()?.message ?: "Error desconocido"}"
+                                                )
+                                            }
+                                        } catch (e: Exception) {
+                                            snackbarHostState.showSnackbar("Error al actualizar contraseña: ${e.localizedMessage ?: "Error desconocido"}")
+                                        } finally {
+                                            isUpdatingPassword = false
                                         }
                                     }
                                 },

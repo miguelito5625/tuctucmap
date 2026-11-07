@@ -72,135 +72,143 @@ fun DriverLoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBackToOnboarding) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = Color.White
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onBackToOnboarding) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
+                    }
+                    Text(
+                        text = "Volver al inicio",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
+
+                Spacer(modifier = Modifier.height(40.dp))
+
                 Text(
-                    text = "Volver al inicio",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    text = "🛺 Conductor",
+                    fontSize = 28.sp,
+                    color = Color(0xFFF9D423),
+                    fontWeight = FontWeight.Bold
                 )
-            }
 
-            Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = "🛺 Conductor",
-                fontSize = 28.sp,
-                color = Color(0xFFF9D423),
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Inicia sesión para comenzar a transmitir tu ubicación",
-                fontSize = 15.sp,
-                color = Color.LightGray,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            Spacer(modifier = Modifier.height(36.dp))
-
-            // Campo de Correo Electrónico
-            OutlinedTextField(
-                value = email,
-                onValueChange = {
-                    email = it
-                    errorMessage = null
-                },
-                label = { Text("Correo Electrónico", color = Color.LightGray) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Email,
-                        contentDescription = null,
-                        tint = Color.LightGray
-                    )
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFF9D423),
-                    unfocusedBorderColor = Color.White,
-                    focusedLabelColor = Color(0xFFF9D423),
-                    unfocusedLabelColor = Color.White,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Campo de Contraseña
-            OutlinedTextField(
-                value = password,
-                onValueChange = {
-                    password = it
-                    errorMessage = null
-                },
-                label = { Text("Contraseña", color = Color.LightGray) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = null,
-                        tint = Color.LightGray
-                    )
-                },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFF9D423),
-                    unfocusedBorderColor = Color.White,
-                    focusedLabelColor = Color(0xFFF9D423),
-                    unfocusedLabelColor = Color.White,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Mensaje de Error
-            errorMessage?.let { error ->
                 Text(
-                    text = error,
-                    color = Color(0xFFFF6B6B),
-                    fontSize = 14.sp,
+                    text = "Inicia sesión para comenzar a transmitir tu ubicación",
+                    fontSize = 15.sp,
+                    color = Color.LightGray,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
-            }
 
-            // Botón de Login o Indicador de Progreso
-            if (isLoading) {
-                CircularProgressIndicator(color = Color(0xFFF9D423))
-            } else {
+                Spacer(modifier = Modifier.height(36.dp))
+
+                // Campo de Correo Electrónico
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = {
+                        email = it
+                        errorMessage = null
+                    },
+                    label = { Text("Correo Electrónico", color = Color.LightGray) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Email,
+                            contentDescription = null,
+                            tint = Color.LightGray
+                        )
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFF9D423),
+                        unfocusedBorderColor = Color.White,
+                        focusedLabelColor = Color(0xFFF9D423),
+                        unfocusedLabelColor = Color.White,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Campo de Contraseña
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        errorMessage = null
+                    },
+                    label = { Text("Contraseña", color = Color.LightGray) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = Color.LightGray
+                        )
+                    },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFF9D423),
+                        unfocusedBorderColor = Color.White,
+                        focusedLabelColor = Color(0xFFF9D423),
+                        unfocusedLabelColor = Color.White,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Mensaje de Error
+                errorMessage?.let { error ->
+                    Text(
+                        text = error,
+                        color = Color(0xFFFF6B6B),
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+
+                // Botón de Iniciar Sesión con estado de carga uniforme
                 Button(
                     onClick = {
+                        if (email.isBlank() || password.isBlank()) {
+                            errorMessage = "Por favor completa todos los campos"
+                            return@Button
+                        }
                         isLoading = true
                         scope.launch {
-                            val result = repository.loginDriver(email.trim(), password)
-                            isLoading = false
-                            if (result.isSuccess) {
-                                onLoginSuccess()
-                            } else {
-                                errorMessage = com.example.tuctucmap.data.repository.SupabaseRepository.formatAuthError(result.exceptionOrNull())
+                            try {
+                                val result = repository.loginDriver(email.trim(), password)
+                                if (result.isSuccess) {
+                                    onLoginSuccess()
+                                } else {
+                                    errorMessage =
+                                        com.example.tuctucmap.data.repository.SupabaseRepository.formatAuthError(result.exceptionOrNull())
+                                }
+                            } catch (e: Exception) {
+                                errorMessage = e.localizedMessage ?: "Error al iniciar sesión"
+                            } finally {
+                                isLoading = false
                             }
                         }
                     },
+                    enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp),
@@ -210,45 +218,52 @@ fun DriverLoginScreen(
                         contentColor = Color(0xFF0F2027)
                     )
                 ) {
-                    Text(
-                        text = "Iniciar Sesión",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            strokeWidth = 2.dp,
+                            color = Color(0xFF0F2027)
+                        )
+                    } else {
+                        Text(
+                            text = "Iniciar Sesión",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-        }
+            // Enlace para crear cuenta
+            Row(
+                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "¿No tienes una cuenta? ",
+                    color = Color.LightGray,
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = "Regístrate aquí",
+                    color = Color(0xFFF9D423),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    modifier = Modifier.clickable { onNavigateToRegister() }
+                )
+            }
 
-        // Enlace para crear cuenta
-        Row(
-            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
             Text(
-                text = "¿No tienes una cuenta? ",
-                color = Color.LightGray,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "Regístrate aquí",
-                color = Color(0xFFF9D423),
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                modifier = Modifier.clickable { onNavigateToRegister() }
+                text = "🗺️ Explorar Mapa como Pasajero",
+                color = Color(0xFF38BDF8),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier
+                    .clickable { onExploreMapAsGuest() }
+                    .padding(bottom = 20.dp)
             )
         }
-
-        Text(
-            text = "🗺️ Explorar Mapa como Pasajero",
-            color = Color(0xFF38BDF8),
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier
-                .clickable { onExploreMapAsGuest() }
-                .padding(bottom = 20.dp)
-        )
     }
-}
 }

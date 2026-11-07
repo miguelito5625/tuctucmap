@@ -110,22 +110,27 @@ fun DriverSubscriptionScreen(
         }
 
         coroutineScope.launch {
-            val res = repository.submitPaymentRequest(
-                planType = selectedPlan,
-                amount = amount,
-                paymentMethod = "deposito_bancario",
-                referenceNumber = referenceInput.trim()
-            )
-            isSubmitting = false
-            res.onSuccess {
-                Toast.makeText(context, "¡Solicitud registrada! Ahora envía tu captura por WhatsApp para validación.", Toast.LENGTH_LONG).show()
-                openWhatsApp()
-                referenceInput = ""
-                // Refrescar historial de solicitudes
-                val reqs = repository.getDriverRenewalRequests()
-                requests = reqs.getOrDefault(emptyList()).sortedByDescending { it.createdAtEpoch }
-            }.onFailure { err ->
-                Toast.makeText(context, "Error: ${err.message}", Toast.LENGTH_SHORT).show()
+            try {
+                val res = repository.submitPaymentRequest(
+                    planType = selectedPlan,
+                    amount = amount,
+                    paymentMethod = "deposito_bancario",
+                    referenceNumber = referenceInput.trim()
+                )
+                res.onSuccess {
+                    Toast.makeText(context, "¡Solicitud registrada! Ahora envía tu captura por WhatsApp para validación.", Toast.LENGTH_LONG).show()
+                    openWhatsApp()
+                    referenceInput = ""
+                    // Refrescar historial de solicitudes
+                    val reqs = repository.getDriverRenewalRequests()
+                    requests = reqs.getOrDefault(emptyList()).sortedByDescending { it.createdAtEpoch }
+                }.onFailure { err ->
+                    Toast.makeText(context, "Error: ${err.message}", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+            } finally {
+                isSubmitting = false
             }
         }
     }

@@ -126,6 +126,8 @@ fun DriverHomeScreen(
     }
 
     var showFinishTripDialog by remember { mutableStateOf(false) }
+    var isFinishingTrip by remember { mutableStateOf(false) }
+    var isUpdatingStatus by remember { mutableStateOf(false) }
     var fareInputText by remember { mutableStateOf("") }
     var suggestedFares by remember { mutableStateOf<List<Double>>(emptyList()) }
     val liveTripDistanceMeters by LocationTrackingService.activeTripDistanceMeters.collectAsState()
@@ -819,12 +821,20 @@ fun DriverHomeScreen(
                                 ) {
                                     Button(
                                         onClick = {
+                                            isUpdatingStatus = true
                                             val newStatus = if (isAvailable) "ocupado" else "disponible"
                                             LocationTrackingService.driverStatus.value = newStatus
                                             coroutineScope.launch {
-                                                repository.updateDriverStatus(uid, newStatus)
+                                                try {
+                                                    repository.updateDriverStatus(uid, newStatus)
+                                                } catch (e: Exception) {
+                                                    Toast.makeText(context, "Error al actualizar estado: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                                                } finally {
+                                                    isUpdatingStatus = false
+                                                }
                                             }
                                         },
+                                        enabled = !isUpdatingStatus,
                                         modifier = Modifier
                                             .weight(1f)
                                             .height(50.dp),
@@ -834,18 +844,26 @@ fun DriverHomeScreen(
                                             contentColor = Color(0xFF0F172A)
                                         )
                                     ) {
-                                        Icon(
-                                            imageVector = if (isAvailable) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(19.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = if (isAvailable) "Pausar" else "Reanudar",
-                                            fontWeight = FontWeight.ExtraBold,
-                                            fontSize = 14.sp,
-                                            maxLines = 1
-                                        )
+                                        if (isUpdatingStatus) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(19.dp),
+                                                color = Color(0xFF0F172A),
+                                                strokeWidth = 2.dp
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = if (isAvailable) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(19.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = if (isAvailable) "Pausar" else "Reanudar",
+                                                fontWeight = FontWeight.ExtraBold,
+                                                fontSize = 14.sp,
+                                                maxLines = 1
+                                            )
+                                        }
                                     }
 
                                     OutlinedButton(
@@ -1755,70 +1773,83 @@ fun DriverHomeScreen(
                                     return@Button
                                 }
 
+                                isFinishingTrip = true
                                 // Guardar en LocalStorage para actualizar las sugerencias
                                 DriverFarePreferences.saveFare(context, fareValue)
 
                                 coroutineScope.launch {
-                                    val tid = tripToFinish.tripId
-                                    val (trackedDistanceKm, points) = LocationTrackingService.finishTripTracking()
-                                    val finalDistance =
-                                        if (trackedDistanceKm > 0.0) trackedDistanceKm else estimatedDistanceKm
+                                    try {
+                                        val tid = tripToFinish.tripId
+                                        val (trackedDistanceKm, points) = LocationTrackingService.finishTripTracking()
+                                        val finalDistance =
+                                            if (trackedDistanceKm > 0.0) trackedDistanceKm else estimatedDistanceKm
 
-                                    if (tid.isNotBlank()) {
-                                        repository.updateTripStatus(tid, "completed")
-                                        val saveResult = repository.saveTripRecord(
-                                            tripInfo = tripToFinish.copy(driverId = uid),
-                                            status = "completed",
-                                            driverIdOverride = uid,
-                                            fare = fareValue,
-                                            distanceKm = finalDistance,
-                                            routePoints = points
-                                        )
-                                        if (saveResult.isFailure) {
-                                            android.util.Log.e(
-                                                "DriverHomeScreen",
-                                                "Error al guardar viaje en Supabase",
-                                                saveResult.exceptionOrNull()
+                                        if (tid.isNotBlank()) {
+                                            repository.updateTripStatus(tid, "completed")
+                                            val saveResult = repository.saveTripRecord(
+                                                tripInfo = tripToFinish.copy(driverId = uid),
+                                                status = "completed",
+                                                driverIdOverride = uid,
+                                                fare = fareValue,
+                                                distanceKm = finalDistance,
+                                                routePoints = points
                                             )
+                                            if (saveResult.isFailure) {
+                                                android.util.Log.e(
+                                                    "DriverHomeScreen",
+                                                    "Error al guardar viaje en Supabase",
+                                                    saveResult.exceptionOrNull()
+                                                )
+                                            }
+                                            repository.deleteTrip(tid)
+                                            com.example.tuctucmap.ui.util.InAppReviewHelper.recordSuccessfulTripAndRequestReview(context)
                                         }
-                                        repository.deleteTrip(tid)
-                                        com.example.tuctucmap.ui.util.InAppReviewHelper.recordSuccessfulTripAndRequestReview(context)
-                                    }
 
-                                    LocationTrackingService.driverStatus.value = "disponible"
-                                    repository.updateDriverStatus(uid, "disponible")
-                                    LocationTrackingService.activeAcceptedTrip.value = null
-                                    tripSharedPrefs.edit().clear().apply()
-                                    showFinishTripDialog = false
-                                    LocationTrackingService.stopSpeaking()
-                                    refreshTripStats()
-                                    Toast.makeText(
-                                        context,
-                                        "¡Viaje finalizado! Cobro: Q${
-                                            String.format(
-                                                Locale.US,
-                                                "%.2f",
-                                                fareValue
-                                            )
-                                        } | Distancia: ${finalDistance} km",
-                                        Toast.LENGTH_LONG
-                                    ).show()
+                                        LocationTrackingService.driverStatus.value = "disponible"
+                                        repository.updateDriverStatus(uid, "disponible")
+                                        LocationTrackingService.activeAcceptedTrip.value = null
+                                        tripSharedPrefs.edit().clear().apply()
+                                        showFinishTripDialog = false
+                                        LocationTrackingService.stopSpeaking()
+                                        refreshTripStats()
+                                        Toast.makeText(
+                                            context,
+                                            "¡Viaje finalizado! Cobro: Q${
+                                                String.format(
+                                                    Locale.US,
+                                                    "%.2f",
+                                                    fareValue
+                                                )
+                                            } | Distancia: ${finalDistance} km",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Error al finalizar viaje: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_LONG).show()
+                                    } finally {
+                                        isFinishingTrip = false
+                                    }
                                 }
                             },
+                            enabled = !isFinishingTrip,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFFF9D423),
                                 contentColor = Color(0xFF0F2027)
                             ),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Guardar y Finalizar", fontWeight = FontWeight.Bold)
+                            if (isFinishingTrip) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color(0xFF0F2027), strokeWidth = 2.dp)
+                            } else {
+                                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Guardar y Finalizar", fontWeight = FontWeight.Bold)
+                            }
                         }
                     },
                     dismissButton = {
                         TextButton(
                             onClick = { showFinishTripDialog = false },
+                            enabled = !isFinishingTrip,
                             colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF94A3B8))
                         ) {
                             Text("Cancelar")
@@ -1840,6 +1871,7 @@ fun DriverHomeScreen(
                 ) {
                     items(pendingTrips, key = { it.tripId }) { trip ->
                         var isVisible by remember { mutableStateOf(true) }
+                        var isAcceptingTrip by remember { mutableStateOf(false) }
 
                         AnimatedVisibility(
                             visible = isVisible,
@@ -1997,55 +2029,64 @@ fun DriverHomeScreen(
                                     // BOTÓN GIGANTE DE ACEPTACIÓN (72dp)
                                     Button(
                                         onClick = {
-                                            isVisible = false
+                                            isAcceptingTrip = true
                                             coroutineScope.launch {
-                                                val acceptResult = repository.acceptTripAtomically(
-                                                    tripId = trip.tripId,
-                                                    driverId = uid,
-                                                    driverName = driverProfile?.nombre ?: "Conductor",
-                                                    driverPhone = driverProfile?.telefono ?: "",
-                                                    driverPlate = driverProfile?.displayIdentifier?.ifBlank {
-                                                        driverProfile?.placas ?: ""
-                                                    } ?: ""
-                                                )
+                                                try {
+                                                    val acceptResult = repository.acceptTripAtomically(
+                                                        tripId = trip.tripId,
+                                                        driverId = uid,
+                                                        driverName = driverProfile?.nombre ?: "Conductor",
+                                                        driverPhone = driverProfile?.telefono ?: "",
+                                                        driverPlate = driverProfile?.displayIdentifier?.ifBlank {
+                                                            driverProfile?.placas ?: ""
+                                                        } ?: ""
+                                                    )
 
-                                                when (acceptResult) {
-                                                    is SupabaseRepository.AcceptTripResult.Success -> {
-                                                        LocationTrackingService.driverStatus.value = "ocupado"
-                                                        repository.updateDriverStatus(uid, "ocupado")
-                                                        val acceptedTrip = trip.copy(driverId = uid)
-                                                        LocationTrackingService.startTripTracking(
-                                                            trip.tripId,
-                                                            currentLocation,
-                                                            acceptedTrip
-                                                        )
-                                                        LocationTrackingService.stopSpeaking()
-                                                        Toast.makeText(
-                                                            context,
-                                                            "¡Viaje aceptado! En camino a recoger al pasajero.",
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                        onNavigateToRoute(acceptedTrip)
-                                                    }
+                                                    when (acceptResult) {
+                                                        is SupabaseRepository.AcceptTripResult.Success -> {
+                                                            isVisible = false
+                                                            LocationTrackingService.driverStatus.value = "ocupado"
+                                                            repository.updateDriverStatus(uid, "ocupado")
+                                                            val acceptedTrip = trip.copy(driverId = uid)
+                                                            LocationTrackingService.startTripTracking(
+                                                                trip.tripId,
+                                                                currentLocation,
+                                                                acceptedTrip
+                                                            )
+                                                            LocationTrackingService.stopSpeaking()
+                                                            Toast.makeText(
+                                                                context,
+                                                                "¡Viaje aceptado! En camino a recoger al pasajero.",
+                                                                Toast.LENGTH_SHORT
+                                                            ).show()
+                                                            onNavigateToRoute(acceptedTrip)
+                                                        }
 
-                                                    is SupabaseRepository.AcceptTripResult.AlreadyTaken -> {
-                                                        Toast.makeText(
-                                                            context,
-                                                            "¡Este viaje ya fue tomado por otro tuctuc!",
-                                                            Toast.LENGTH_LONG
-                                                        ).show()
-                                                    }
+                                                        is SupabaseRepository.AcceptTripResult.AlreadyTaken -> {
+                                                            isVisible = false
+                                                            Toast.makeText(
+                                                                context,
+                                                                "¡Este viaje ya fue tomado por otro tuctuc!",
+                                                                Toast.LENGTH_LONG
+                                                            ).show()
+                                                        }
 
-                                                    is SupabaseRepository.AcceptTripResult.Error -> {
-                                                        Toast.makeText(
-                                                            context,
-                                                            "Error de conexión: ${acceptResult.message}",
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
+                                                        is SupabaseRepository.AcceptTripResult.Error -> {
+                                                            Toast.makeText(
+                                                                context,
+                                                                "Error de conexión: ${acceptResult.message}",
+                                                                Toast.LENGTH_SHORT
+                                                            ).show()
+                                                        }
                                                     }
+                                                } catch (e: Exception) {
+                                                    Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                                                } finally {
+                                                    isAcceptingTrip = false
                                                 }
                                             }
                                         },
+                                        enabled = !isAcceptingTrip,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(72.dp),
@@ -2053,20 +2094,28 @@ fun DriverHomeScreen(
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
                                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.CheckCircle,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(28.dp),
-                                            tint = Color.White
-                                        )
-                                        Spacer(modifier = Modifier.width(10.dp))
-                                        Text(
-                                            text = "ACEPTAR VIAJE",
-                                            fontSize = 18.sp,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = Color.White,
-                                            letterSpacing = 1.sp
-                                        )
+                                        if (isAcceptingTrip) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(28.dp),
+                                                color = Color.White,
+                                                strokeWidth = 3.dp
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = Icons.Default.CheckCircle,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(28.dp),
+                                                tint = Color.White
+                                            )
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Text(
+                                                text = "ACEPTAR VIAJE",
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = Color.White,
+                                                letterSpacing = 1.sp
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -2245,21 +2294,26 @@ fun DriverHomeScreen(
                                             else -> appConfig.priceSemanal
                                         }
                                         coroutineScope.launch {
-                                            val res = repository.submitPaymentRequest(
-                                                planType = selectedPlan,
-                                                amount = amount,
-                                                referenceNumber = boletaRefInput
-                                            )
-                                            isSubmittingBoleta = false
-                                            res.onSuccess {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Boleta registrada en el sistema. Envía también la foto por WhatsApp.",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
-                                            }.onFailure { err ->
-                                                Toast.makeText(context, "Error: ${err.message}", Toast.LENGTH_SHORT)
-                                                    .show()
+                                            try {
+                                                val res = repository.submitPaymentRequest(
+                                                    planType = selectedPlan,
+                                                    amount = amount,
+                                                    referenceNumber = boletaRefInput
+                                                )
+                                                res.onSuccess {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Boleta registrada en el sistema. Envía también la foto por WhatsApp.",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                }.onFailure { err ->
+                                                    Toast.makeText(context, "Error: ${err.message}", Toast.LENGTH_SHORT)
+                                                        .show()
+                                                }
+                                            } catch (e: Exception) {
+                                                Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                                            } finally {
+                                                isSubmittingBoleta = false
                                             }
                                         }
                                     },
@@ -2270,11 +2324,15 @@ fun DriverHomeScreen(
                                         contentColor = Color(0xFF0F172A)
                                     )
                                 ) {
-                                    Text(
-                                        "Registrar N° de Boleta en App",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp
-                                    )
+                                    if (isSubmittingBoleta) {
+                                        CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color(0xFF0F172A), strokeWidth = 2.dp)
+                                    } else {
+                                        Text(
+                                            "Registrar N° de Boleta en App",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp
+                                        )
+                                    }
                                 }
                             }
 

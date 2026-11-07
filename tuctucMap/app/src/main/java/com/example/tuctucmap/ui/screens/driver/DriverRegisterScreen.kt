@@ -307,27 +307,25 @@ fun DriverRegisterScreen(
                 )
             }
 
-            // Botón de Registro o Barra de Progreso
-            if (isLoading) {
-                CircularProgressIndicator(color = Color(0xFFF9D423))
-            } else {
-                Button(
-                    onClick = {
-                        if (nombre.isBlank() || telefono.isBlank() || placas.isBlank() || email.isBlank() || password.isBlank()) {
-                            errorMessage = "Todos los campos principales son obligatorios"
-                            return@Button
-                        }
-                        val cleanDigits = telefono.replace(Regex("[^0-9]"), "")
-                        if (cleanDigits.length < 8) {
-                            errorMessage = "Ingresa un número de teléfono válido (al menos 8 dígitos)"
-                            return@Button
-                        }
-                        if (password.length < 6) {
-                            errorMessage = "La contraseña debe tener al menos 6 caracteres"
-                            return@Button
-                        }
-                        isLoading = true
-                        scope.launch {
+            // Botón de Registro con estado de carga uniforme
+            Button(
+                onClick = {
+                    if (nombre.isBlank() || telefono.isBlank() || placas.isBlank() || email.isBlank() || password.isBlank()) {
+                        errorMessage = "Todos los campos principales son obligatorios"
+                        return@Button
+                    }
+                    val cleanDigits = telefono.replace(Regex("[^0-9]"), "")
+                    if (cleanDigits.length < 8) {
+                        errorMessage = "Ingresa un número de teléfono válido (al menos 8 dígitos)"
+                        return@Button
+                    }
+                    if (password.length < 6) {
+                        errorMessage = "La contraseña debe tener al menos 6 caracteres"
+                        return@Button
+                    }
+                    isLoading = true
+                    scope.launch {
+                        try {
                             val result = repository.registerDriver(
                                 nombre = nombre.trim(),
                                 telefono = telefono.trim(),
@@ -336,23 +334,31 @@ fun DriverRegisterScreen(
                                 contrasena = password,
                                 numeroUnidad = numeroUnidad.trim()
                             )
-                            isLoading = false
                             if (result.isSuccess) {
                                 onRegisterSuccess()
                             } else {
                                 errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Error al registrarse"
                             }
+                        } catch (e: Exception) {
+                            errorMessage = e.localizedMessage ?: "Error al registrarse"
+                        } finally {
+                            isLoading = false
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(54.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF9D423),
-                        contentColor = Color(0xFF0F2027)
-                    )
-                ) {
+                    }
+                },
+                enabled = !isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFF9D423),
+                    contentColor = Color(0xFF0F2027)
+                )
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp, color = Color(0xFF0F2027))
+                } else {
                     Text(
                         text = "Registrarme",
                         fontSize = 16.sp,

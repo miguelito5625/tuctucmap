@@ -742,32 +742,37 @@ fun DriverRouteToPassengerScreen(
                         DriverFarePreferences.saveFare(context, fareDouble)
 
                         coroutineScope.launch {
-                            val (trackedDistanceKm, recordedPoints) = LocationTrackingService.finishTripTracking()
-                            val finalDistance = if (trackedDistanceKm > 0.0) trackedDistanceKm else realDistanceKm
+                            try {
+                                val (trackedDistanceKm, recordedPoints) = LocationTrackingService.finishTripTracking()
+                                val finalDistance = if (trackedDistanceKm > 0.0) trackedDistanceKm else realDistanceKm
 
-                            repository.updateTripStatus(trip.tripId, "completed")
-                            val saveResult = repository.saveTripRecord(
-                                tripInfo = trip.copy(driverId = uid),
-                                status = "completed",
-                                driverIdOverride = uid,
-                                fare = fareDouble,
-                                distanceKm = finalDistance,
-                                routePoints = recordedPoints
-                            )
+                                repository.updateTripStatus(trip.tripId, "completed")
+                                val saveResult = repository.saveTripRecord(
+                                    tripInfo = trip.copy(driverId = uid),
+                                    status = "completed",
+                                    driverIdOverride = uid,
+                                    fare = fareDouble,
+                                    distanceKm = finalDistance,
+                                    routePoints = recordedPoints
+                                )
 
-                            repository.deleteTrip(trip.tripId)
-                            LocationTrackingService.driverStatus.value = "disponible"
-                            repository.updateDriverStatus(uid, "disponible")
+                                repository.deleteTrip(trip.tripId)
+                                LocationTrackingService.driverStatus.value = "disponible"
+                                repository.updateDriverStatus(uid, "disponible")
 
-                            // Limpiar estado de viaje activo compartido y caché local persistente
-                            LocationTrackingService.activeAcceptedTrip.value = null
-                            context.getSharedPreferences("driver_active_trip_prefs", Context.MODE_PRIVATE).edit().clear().apply()
+                                // Limpiar estado de viaje activo compartido y caché local persistente
+                                LocationTrackingService.activeAcceptedTrip.value = null
+                                context.getSharedPreferences("driver_active_trip_prefs", Context.MODE_PRIVATE).edit().clear().apply()
 
-                            isSubmittingFinish = false
-                            showFinishTripDialog = false
-                            Toast.makeText(context, "¡Viaje finalizado y registrado con éxito!", Toast.LENGTH_LONG).show()
-                            com.example.tuctucmap.ui.util.InAppReviewHelper.recordSuccessfulTripAndRequestReview(context)
-                            onTripCompleted()
+                                showFinishTripDialog = false
+                                Toast.makeText(context, "¡Viaje finalizado y registrado con éxito!", Toast.LENGTH_LONG).show()
+                                com.example.tuctucmap.ui.util.InAppReviewHelper.recordSuccessfulTripAndRequestReview(context)
+                                onTripCompleted()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Error al finalizar viaje: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_LONG).show()
+                            } finally {
+                                isSubmittingFinish = false
+                            }
                         }
                     },
                     enabled = !isSubmittingFinish,
@@ -834,19 +839,24 @@ fun DriverRouteToPassengerScreen(
                     onClick = {
                         isCancellingTrip = true
                         coroutineScope.launch {
-                            LocationTrackingService.finishTripTracking()
-                            repository.updateTripStatus(trip.tripId, "cancelled")
-                            repository.deleteTrip(trip.tripId)
-                            LocationTrackingService.driverStatus.value = "disponible"
-                            repository.updateDriverStatus(uid, "disponible")
+                            try {
+                                LocationTrackingService.finishTripTracking()
+                                repository.updateTripStatus(trip.tripId, "cancelled")
+                                repository.deleteTrip(trip.tripId)
+                                LocationTrackingService.driverStatus.value = "disponible"
+                                repository.updateDriverStatus(uid, "disponible")
 
-                            LocationTrackingService.activeAcceptedTrip.value = null
-                            context.getSharedPreferences("driver_active_trip_prefs", Context.MODE_PRIVATE).edit().clear().apply()
+                                LocationTrackingService.activeAcceptedTrip.value = null
+                                context.getSharedPreferences("driver_active_trip_prefs", Context.MODE_PRIVATE).edit().clear().apply()
 
-                            isCancellingTrip = false
-                            showNoMovementWarningDialog = false
-                            Toast.makeText(context, "Viaje cancelado sin cobro", Toast.LENGTH_SHORT).show()
-                            onBack()
+                                showNoMovementWarningDialog = false
+                                Toast.makeText(context, "Viaje cancelado sin cobro", Toast.LENGTH_SHORT).show()
+                                onBack()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Error al cancelar viaje: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                            } finally {
+                                isCancellingTrip = false
+                            }
                         }
                     },
                     enabled = !isCancellingTrip,

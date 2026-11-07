@@ -64,6 +64,7 @@ fun AdminDriversTab(
 
     // Estado para diálogo de confirmación de eliminación
     var driverToDelete by remember { mutableStateOf<AdminDriver?>(null) }
+    var isDeletingDriver by remember { mutableStateOf(false) }
 
     fun loadData() {
         scope.launch {
@@ -372,24 +373,39 @@ fun AdminDriversTab(
                 Button(
                     onClick = {
                         val id = target.id
-                        driverToDelete = null
+                        isDeletingDriver = true
                         scope.launch {
-                            val res = adminRepo.deleteDriver(id)
-                            if (res.isSuccess) {
-                                Toast.makeText(context, "Conductor eliminado", Toast.LENGTH_SHORT).show()
-                                loadData()
-                            } else {
-                                Toast.makeText(context, "Error al eliminar conductor", Toast.LENGTH_SHORT).show()
+                            try {
+                                val res = adminRepo.deleteDriver(id)
+                                if (res.isSuccess) {
+                                    Toast.makeText(context, "Conductor eliminado", Toast.LENGTH_SHORT).show()
+                                    loadData()
+                                    driverToDelete = null
+                                } else {
+                                    Toast.makeText(context, "Error al eliminar conductor", Toast.LENGTH_SHORT).show()
+                                }
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                            } finally {
+                                isDeletingDriver = false
                             }
                         }
                     },
+                    enabled = !isDeletingDriver,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
                 ) {
-                    Text("Eliminar", color = Color.White)
+                    if (isDeletingDriver) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                    } else {
+                        Text("Eliminar", color = Color.White)
+                    }
                 }
             },
             dismissButton = {
-                TextButton(onClick = { driverToDelete = null }) {
+                TextButton(
+                    onClick = { driverToDelete = null },
+                    enabled = !isDeletingDriver
+                ) {
                     Text("Cancelar", color = Color(0xFF94A3B8))
                 }
             },
@@ -678,6 +694,7 @@ private fun RenewSubscriptionBottomSheetContent(
     var paymentMethod by remember { mutableStateOf("deposito_bancario") }
     var amountText by remember { mutableStateOf(appConfig.priceSemanal.toString()) }
     var referenceText by remember { mutableStateOf("") }
+    var isConfirming by remember { mutableStateOf(false) }
 
     LaunchedEffect(selectedPlan) {
         amountText = when (selectedPlan) {
@@ -833,13 +850,19 @@ private fun RenewSubscriptionBottomSheetContent(
             Button(
                 onClick = {
                     val amt = amountText.toDoubleOrNull() ?: 25.0
+                    isConfirming = true
                     onConfirm(selectedPlan, amt, paymentMethod, referenceText)
                 },
+                enabled = !isConfirming,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B))
             ) {
-                Text("Confirmar", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold)
+                if (isConfirming) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color(0xFF0F172A), strokeWidth = 2.dp)
+                } else {
+                    Text("Confirmar", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold)
+                }
             }
         }
         Spacer(modifier = Modifier.height(18.dp))

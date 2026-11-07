@@ -160,6 +160,9 @@ fun PassengerMapScreen(
 
     var tripMessage by remember { mutableStateOf("") }
     var isRequestingTrip by remember { mutableStateOf(false) }
+    var isCancellingTrip by remember { mutableStateOf(false) }
+    var isFinishingCompletedTrip by remember { mutableStateOf(false) }
+    var isClearingCancelledTrip by remember { mutableStateOf(false) }
 
     val sharedPrefs = remember(context) { context.getSharedPreferences("tuctuc_prefs", Context.MODE_PRIVATE) }
     var activeTripId by remember { mutableStateOf(sharedPrefs.getString("active_passenger_trip_id", null)) }
@@ -1557,28 +1560,31 @@ fun PassengerMapScreen(
                                         recentDestinations = PassengerDestinationPreferences.getRecentDestinations(context)
                                     }
                                     coroutineScope.launch {
-                                        val result = repository.requestBroadcastTrip(
-                                            lat = myLoc.latitude,
-                                            lon = myLoc.longitude,
-                                            message = tripMessage.ifBlank { "Pasajero esperando tuctuc" },
-                                            passengerName = effectivePassengerName.ifBlank { "Pasajero" },
-                                            passengerPhone = effectivePassengerPhone
-                                        )
-                                        isRequestingTrip = false
-                                        result.onSuccess { tripId ->
-                                            activeTripId = tripId
-                                            sharedPrefs.edit().putString("active_passenger_trip_id", tripId).apply()
-                                            tripMessage = ""
-                                            showBroadcastDialog = false
-                                            coroutineScope.launch {
-                                                kotlinx.coroutines.delay(60000)
-                                                if (activeTripId == tripId && activeTrip?.status == "requested") {
-                                                    repository.updateTripStatus(tripId, "timeout")
-                                                    kotlinx.coroutines.delay(10000)
-                                                    repository.deleteTrip(tripId)
-                                                    sharedPrefs.edit().remove("active_passenger_trip_id").apply()
+                                        try {
+                                            val result = repository.requestBroadcastTrip(
+                                                lat = myLoc.latitude,
+                                                lon = myLoc.longitude,
+                                                message = tripMessage.ifBlank { "Pasajero esperando tuctuc" },
+                                                passengerName = effectivePassengerName.ifBlank { "Pasajero" },
+                                                passengerPhone = effectivePassengerPhone
+                                            )
+                                            result.onSuccess { tripId ->
+                                                activeTripId = tripId
+                                                sharedPrefs.edit().putString("active_passenger_trip_id", tripId).apply()
+                                                tripMessage = ""
+                                                showBroadcastDialog = false
+                                                coroutineScope.launch {
+                                                    kotlinx.coroutines.delay(60000)
+                                                    if (activeTripId == tripId && activeTrip?.status == "requested") {
+                                                        repository.updateTripStatus(tripId, "timeout")
+                                                        kotlinx.coroutines.delay(10000)
+                                                        repository.deleteTrip(tripId)
+                                                        sharedPrefs.edit().remove("active_passenger_trip_id").apply()
+                                                    }
                                                 }
                                             }
+                                        } finally {
+                                            isRequestingTrip = false
                                         }
                                     }
                                 }
@@ -1673,16 +1679,31 @@ fun PassengerMapScreen(
                                 Spacer(modifier = Modifier.height(14.dp))
                                 OutlinedButton(
                                     onClick = {
+                                        val tripId = activeTripId ?: return@OutlinedButton
+                                        isCancellingTrip = true
                                         coroutineScope.launch {
-                                            repository.deleteTrip(activeTripId!!)
-                                            activeTripId = null
-                                            activeTrip = null
+                                            try {
+                                                repository.deleteTrip(tripId)
+                                                activeTripId = null
+                                                activeTrip = null
+                                            } finally {
+                                                isCancellingTrip = false
+                                            }
                                         }
                                     },
+                                    enabled = !isCancellingTrip,
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFF5252))
                                 ) {
-                                    Text("Cancelar Solicitud")
+                                    if (isCancellingTrip) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
+                                            color = Color(0xFFFF5252),
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        Text("Cancelar Solicitud")
+                                    }
                                 }
                             }
                             "accepted" -> {
@@ -1904,15 +1925,21 @@ fun PassengerMapScreen(
 
                                 Button(
                                     onClick = {
+                                        isFinishingCompletedTrip = true
                                         coroutineScope.launch {
-                                            val tid = activeTripId
-                                            activeTripId = null
-                                            activeTrip = null
-                                            if (tid != null) {
-                                                repository.deleteTrip(tid)
+                                            try {
+                                                val tid = activeTripId
+                                                activeTripId = null
+                                                activeTrip = null
+                                                if (tid != null) {
+                                                    repository.deleteTrip(tid)
+                                                }
+                                            } finally {
+                                                isFinishingCompletedTrip = false
                                             }
                                         }
                                     },
+                                    enabled = !isFinishingCompletedTrip,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(48.dp),
@@ -1922,17 +1949,25 @@ fun PassengerMapScreen(
                                         contentColor = Color(0xFF0F2027)
                                     )
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "Listo / Pedir Otro TucTuc",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
-                                    )
+                                    if (isFinishingCompletedTrip) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
+                                            color = Color(0xFF0F2027),
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircle,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Listo / Pedir Otro TucTuc",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp
+                                        )
+                                    }
                                 }
                             }
                             "cancelled", "timeout" -> {
@@ -1951,19 +1986,33 @@ fun PassengerMapScreen(
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Button(
                                     onClick = {
+                                        isClearingCancelledTrip = true
                                         coroutineScope.launch {
-                                            val tid = activeTripId
-                                            activeTripId = null
-                                            activeTrip = null
-                                            if (tid != null) {
-                                                repository.deleteTrip(tid)
+                                            try {
+                                                val tid = activeTripId
+                                                activeTripId = null
+                                                activeTrip = null
+                                                if (tid != null) {
+                                                    repository.deleteTrip(tid)
+                                                }
+                                            } finally {
+                                                isClearingCancelledTrip = false
                                             }
                                         }
                                     },
+                                    enabled = !isClearingCancelledTrip,
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9D423), contentColor = Color(0xFF0F2027))
                                 ) {
-                                    Text("Aceptar", fontWeight = FontWeight.Bold)
+                                    if (isClearingCancelledTrip) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
+                                            color = Color(0xFF0F2027),
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        Text("Aceptar", fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                         }

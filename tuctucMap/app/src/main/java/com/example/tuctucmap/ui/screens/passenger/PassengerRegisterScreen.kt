@@ -231,12 +231,17 @@ fun PassengerRegisterScreen(
                         }
                         isLoading = true
                         scope.launch {
-                            val result = repository.registerPassengerWithEmail(nombre.trim(), telefono.trim(), email.trim(), password)
-                            isLoading = false
-                            if (result.isSuccess) {
-                                onRegisterSuccess()
-                            } else {
-                                errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Error al registrar"
+                            try {
+                                val result = repository.registerPassengerWithEmail(nombre.trim(), telefono.trim(), email.trim(), password)
+                                if (result.isSuccess) {
+                                    onRegisterSuccess()
+                                } else {
+                                    errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Error al registrar"
+                                }
+                            } catch (e: Exception) {
+                                errorMessage = e.localizedMessage ?: "Error al registrar"
+                            } finally {
+                                isLoading = false
                             }
                         }
                     },

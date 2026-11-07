@@ -53,6 +53,7 @@ fun DriverSubscriptionExpiredScreen(
     var boletaRefInput by remember { mutableStateOf("") }
     var selectedPlan by remember { mutableStateOf("semanal") }
     var isSubmittingBoleta by remember { mutableStateOf(false) }
+    var isVerifyingActivation by remember { mutableStateOf(false) }
     var requests by remember { mutableStateOf<List<SubscriptionRenewalRequest>>(emptyList()) }
     var isLoadingRequests by remember { mutableStateOf(false) }
 
@@ -374,17 +375,22 @@ fun DriverSubscriptionExpiredScreen(
                                     else -> appConfig.priceSemanal
                                 }
                                 coroutineScope.launch {
-                                    val res = repository.submitPaymentRequest(
-                                        planType = selectedPlan,
-                                        amount = amount,
-                                        referenceNumber = boletaRefInput
-                                    )
-                                    isSubmittingBoleta = false
-                                    res.onSuccess {
-                                        Toast.makeText(context, "Boleta registrada. Ahora envía la foto por WhatsApp para activación inmediata.", Toast.LENGTH_LONG).show()
-                                        loadRequests()
-                                    }.onFailure { err ->
-                                        Toast.makeText(context, "Error: ${err.message}", Toast.LENGTH_SHORT).show()
+                                    try {
+                                        val res = repository.submitPaymentRequest(
+                                            planType = selectedPlan,
+                                            amount = amount,
+                                            referenceNumber = boletaRefInput
+                                        )
+                                        res.onSuccess {
+                                            Toast.makeText(context, "Boleta registrada. Ahora envía la foto por WhatsApp para activación inmediata.", Toast.LENGTH_LONG).show()
+                                            loadRequests()
+                                        }.onFailure { err ->
+                                            Toast.makeText(context, "Error: ${err.message}", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                                    } finally {
+                                        isSubmittingBoleta = false
                                     }
                                 }
                             },
@@ -392,9 +398,13 @@ fun DriverSubscriptionExpiredScreen(
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9D423), contentColor = Color(0xFF0F2027))
                         ) {
-                            Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Notificar N° de Boleta en App", fontWeight = FontWeight.Bold)
+                            if (isSubmittingBoleta) {
+                                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color(0xFF0F2027), strokeWidth = 2.dp)
+                            } else {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Notificar N° de Boleta en App", fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
@@ -435,20 +445,28 @@ fun DriverSubscriptionExpiredScreen(
             // ── Botón: Verificar si el Admin ya Activó ────────────────────────
             Button(
                 onClick = {
+                    isVerifyingActivation = true
                     coroutineScope.launch {
-                        if (uid.isNotBlank()) {
-                            repository.getDriverProfileOnce(uid) { d ->
-                                if (d != null && d.isApprovedAndActive) {
-                                    Toast.makeText(context, "¡Suscripción aprobada y activa!", Toast.LENGTH_SHORT).show()
-                                    onRenewed()
-                                } else {
-                                    Toast.makeText(context, "Tu renovación sigue en revisión. Si enviaste tu captura por WhatsApp, el admin la validará pronto.", Toast.LENGTH_LONG).show()
+                        try {
+                            if (uid.isNotBlank()) {
+                                repository.getDriverProfileOnce(uid) { d ->
+                                    if (d != null && d.isApprovedAndActive) {
+                                        Toast.makeText(context, "¡Suscripción aprobada y activa!", Toast.LENGTH_SHORT).show()
+                                        onRenewed()
+                                    } else {
+                                        Toast.makeText(context, "Tu renovación sigue en revisión. Si enviaste tu captura por WhatsApp, el admin la validará pronto.", Toast.LENGTH_LONG).show()
+                                    }
                                 }
                             }
+                            loadRequests()
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Error al verificar: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                        } finally {
+                            isVerifyingActivation = false
                         }
-                        loadRequests()
                     }
                 },
+                enabled = !isVerifyingActivation,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -458,9 +476,13 @@ fun DriverSubscriptionExpiredScreen(
                     contentColor = Color.White
                 )
             ) {
-                Icon(Icons.Default.Refresh, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Verificar Activación Ahora", fontWeight = FontWeight.Bold)
+                if (isVerifyingActivation) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
+                } else {
+                    Icon(Icons.Default.Refresh, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Verificar Activación Ahora", fontWeight = FontWeight.Bold)
+                }
             }
 
             // ── Historial de Solicitudes de Renovación del Conductor ──────────

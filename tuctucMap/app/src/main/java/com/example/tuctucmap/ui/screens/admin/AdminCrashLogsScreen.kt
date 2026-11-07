@@ -64,6 +64,7 @@ fun AdminCrashLogsScreen(
     var crashToResolve by remember { mutableStateOf<AdminCrashLog?>(null) }
     var crashToReopen by remember { mutableStateOf<AdminCrashLog?>(null) }
     var solutionInput by remember { mutableStateOf("") }
+    var isResolvingCrash by remember { mutableStateOf(false) }
 
     fun loadCrashes() {
         scope.launch {
@@ -485,32 +486,46 @@ fun AdminCrashLogsScreen(
                             Toast.makeText(context, "Debes ingresar una explicación de la solución", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
+                        isResolvingCrash = true
                         scope.launch {
-                            val res = adminRepo.setCrashLogResolved(targetCrash.id, true, trimmed)
-                            if (res.isSuccess) {
-                                loadCrashes()
-                                if (selectedCrashForDetail?.id == targetCrash.id) {
-                                    selectedCrashForDetail = selectedCrashForDetail?.copy(resolved = true, solution = trimmed)
+                            try {
+                                val res = adminRepo.setCrashLogResolved(targetCrash.id, true, trimmed)
+                                if (res.isSuccess) {
+                                    loadCrashes()
+                                    if (selectedCrashForDetail?.id == targetCrash.id) {
+                                        selectedCrashForDetail = selectedCrashForDetail?.copy(resolved = true, solution = trimmed)
+                                    }
+                                    Toast.makeText(context, "Incidencia resuelta y solución guardada", Toast.LENGTH_SHORT).show()
+                                    crashToResolve = null
+                                } else {
+                                    Toast.makeText(context, "Error al guardar solución", Toast.LENGTH_SHORT).show()
                                 }
-                                Toast.makeText(context, "Incidencia resuelta y solución guardada", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "Error al guardar solución", Toast.LENGTH_SHORT).show()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                            } finally {
+                                isResolvingCrash = false
                             }
-                            crashToResolve = null
                         }
                     },
-                    enabled = solutionInput.trim().isNotEmpty(),
+                    enabled = !isResolvingCrash && solutionInput.trim().isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF059669),
                         disabledContainerColor = Color(0xFF334155)
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Guardar y Resolver", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    if (isResolvingCrash) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                    } else {
+                        Text("Guardar y Resolver", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
                 }
             },
             dismissButton = {
-                TextButton(onClick = { crashToResolve = null }) {
+                TextButton(
+                    onClick = { crashToResolve = null },
+                    enabled = !isResolvingCrash
+                ) {
                     Text("Cancelar", color = Color(0xFF94A3B8))
                 }
             },

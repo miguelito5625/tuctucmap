@@ -131,6 +131,8 @@ fun AdminSubscriptionsTab(
     var requestToApprove by remember { mutableStateOf<AdminPaymentRequest?>(null) }
     var requestToReject by remember { mutableStateOf<AdminPaymentRequest?>(null) }
     var rejectionReasonText by remember { mutableStateOf("") }
+    var isApprovingPayment by remember { mutableStateOf(false) }
+    var isRejectingPayment by remember { mutableStateOf(false) }
 
     fun loadRequests() {
         scope.launch {
@@ -609,25 +611,40 @@ fun AdminSubscriptionsTab(
                 Button(
                     onClick = {
                         val id = req.id
-                        requestToApprove = null
+                        isApprovingPayment = true
                         scope.launch {
-                            val res = adminRepo.approvePaymentRequest(id)
-                            if (res.isSuccess) {
-                                Toast.makeText(context, "Solicitud aprobada y vigencia extendida", Toast.LENGTH_LONG).show()
-                                loadRequests()
-                                loadHistory()
-                            } else {
-                                Toast.makeText(context, "Error al aprobar solicitud", Toast.LENGTH_SHORT).show()
+                            try {
+                                val res = adminRepo.approvePaymentRequest(id)
+                                if (res.isSuccess) {
+                                    Toast.makeText(context, "Solicitud aprobada y vigencia extendida", Toast.LENGTH_LONG).show()
+                                    requestToApprove = null
+                                    loadRequests()
+                                    loadHistory()
+                                } else {
+                                    Toast.makeText(context, "Error al aprobar solicitud", Toast.LENGTH_SHORT).show()
+                                }
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                            } finally {
+                                isApprovingPayment = false
                             }
                         }
                     },
+                    enabled = !isApprovingPayment,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
                 ) {
-                    Text("Aprobar Ahora", color = Color.White, fontWeight = FontWeight.Bold)
+                    if (isApprovingPayment) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                    } else {
+                        Text("Aprobar Ahora", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
                 }
             },
             dismissButton = {
-                TextButton(onClick = { requestToApprove = null }) {
+                TextButton(
+                    onClick = { requestToApprove = null },
+                    enabled = !isApprovingPayment
+                ) {
                     Text("Cancelar", color = Color(0xFF94A3B8))
                 }
             },
@@ -638,7 +655,7 @@ fun AdminSubscriptionsTab(
     // ── Diálogo para Rechazar Solicitud ───────────────────────────────────────
     requestToReject?.let { req ->
         AlertDialog(
-            onDismissRequest = { requestToReject = null },
+            onDismissRequest = { if (!isRejectingPayment) requestToReject = null },
             title = { Text("Rechazar Solicitud", fontWeight = FontWeight.Bold, color = Color(0xFFEF4444)) },
             text = {
                 Column {
@@ -668,25 +685,40 @@ fun AdminSubscriptionsTab(
                     onClick = {
                         val id = req.id
                         val reason = rejectionReasonText.trim().ifBlank { "Comprobante rechazado por administración" }
-                        requestToReject = null
+                        isRejectingPayment = true
                         scope.launch {
-                            val res = adminRepo.rejectPaymentRequest(id, reason)
-                            if (res.isSuccess) {
-                                Toast.makeText(context, "Solicitud rechazada", Toast.LENGTH_SHORT).show()
-                                loadRequests()
-                                loadHistory()
-                            } else {
-                                Toast.makeText(context, "Error al rechazar solicitud", Toast.LENGTH_SHORT).show()
+                            try {
+                                val res = adminRepo.rejectPaymentRequest(id, reason)
+                                if (res.isSuccess) {
+                                    Toast.makeText(context, "Solicitud rechazada", Toast.LENGTH_SHORT).show()
+                                    requestToReject = null
+                                    loadRequests()
+                                    loadHistory()
+                                } else {
+                                    Toast.makeText(context, "Error al rechazar solicitud", Toast.LENGTH_SHORT).show()
+                                }
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                            } finally {
+                                isRejectingPayment = false
                             }
                         }
                     },
+                    enabled = !isRejectingPayment,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
                 ) {
-                    Text("Rechazar", color = Color.White, fontWeight = FontWeight.Bold)
+                    if (isRejectingPayment) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                    } else {
+                        Text("Rechazar", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
                 }
             },
             dismissButton = {
-                TextButton(onClick = { requestToReject = null }) {
+                TextButton(
+                    onClick = { requestToReject = null },
+                    enabled = !isRejectingPayment
+                ) {
                     Text("Cancelar", color = Color(0xFF94A3B8))
                 }
             },
