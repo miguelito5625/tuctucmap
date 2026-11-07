@@ -1,37 +1,37 @@
 # Graph Report - tuctucmap  (2026-11-07)
 
 ## Corpus Check
-- 140 files · ~157,989 words
+- 134 files · ~136,313 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1353 nodes · 2286 edges · 105 communities (80 shown, 25 thin omitted)
+- 1230 nodes · 2158 edges · 110 communities (81 shown, 29 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 22 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4aa6b544`
+- Built from commit: `34c9e8c6`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - SupabaseService
 - @supabase/supabase-js
-- 💰 Reporte de Costos Operativos y Rentabilidad en Producción: TucTuc Map
+- 3. Escenarios y Pruebas Ejecutadas
 - tuctucMapDashboard
 - Screen
 - LocationTrackingService
-- Informe Técnico y Financiero: Análisis de Costos Cloud (Supabase vs. Firebase) y Rentabilidad de TucTuc Map
+- supabase.service.ts
 - Política de Privacidad y Deslinde de Responsabilidad de TucTuc Map
 - DriversComponent
 - Vistas y Navegación (Jetpack Compose)
 - dependencies
 - devDependencies
-- 2.1 Problemas Comprobados (Evidencia en Código)
+- DriverSubscriptionScreen.kt
 - db_config.js
-- DataSnapshot
+- SupabaseRepository.kt
 - SubscriptionsComponent
-- login.component.ts
+- LoginComponent
 - SecurePrefs
 - SupabaseRepository
 - db.sql
@@ -46,7 +46,7 @@
 - Skill: Android App (TucTuc Map)
 - TucTucMap Dashboard — Plan de Implementación
 - ShellComponent
-- supabase.service.ts
+- drivers.component.ts
 - AppNavigation
 - TucTucMap Dashboard — Tasks
 - TuctucMapDashboard
@@ -57,7 +57,7 @@
 - 2. Protocolo de Ejecución en 6 Pasos
 - CrashLogsComponent
 - Skill: Angular Dashboard (TucTuc Map)
-- Intent
+- DriverTripHistoryScreen.kt
 - AdminRepository
 - Contexto del Proyecto: TucTuc Map (Monorepo)
 - gradlew
@@ -69,7 +69,7 @@
 - Result
 - Guía Regulatoria, Fiscal (SAT) y Ruta de Formalización — TucTuc Map
 - workflows/graphify.md
-- Color.kt
+- GoogleSignInButton
 - scripts
 - AdminDriversTab.kt
 - tuctucMapDashboard/package.json
@@ -77,20 +77,20 @@
 - 2. Recomendaciones Estratégicas y Técnicas (Contextualizadas para TucTuc Map)
 - AdminSubscriptionsTab.kt
 - shell.component.ts
-- 2. Errores Funcionales y Bugs Detectados
+- AdminMainScreen
 - rxjs
 - tslib
+- DriverReportsScreen.kt
 - parseIsoTimestamp
-- 2. Vulnerabilidades Identificadas y Remediación
-- AppDrawer.kt
+- PassengerDrawerSheet
 - 2. El Flujo de Trabajo en 3 Fases (El Ciclo Consultivo)
-- Auditoría Funcional Completa — TucTuc Map (App Android)
+- AppDrawer.kt
 - @angular/cdk
 - AdminTripsScreen.kt
 - GoogleAuthCancellationException
 - MainActivity.kt
 - public.app_crash_logs
-- Flow
+- .saveTripRecord
 - AdminPassengersScreen.kt
 - @angular/platform-browser
 - AdminTripPeriodFilter
@@ -101,26 +101,31 @@
 - public.app_config
 - public.subscription_payment_requests
 - public.trips
-- SupabaseRepository.kt
+- DataSnapshot
 - public.app_crash_logs
 - SelectableDates
 - @angular/core
 - DriverLocation
 - @angular/common
 - SettingsScreen.kt
-- DriverPendingScreen.kt
-- DriverReportsPeriodFilter
+- Color.kt
+- DriverDrawerItem
+- PassengerDestinationPreferences
+- DriverFarePreferences
+- DriverHomeScreen.kt
+- AdminRepository.kt
+- SubscriptionHistory
 
 ## God Nodes (most connected - your core abstractions)
-1. `SupabaseRepository` - 120 edges
+1. `SupabaseRepository` - 122 edges
 2. `SupabaseService` - 55 edges
 3. `AdminRepository` - 43 edges
-4. `LocationTrackingService` - 29 edges
+4. `LocationTrackingService` - 36 edges
 5. `AppNavigation()` - 29 edges
-6. `Screen` - 25 edges
-7. `DriversComponent` - 24 edges
-8. `SecurePrefs` - 24 edges
-9. `PassengerMapScreen()` - 16 edges
+6. `SecurePrefs` - 25 edges
+7. `Screen` - 25 edges
+8. `DriversComponent` - 24 edges
+9. `PassengerMapScreen()` - 15 edges
 10. `Driver` - 14 edges
 
 ## Surprising Connections (you probably didn't know these)
@@ -138,35 +143,35 @@
 ## Import Cycles
 - None detected.
 
-## Communities (105 total, 25 thin omitted)
+## Communities (110 total, 29 thin omitted)
 
 ### Community 0 - "SupabaseService"
-Cohesion: 0.08
-Nodes (3): Injectable, SubscriptionHistory, SupabaseService
+Cohesion: 0.09
+Nodes (3): Injectable, AppConfig, SupabaseService
 
-### Community 2 - "💰 Reporte de Costos Operativos y Rentabilidad en Producción: TucTuc Map"
-Cohesion: 0.10
-Nodes (19): 1. Resumen Ejecutivo, 2.1. Parámetros de Usuarios y Operación, 2.2. Parámetros Reales de Código (`LocationTrackingService.kt` y `SupabaseRepository.kt`), 2. Supuestos Técnicos y Operativos Utilizados, 3.1. Consumo Mensual en Firebase Realtime Database (Telemetría + Despacho `/trips`), 3.2. Consumo Mensual en Supabase (PostgreSQL + Auth + Realtime), 3. Estimación Técnica de Consumo de Infraestructura (50 Conductores / 200 Pasajeros), 4. Desglose Completo de Costos de Producción (USD y Quetzales) (+11 more)
+### Community 2 - "3. Escenarios y Pruebas Ejecutadas"
+Cohesion: 0.08
+Nodes (25): 1. Resumen Ejecutivo, 2. Dispositivos y Credenciales Utilizadas, 3. Escenarios y Pruebas Ejecutadas, 4. Cuadro Comparativo: Resultados Esperados vs. Obtenidos, 5. Errores Encontrados y Problemas de Sincronización, 6. Mejoras Recomendadas Clasificadas por Prioridad, 7. Conclusión de la Auditoría, Hallazgo 1: Falta de botón explícito de Cancelación para el Pasajero tras la Aceptación (+17 more)
 
 ### Community 3 - "tuctucMapDashboard"
 Cohesion: 0.05
-Nodes (40): src/material-theme.scss, src/styles.css, build, serve, test, builder, configurations, defaultConfiguration (+32 more)
+Nodes (39): src/material-theme.scss, src/styles.css, build, serve, test, builder, configurations, defaultConfiguration (+31 more)
 
 ### Community 4 - "Screen"
 Cohesion: 0.10
 Nodes (21): AdminCrashLogs, AdminHome, AdminPassengers, AdminTrips, DriverHome, DriverLogin, DriverPending, DriverProfile (+13 more)
 
 ### Community 5 - "LocationTrackingService"
-Cohesion: 0.11
-Nodes (11): FusedLocationProviderClient, IBinder, Job, Location, LocationResult, Notification, Service, TextToSpeech (+3 more)
+Cohesion: 0.12
+Nodes (13): FusedLocationProviderClient, IBinder, Job, Location, LocationResult, Notification, Service, TextToSpeech (+5 more)
 
-### Community 6 - "Informe Técnico y Financiero: Análisis de Costos Cloud (Supabase vs. Firebase) y Rentabilidad de TucTuc Map"
-Cohesion: 0.06
-Nodes (35): 10. Fuentes Oficiales Consultadas, 1. Resumen Ejecutivo, 2.1 Base de Datos Relacional y Lógica deServidor (`databaseTuctucApp/db.sql`), 2.2 Telemetría GPS en Tiempo Real y Despacho de Viajes (`LocationTrackingService.kt` y `SupabaseRepository.kt`), 2.3 Autenticación (`SupabaseRepository.kt`), 2.4 Almacenamiento de Archivos (Cloud Storage), 2.5 Notificaciones y Alertas de Viaje (`LocationTrackingService.kt`, líneas 247–310), 2.6 Mapas y Ruteo Vial (`MapTileUtils.kt`, `OsrmRoutingService.kt`, `fleet-map.component.ts`) (+27 more)
+### Community 6 - "supabase.service.ts"
+Cohesion: 0.29
+Nodes (6): authGuard(), CrashLog, FinancialKPIs, LiveDriverLocation, PassengerProfile, RenewalRequestStatus
 
 ### Community 7 - "Política de Privacidad y Deslinde de Responsabilidad de TucTuc Map"
-Cohesion: 0.06
-Nodes (32): 1. Resumen de Ajustes Técnicos Realizados en el Proyecto, 2. Datos del Almacén de Claves de Producción (*Keystore*), 3. Generación del Paquete de Producción (`.aab`), 4.1 Política de Privacidad, 4.2 Acceso a la Aplicación, 4.3 Anuncios, 4.4 Clasificación de Contenido, 4.5 Público Objetivo y Contenido (+24 more)
+Cohesion: 0.11
+Nodes (17): 10. Contacto, 1. Naturaleza del Servicio (Intermediación Tecnológica), 2.1 Consentimiento Voluntario, 2.2 Veracidad y Legalidad de la Información, 2.3 Datos Compartidos Directamente entre Usuarios, 2. Responsabilidad Exclusiva del Usuario sobre los Datos Compartidos, 3. Deslinde y Exclusión Total de Responsabilidad del Propietario, 4.1 Información de Registro y Perfil (+9 more)
 
 ### Community 8 - "DriversComponent"
 Cohesion: 0.11
@@ -184,17 +189,17 @@ Nodes (15): @angular/animations, @angular/compiler, @angular/forms, @angular/mat
 Cohesion: 0.13
 Nodes (15): @angular/build, @angular/cli, @angular/compiler-cli, jsdom, prettier, devDependencies, @angular/build, @angular/cli (+7 more)
 
-### Community 12 - "2.1 Problemas Comprobados (Evidencia en Código)"
-Cohesion: 0.05
-Nodes (36): 1.1 Diagnóstico Ejecutivo, 1.2 Calificación por Dimensión Técnica, 1. Resumen del Estado General de Optimización, 2.1 Problemas Comprobados (Evidencia en Código), 2.2 Mejoras Potenciales (Preventivas y Arquitectónicas), 2. Problemas Encontrados, Archivos Afectados y Evidencias, 3.1 Inventario Completo de Recursos Gráficos, 3.2 Resumen Cuantitativo del Impacto en Recursos Gráficos (+28 more)
+### Community 12 - "DriverSubscriptionScreen.kt"
+Cohesion: 0.31
+Nodes (7): calculateRemainingDays(), Driver, ServerClock, SubscriptionRenewalRequest, DriverSubscriptionScreen(), Quadruple, RenewalRequestItem()
 
 ### Community 13 - "db_config.js"
 Cohesion: 0.07
 Nodes (22): { Client }, { dbConfig }, { Client }, { dbConfig }, fs, path, { Client }, { dbConfig } (+14 more)
 
-### Community 14 - "DataSnapshot"
-Cohesion: 0.12
-Nodes (8): DatabaseError, DataSnapshot, ValueEventListener, ValueEventListener, com, ValueEventListener, ValueEventListener, ValueEventListener
+### Community 14 - "SupabaseRepository.kt"
+Cohesion: 0.11
+Nodes (12): DatabaseError, MutableData, AcceptTripResult, AlreadyTaken, DriverGoogleLoginResult, Error, NeedsProfile, Success (+4 more)
 
 ### Community 15 - "SubscriptionsComponent"
 Cohesion: 0.15
@@ -205,8 +210,8 @@ Cohesion: 0.11
 Nodes (13): Application, SecretKey, SessionManager, Thread, CrashReportDto, CrashReporterManager, Context, TucTucCrashHandler (+5 more)
 
 ### Community 18 - "SupabaseRepository"
-Cohesion: 0.16
-Nodes (7): kotlinx, CompletedTripDto, RoutePoint, SupabaseRepository, TripInfo, TripSummaryDto, UpdatePassengerProfileDto
+Cohesion: 0.11
+Nodes (8): kotlinx, DriverTodaySummary, AppConfig, Driver, SupabaseRepository, TripSummaryDto, UpdateDriverProfileDto, UpdatePassengerProfileDto
 
 ### Community 19 - "db.sql"
 Cohesion: 0.12
@@ -225,7 +230,7 @@ Cohesion: 0.18
 Nodes (10): 1. Modelo SaaS: Suscripción para Conductores (Recomendado), 2. Publicidad Geolocalizada e Hiperlocal (Pasajeros), 3. Modelo B2B: Portal para Sindicatos y Asociaciones de Tuc Tucs, 4. Funciones Premium de Pasajeros (Microtransacciones), Mecánica:, Mecánica:, Mecánica:, Mecánica: (+2 more)
 
 ### Community 23 - "FleetMapComponent"
-Cohesion: 0.26
+Cohesion: 0.23
 Nodes (3): FleetMapComponent, Component, ViewChild
 
 ### Community 24 - "3. Protocolo de Ejecución Paso a Paso"
@@ -237,7 +242,7 @@ Cohesion: 0.20
 Nodes (9): 1. Misión y Cuándo Activar Este Skill, 3. Plantillas de Comunicación para el Agente, 4. Ejemplos de Aplicación en TucTuc Map, 5. Reglas Mandatorias de Salida, Ejemplo 1: Solicitud imprecisa en la App Móvil, Ejemplo 2: Solicitud en el Dashboard, Plantilla A: Cuando la solicitud es ambigua o admite varias alternativas, Plantilla B: Cuando la solicitud es clara pero se detecta una mejora técnica o de UX (+1 more)
 
 ### Community 26 - "TripsComponent"
-Cohesion: 0.24
+Cohesion: 0.27
 Nodes (3): TripsComponent, Component, ViewChild
 
 ### Community 27 - "2. Flujo de Ejecución Paso a Paso"
@@ -252,13 +257,13 @@ Nodes (10): 1. Stack Tecnológico & Dependencias, 2. Convenciones Críticas de U
 Cohesion: 0.25
 Nodes (7): Decisiones Técnicas, Estructura de Archivos a Crear/Modificar, Flujo de Datos, Módulos de Angular Material a Importar, Objetivo, TucTucMap Dashboard — Plan de Implementación, Verificación
 
-### Community 31 - "supabase.service.ts"
-Cohesion: 0.16
-Nodes (12): leaflet, authGuard(), AppConfig, FinancialKPIs, LiveDriverLocation, PassengerProfile, PaymentMethod, RenewalRequestStatus (+4 more)
+### Community 31 - "drivers.component.ts"
+Cohesion: 0.19
+Nodes (7): leaflet, allowedCommonJsDependencies, PaymentMethod, SubscriptionPlan, DriverHistoryDialogComponent, Component, sanitizeCsvCell()
 
 ### Community 32 - "AppNavigation"
-Cohesion: 0.29
-Nodes (8): AppNavigation(), DriverRouteToPassenger, Driver, resolveDriverScreen(), PassengerLoginScreen(), PassengerProfileScreen(), PassengerRegisterScreen(), PassengerTripHistoryScreen()
+Cohesion: 0.31
+Nodes (7): AppNavigation(), DriverRouteToPassenger, Driver, resolveDriverScreen(), PassengerProfileScreen(), PassengerRegisterScreen(), PassengerTripHistoryScreen()
 
 ### Community 33 - "TucTucMap Dashboard — Tasks"
 Cohesion: 0.25
@@ -277,7 +282,7 @@ Cohesion: 0.36
 Nodes (4): App, appConfig, routes, Component
 
 ### Community 38 - "AdminCrashLogsScreen.kt"
-Cohesion: 0.31
+Cohesion: 0.35
 Nodes (11): AdminCrashLog, AdminCrashLogsScreen(), AnalyticsBarChartCard(), AnalyticsDashboardView(), CleanCrashLogCard(), CrashDetailContent(), formatCrashDate(), KpiMiniCard() (+3 more)
 
 ### Community 39 - "2. Protocolo de Ejecución en 6 Pasos"
@@ -285,20 +290,20 @@ Cohesion: 0.18
 Nodes (11): 1. Activación del Skill, 2. Protocolo de Ejecución en 6 Pasos, 3. Ejemplo Práctico de Interacción, Clasificación Inicial:, Paso 1: Consultar Incidencias Pendientes en Supabase, Paso 2: Análisis y Diagnóstico de Causa Raíz, Paso 3: Presentar Resumen y Solicitar Confirmación (Obligatorio), Paso 4: Aplicar Cambios y Compilar (Tras Aprobación) (+3 more)
 
 ### Community 40 - "CrashLogsComponent"
-Cohesion: 0.27
-Nodes (4): CrashLog, CrashLogsComponent, Component, ViewChild
+Cohesion: 0.30
+Nodes (3): CrashLogsComponent, Component, ViewChild
 
 ### Community 41 - "Skill: Angular Dashboard (TucTuc Map)"
 Cohesion: 0.33
 Nodes (5): 1. Stack Tecnológico & Dependencias, 2. Autenticación, Secretos y Seguridad Administrativa (RLS & XSS), 3. Módulos y Funcionalidades Clave, 4. Verificación y Compilación Obligatoria, Skill: Angular Dashboard (TucTuc Map)
 
-### Community 42 - "Intent"
-Cohesion: 0.06
-Nodes (40): Activity, Intent, DriverFarePreferences, Context, AppConfig, calculateRemainingDays(), Driver, ServerClock (+32 more)
+### Community 42 - "DriverTripHistoryScreen.kt"
+Cohesion: 0.14
+Nodes (12): DriverHistoryPeriodFilter, CUSTOM_RANGE, TODAY, YESTERDAY, DriverTripCard(), DriverTripHistoryScreen(), SelectableDates, Context (+4 more)
 
 ### Community 43 - "AdminRepository"
-Cohesion: 0.15
-Nodes (8): StateFlow, AdminRepository, AppConfig, Flow, Result, PendingCountIdDto, TripDateBounds, UpdateAppConfigDto
+Cohesion: 0.17
+Nodes (6): AdminRepository, AppConfig, Result, PendingCountIdDto, TripDateBounds, UpdateAppConfigDto
 
 ### Community 44 - "Contexto del Proyecto: TucTuc Map (Monorepo)"
 Cohesion: 0.40
@@ -309,27 +314,27 @@ Cohesion: 0.83
 Nodes (3): gradlew script, die(), warn()
 
 ### Community 49 - "PassengerMapScreen.kt"
-Cohesion: 0.06
-Nodes (36): Animator, AnimatorListenerAdapter, Canvas, GeoPoint, IMyLocationProvider, MapView, MyLocationNewOverlay, org (+28 more)
+Cohesion: 0.07
+Nodes (35): Animator, AnimatorListenerAdapter, Canvas, GeoPoint, IMyLocationProvider, MapView, MyLocationNewOverlay, org (+27 more)
 
 ### Community 54 - "Result"
-Cohesion: 0.13
-Nodes (8): getOperationalCalendar(), CompletedTripResponseDto, DriverTodaySummary, Exception, Result, PaymentRequestInsertDto, RoleMismatchException, UpdateDriverProfileDto
+Cohesion: 0.16
+Nodes (6): getOperationalCalendar(), CompletedTripResponseDto, Exception, Result, PaymentRequestInsertDto, RoleMismatchException
 
 ### Community 55 - "Guía Regulatoria, Fiscal (SAT) y Ruta de Formalización — TucTuc Map"
 Cohesion: 0.22
 Nodes (8): 1. La Gran Ventaja del Modelo de Negocio de TucTuc Map, 2. El Semáforo de Crecimiento: Métricas y Puntos de Inflexión, 3. Análisis de Frentes Regulatorios, 4. Plan de Acción Recomendado, A. Superintendencia de Administración Tributaria (SAT) e Impuestos, B. Municipalidades y Policía Municipal de Tránsito (PMT), C. Términos y Condiciones Contractuales (Desde el Lanzamiento Público), Guía Regulatoria, Fiscal (SAT) y Ruta de Formalización — TucTuc Map
 
-### Community 62 - "Color.kt"
-Cohesion: 0.25
-Nodes (6): Brush, CompleteDriverGoogleRegistrationDialog(), GoogleSignInButton(), Modifier, DriverLoginScreen(), DriverRegisterScreen()
+### Community 62 - "GoogleSignInButton"
+Cohesion: 0.35
+Nodes (6): CompleteDriverGoogleRegistrationDialog(), GoogleSignInButton(), Modifier, DriverLoginScreen(), DriverRegisterScreen(), PassengerLoginScreen()
 
 ### Community 63 - "scripts"
 Cohesion: 0.33
 Nodes (6): scripts, build, ng, start, test, watch
 
 ### Community 64 - "AdminDriversTab.kt"
-Cohesion: 0.28
+Cohesion: 0.31
 Nodes (12): AdminDriver, AdminFinancialStats, AdminDriverCard(), AdminDriversTab(), filterChipColors(), KpiCard(), AppConfig, Color (+4 more)
 
 ### Community 65 - "tuctucMapDashboard/package.json"
@@ -345,36 +350,36 @@ Cohesion: 0.12
 Nodes (16): 1.1 Diagnóstico de Estabilidad Técnica y Rendimiento (Findings), 1.2 Oportunidades de Mejora Identificadas por los Evaluadores, 1. Resumen Ejecutivo del Reporte de Pruebas, 2.1 Implementación de Onboarding / Walkthrough Dinámico por Rol, 2.2 Botón "Compartir App" (Viralidad Hiperlocal vía WhatsApp), 2.3 Botón "Calificar la Aplicación" e In-App Review, 2.4 Renovación Gráfica de la Ficha de Google Play (ASO & Capturas), 2.5 Canal de Soporte y Sugerencias In-App (+8 more)
 
 ### Community 68 - "AdminSubscriptionsTab.kt"
-Cohesion: 0.12
-Nodes (20): AdminPaymentRequest, AdminSubscriptionHistory, AdminSubscriptionsTab(), exportAndShareCsv(), filterChipColors(), formatEpochDate(), getSubscriptionPeriodRangeIso(), Context (+12 more)
+Cohesion: 0.10
+Nodes (27): AdminPaymentRequest, AdminSubscriptionHistory, AppConfig, AdminBusinessConfigTab(), configFieldColors(), ConfigSectionTitle(), Context, Modifier (+19 more)
 
 ### Community 69 - "shell.component.ts"
 Cohesion: 0.24
 Nodes (4): ChangeNameDialogComponent, Component, ChangePasswordDialogComponent, Component
 
-### Community 70 - "2. Errores Funcionales y Bugs Detectados"
-Cohesion: 0.14
-Nodes (13): 1. Resumen Ejecutivo, 2. Errores Funcionales y Bugs Detectados, 3. Evaluación de Rendimiento por Subsistema, 4. Hoja de Ruta de Optimización Recomendada, 🔴 [BUG-01] Tormenta de Consultas `O(N)` por Canales Realtime sin Filtro en `public.profiles`, 🔴 [BUG-02] Viajes Broadcast de Pasajeros Invitados Expirados Nunca se Eliminan de Firebase RTDB, 🟠 [BUG-03] Descarga Innecesaria de Polilíneas `route_points` (JSONB) en `getDriverTripHistory()`, 🟠 [BUG-04] Escaneo Completo de Tablas y Truncamiento Silencioso a 1,000 Filas en `AdminRepository` (+5 more)
+### Community 70 - "AdminMainScreen"
+Cohesion: 0.20
+Nodes (10): AdminDrawerItem, CONFIG, CRASH_LOGS, DRIVERS, FLEET_MAP, PASSENGERS, SUBSCRIPTIONS, TRIPS (+2 more)
 
-### Community 73 - "parseIsoTimestamp"
-Cohesion: 0.23
-Nodes (10): parseIsoTimestamp(), DriverProfileScreen(), formatExpiryDate(), DailyReportGroup, DriverReportsScreen(), SelectableDates, DriverWeeklyBarChart(), Modifier (+2 more)
+### Community 73 - "DriverReportsScreen.kt"
+Cohesion: 0.20
+Nodes (11): DailyReportGroup, DriverReportsPeriodFilter, CUSTOM_RANGE, TODAY, YESTERDAY, DriverReportsScreen(), SelectableDates, DriverWeeklyBarChart() (+3 more)
 
-### Community 74 - "2. Vulnerabilidades Identificadas y Remediación"
-Cohesion: 0.14
-Nodes (13): 1. Resumen Ejecutivo, 2. Vulnerabilidades Identificadas y Remediación, 3. Controles de Seguridad Positivos Ya Implementados ✅, 4. Plan Priorizado de Remediación de Seguridad, 🛡️ Reporte de Auditoría de Seguridad: TucTuc Map (Android + Backend), 🔴 [SEC-01] CRÍTICA: Falta de Autenticación en Firebase Realtime Database (`driver_locations` y `trips`), 🟠 [SEC-02] ALTA: Exposición Masiva de Datos Personales (PII) en `public.profiles` por Política RLS Permisiva, 🟠 [SEC-03] ALTA: Falsificación de Historial de Viajes en `public.trips` y Manipulación de Montos en Solicitudes de Pago (+5 more)
+### Community 74 - "parseIsoTimestamp"
+Cohesion: 0.36
+Nodes (5): parseIsoTimestamp(), DriverProfileScreen(), formatExpiryDate(), AppShareUtils, Context
 
-### Community 75 - "AppDrawer.kt"
-Cohesion: 0.08
-Nodes (35): Passenger, AdminDrawerItem, CONFIG, CRASH_LOGS, DRIVERS, FLEET_MAP, PASSENGERS, SUBSCRIPTIONS (+27 more)
+### Community 75 - "PassengerDrawerSheet"
+Cohesion: 0.24
+Nodes (9): Passenger, PassengerDrawerItem, HISTORY, HOME, INFORMATION, MAP, PROFILE, PassengerDrawerSheet() (+1 more)
 
 ### Community 76 - "2. El Flujo de Trabajo en 3 Fases (El Ciclo Consultivo)"
 Cohesion: 0.33
 Nodes (6): 2. El Flujo de Trabajo en 3 Fases (El Ciclo Consultivo), Fase 1: Reformulación y Enriquecimiento Técnico (Prompt Engineering), Fase 2: Detección de Vacíos y Consulta de Dudas Críticas, Fase 3: Recomendación Proactiva de la Mejor Opción, ¿Qué aspectos consultar activamente?, Regla de Interrogación:
 
-### Community 77 - "Auditoría Funcional Completa — TucTuc Map (App Android)"
-Cohesion: 0.09
-Nodes (21): 1. Resumen Ejecutivo, 2.1. Autenticación, Registro y Barreras de Seguridad (Roles), 2.2. Flujo Funcional del Pasajero (`PassengerMapScreen`), 2.3. Flujo Funcional del Conductor (`DriverHomeScreen`), 2.4. Módulo Administrativo Móvil (`AdminMainScreen`), 2. Matriz de Cobertura y Resultados de Pruebas, 3. Detalle de Hallazgos y Clasificación por Prioridad, 4.1. Pruebas de Desconexión de Red (Modo Offline) (+13 more)
+### Community 77 - "AppDrawer.kt"
+Cohesion: 0.47
+Nodes (8): AdminDrawerSheet(), DrawerEasterEggVersionText(), DrawerNavigationItem(), DriverDrawerSheet(), formatDate(), Driver, ImageVector, Modifier
 
 ### Community 79 - "AdminTripsScreen.kt"
 Cohesion: 0.33
@@ -385,12 +390,12 @@ Cohesion: 0.33
 Nodes (6): GoogleAuthCancellationException, GoogleAuthHelper, GoogleUserData, Context, Exception, Result
 
 ### Community 81 - "MainActivity.kt"
-Cohesion: 0.29
-Nodes (9): Bundle, ComponentActivity, SessionStatus, MainActivity, AnimatedAppName(), AnimatedSplashScreen(), Modifier, SmokePuffDef (+1 more)
+Cohesion: 0.15
+Nodes (13): Activity, Bundle, ComponentActivity, SessionStatus, Intent, MainActivity, AnimatedAppName(), AnimatedSplashScreen() (+5 more)
 
-### Community 83 - "Flow"
-Cohesion: 0.29
-Nodes (3): AppConfig, Driver, Flow
+### Community 83 - ".saveTripRecord"
+Cohesion: 0.22
+Nodes (4): CompletedTripDto, RoutePoint, ValueEventListener, TripInfo
 
 ### Community 84 - "AdminPassengersScreen.kt"
 Cohesion: 0.43
@@ -404,41 +409,45 @@ Nodes (7): AdminTripPeriodFilter, CUSTOM, LAST_3_DAYS, LAST_5_DAYS, LAST_7_DAYS,
 Cohesion: 0.33
 Nodes (5): AdminFinancialSummaryDto, ApprovePaymentRequestRpcParams, DeleteUserByAdminRpcParams, RejectPaymentRequestRpcParams, UserRoleDto
 
-### Community 95 - "SupabaseRepository.kt"
-Cohesion: 0.24
-Nodes (8): MutableData, AcceptTripResult, AlreadyTaken, DriverGoogleLoginResult, Error, NeedsProfile, Success, Transaction
+### Community 100 - "DriverLocation"
+Cohesion: 0.20
+Nodes (3): DriverLocation, Flow, ValueEventListener
 
 ### Community 102 - "SettingsScreen.kt"
 Cohesion: 0.70
 Nodes (4): Context, Modifier, openWhatsAppSupport(), SettingsScreen()
 
-### Community 103 - "DriverPendingScreen.kt"
-Cohesion: 0.83
-Nodes (3): DriverPendingScreen(), Context, openAdminWhatsApp()
+### Community 103 - "Color.kt"
+Cohesion: 0.24
+Nodes (5): Brush, DriverPendingScreen(), Context, openAdminWhatsApp(), DriverSubscriptionExpiredScreen()
 
-### Community 104 - "DriverReportsPeriodFilter"
-Cohesion: 0.50
-Nodes (4): DriverReportsPeriodFilter, CUSTOM_RANGE, TODAY, YESTERDAY
+### Community 104 - "DriverDrawerItem"
+Cohesion: 0.25
+Nodes (8): DriverDrawerItem, HISTORY, HOME, INFORMATION, MAP, PROFILE, REPORTS, SUBSCRIPTIONS
+
+### Community 107 - "DriverHomeScreen.kt"
+Cohesion: 0.60
+Nodes (4): DriverHomeScreen(), Context, Driver, toggleService()
 
 ## Knowledge Gaps
-- **409 isolated node(s):** `{ Client }`, `{ dbConfig }`, `{ Client }`, `{ dbConfig }`, `fs` (+404 more)
+- **314 isolated node(s):** `{ Client }`, `{ dbConfig }`, `{ Client }`, `{ dbConfig }`, `fs` (+309 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **25 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **29 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `SupabaseRepository` connect `SupabaseRepository` to `LocationTrackingService`, `DataSnapshot`, `AppNavigation`, `Intent`, `AdminRepository`, `PassengerMapScreen.kt`, `Result`, `Color.kt`, `AdminDriversTab.kt`, `AdminSubscriptionsTab.kt`, `parseIsoTimestamp`, `AppDrawer.kt`, `AdminTripsScreen.kt`, `GoogleAuthCancellationException`, `MainActivity.kt`, `Flow`, `SupabaseRepository.kt`, `SettingsScreen.kt`, `DriverPendingScreen.kt`?**
-  _High betweenness centrality (0.092) - this node is a cross-community bridge._
-- **Why does `SecurePrefs` connect `SecurePrefs` to `MainActivity.kt`, `Intent`, `Color.kt`?**
-  _High betweenness centrality (0.031) - this node is a cross-community bridge._
-- **Why does `Screen` connect `Screen` to `AppNavigation`, `MainActivity.kt`?**
-  _High betweenness centrality (0.019) - this node is a cross-community bridge._
+- **Why does `SupabaseRepository` connect `SupabaseRepository` to `LocationTrackingService`, `DriverSubscriptionScreen.kt`, `SupabaseRepository.kt`, `AppNavigation`, `DriverTripHistoryScreen.kt`, `AdminRepository`, `PassengerMapScreen.kt`, `Result`, `GoogleSignInButton`, `AdminDriversTab.kt`, `AdminSubscriptionsTab.kt`, `AdminMainScreen`, `DriverReportsScreen.kt`, `parseIsoTimestamp`, `PassengerDrawerSheet`, `AdminTripsScreen.kt`, `GoogleAuthCancellationException`, `MainActivity.kt`, `.saveTripRecord`, `DataSnapshot`, `DriverLocation`, `SettingsScreen.kt`, `Color.kt`, `DriverHomeScreen.kt`?**
+  _High betweenness centrality (0.124) - this node is a cross-community bridge._
+- **Why does `SecurePrefs` connect `SecurePrefs` to `MainActivity.kt`, `LocationTrackingService`, `Color.kt`?**
+  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+- **Why does `AdminRepository` connect `AdminRepository` to `AdminDriversTab.kt`, `AdminSubscriptionsTab.kt`, `AdminCrashLogsScreen.kt`, `AdminMainScreen`, `AdminRepository.kt`, `AdminTripsScreen.kt`, `SupabaseRepository`, `AdminPassengersScreen.kt`?**
+  _High betweenness centrality (0.025) - this node is a cross-community bridge._
+- **Are the 9 inferred relationships involving `AppNavigation()` (e.g. with `DriverHomeScreen()` and `DriverLoginScreen()`) actually correct?**
+  _`AppNavigation()` has 9 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `{ Client }`, `{ dbConfig }`, `{ Client }` to the rest of the system?**
-  _409 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _314 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `SupabaseService` be split into smaller, more focused modules?**
-  _Cohesion score 0.08408408408408409 - nodes in this community are weakly interconnected._
-- **Should `💰 Reporte de Costos Operativos y Rentabilidad en Producción: TucTuc Map` be split into smaller, more focused modules?**
-  _Cohesion score 0.1 - nodes in this community are weakly interconnected._
-- **Should `tuctucMapDashboard` be split into smaller, more focused modules?**
-  _Cohesion score 0.05121951219512195 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08739495798319327 - nodes in this community are weakly interconnected._
+- **Should `3. Escenarios y Pruebas Ejecutadas` be split into smaller, more focused modules?**
+  _Cohesion score 0.07692307692307693 - nodes in this community are weakly interconnected._

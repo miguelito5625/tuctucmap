@@ -1944,8 +1944,10 @@ fun DriverHomeScreen(
                                                     // Solicitud general (broadcast): solo ignorar localmente en este teléfono
                                                     // sin cancelar el viaje para el pasajero ni para los demás conductores.
                                                     LocationTrackingService.dismissBroadcastTrip(trip.tripId)
+                                                    LocationTrackingService.cancelTripNotification(context, trip.tripId)
                                                 } else {
                                                     // Solicitud directa a este conductor específico
+                                                    LocationTrackingService.cancelTripNotification(context, trip.tripId)
                                                     coroutineScope.launch {
                                                         kotlinx.coroutines.delay(200)
                                                         repository.saveTripRecord(trip, "rejected")
@@ -2060,6 +2062,7 @@ fun DriverHomeScreen(
                                                                 acceptedTrip
                                                             )
                                                             LocationTrackingService.stopSpeaking()
+                                                            LocationTrackingService.clearAllTripNotifications(context)
                                                             Toast.makeText(
                                                                 context,
                                                                 "¡Viaje aceptado! En camino a recoger al pasajero.",
@@ -2070,6 +2073,7 @@ fun DriverHomeScreen(
 
                                                         is SupabaseRepository.AcceptTripResult.AlreadyTaken -> {
                                                             isVisible = false
+                                                            LocationTrackingService.cancelTripNotification(context, trip.tripId)
                                                             Toast.makeText(
                                                                 context,
                                                                 "¡Este viaje ya fue tomado por otro tuctuc!",

@@ -2,6 +2,7 @@ package com.example.tuctucmap
 
 import android.app.ActivityManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.os.StatFs
@@ -19,6 +20,7 @@ import com.example.tuctucmap.data.model.ServerClock
 import com.example.tuctucmap.data.model.parseIsoTimestamp
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.data.supabase
+import com.example.tuctucmap.service.LocationTrackingService
 import com.example.tuctucmap.ui.AppNavigation
 import com.example.tuctucmap.ui.Screen
 import com.example.tuctucmap.ui.screens.AnimatedSplashScreen
@@ -41,6 +43,7 @@ class MainActivity : ComponentActivity() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        handleTripNotificationIntent(intent)
 
         val osmConfig = Configuration.getInstance()
         val currentUserAgent = "TucTucMap/1.0 (Android; app.tuctucmap.gt)"
@@ -240,6 +243,22 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleTripNotificationIntent(intent)
+    }
+
+    private fun handleTripNotificationIntent(incomingIntent: Intent?) {
+        if (incomingIntent == null) return
+        if (incomingIntent.action == LocationTrackingService.ACTION_ACCEPT_TRIP) {
+            val tripId = incomingIntent.getStringExtra(LocationTrackingService.EXTRA_TRIP_ID)
+            if (!tripId.isNullOrBlank()) {
+                LocationTrackingService.acceptPendingTrip(context = this, tripId = tripId)
             }
         }
     }
