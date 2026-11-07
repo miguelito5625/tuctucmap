@@ -536,7 +536,8 @@ class SupabaseRepository {
                 "name" to nombre.trim(),
                 "phone" to telefono.trim(),
                 "role" to "driver",
-                "plate_number" to placas.trim().uppercase()
+                "plate_number" to placas.trim().uppercase(),
+                "approval_status" to "pendiente"
             )
             if (numeroUnidad.isNotBlank()) {
                 profile["unit_number"] = numeroUnidad.trim()

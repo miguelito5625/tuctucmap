@@ -212,15 +212,9 @@ BEGIN
         ) INTO plate_already_used;
       END IF;
 
-      IF plate_already_used THEN
-        -- Si la placa ya fue registrada antes, no otorgar otros 7 días gratis automáticos
-        NEW.approval_status := 'pendiente';
-        NEW.subscription_end_date := NOW();
-      ELSE
-        -- Calcular los 7 días de prueba estrictamente con el reloj del servidor PostgreSQL
-        NEW.approval_status := 'aprobado';
-        NEW.subscription_end_date := NOW() + INTERVAL '7 days';
-      END IF;
+      -- Los nuevos conductores siempre inician en estado 'pendiente' y sin suscripción hasta ser aprobados por el admin
+      NEW.approval_status := 'pendiente';
+      NEW.subscription_end_date := NULL;
     ELSE
       NEW.approval_status := NULL;
       NEW.subscription_end_date := NULL;

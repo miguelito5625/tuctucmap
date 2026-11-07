@@ -51,12 +51,12 @@ sealed class Screen {
 }
 
 // Mapea el perfil del conductor a la pantalla correspondiente
-fun resolveDriverScreen(driver: Driver?, defaultIfNull: Screen = Screen.DriverLogin): Screen {
+fun resolveDriverScreen(driver: Driver?, defaultIfNull: Screen = Screen.DriverPending): Screen {
     if (driver == null) return defaultIfNull
     return when {
+        driver.estadoAprobacion != "aprobado" -> Screen.DriverPending // "pendiente", "rechazado", etc.
         driver.isSubscriptionExpired -> Screen.DriverSubscriptionExpired
-        driver.estadoAprobacion == "aprobado" -> Screen.DriverHome
-        else -> Screen.DriverPending // "pendiente", "rechazado", etc.
+        else -> Screen.DriverHome
     }
 }
 
@@ -257,9 +257,9 @@ fun AppNavigation(
                                         driver.estadoAprobacion,
                                         driver.subscriptionEndDate
                                     )
-                                    navigate(resolveDriverScreen(driver, defaultIfNull = Screen.DriverHome), clearStack = true)
+                                    navigate(resolveDriverScreen(driver, defaultIfNull = Screen.DriverPending), clearStack = true)
                                 } else {
-                                    navigate(Screen.DriverHome, clearStack = true)
+                                    navigate(Screen.DriverPending, clearStack = true)
                                 }
                             }
                         }
@@ -293,9 +293,9 @@ fun AppNavigation(
                                 driver.estadoAprobacion,
                                 driver.subscriptionEndDate
                             )
-                            navigate(resolveDriverScreen(driver, defaultIfNull = Screen.DriverHome), clearStack = true)
+                            navigate(resolveDriverScreen(driver, defaultIfNull = Screen.DriverPending), clearStack = true)
                         } else {
-                            navigate(Screen.DriverHome, clearStack = true)
+                            navigate(Screen.DriverPending, clearStack = true)
                         }
                     }
                 },

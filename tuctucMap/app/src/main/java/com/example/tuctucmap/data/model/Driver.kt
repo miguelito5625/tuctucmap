@@ -105,20 +105,27 @@ data class SubscriptionRenewalRequest(
 @Serializable
 data class Driver(
     val id: String = "",
-    val email: String = "",
+    val email: String? = null,
     @SerialName("name")
-    val nombre: String = "",
+    private val rawNombre: String? = null,
     @SerialName("phone")
-    val telefono: String = "",
+    private val rawTelefono: String? = null,
     @SerialName("plate_number")
-    val placas: String = "",
+    private val rawPlacas: String? = null,
     @SerialName("unit_number")
-    val numeroUnidad: String = "",
+    private val rawNumeroUnidad: String? = null,
     @SerialName("approval_status")
-    val estadoAprobacion: String = "pendiente",
+    private val rawEstadoAprobacion: String? = null,
     @SerialName("subscription_end_date")
-    val fechaVencimientoSuscripcion: String = ""
+    private val rawFechaVencimientoSuscripcion: String? = null
 ) {
+    val nombre: String get() = rawNombre?.trim() ?: ""
+    val telefono: String get() = rawTelefono?.trim() ?: ""
+    val placas: String get() = rawPlacas?.trim() ?: ""
+    val numeroUnidad: String get() = rawNumeroUnidad?.trim() ?: ""
+    val estadoAprobacion: String get() = rawEstadoAprobacion?.trim() ?: "pendiente"
+    val fechaVencimientoSuscripcion: String get() = rawFechaVencimientoSuscripcion?.trim() ?: ""
+
     // Alias de compatibilidad
     val uid: String get() = id
     val subscriptionEndDate: String get() = fechaVencimientoSuscripcion
@@ -137,14 +144,15 @@ data class Driver(
         get() = parseIsoTimestamp(fechaVencimientoSuscripcion)
 
     /**
-     * Determina si la suscripción está vencida usando la hora sincronizada del servidor (ServerClock).
+     * Determina si la suscripción está vencida o inactiva usando la hora sincronizada del servidor (ServerClock).
      */
     val isSubscriptionExpired: Boolean
         get() {
             if (estadoAprobacion == "suscripcion_vencida") return true
             if (estadoAprobacion == "aprobado") {
                 val expiryMs = expiryTimestampMillis
-                if (expiryMs > 0L && ServerClock.nowMillis() > expiryMs) {
+                // Si no tiene fecha de vencimiento (0L) o ya expiró, está vencida/inactiva
+                if (expiryMs <= 0L || ServerClock.nowMillis() > expiryMs) {
                     return true
                 }
             }
@@ -155,7 +163,7 @@ data class Driver(
      * Determina si el conductor está aprobado Y su suscripción está activa y vigente.
      */
     val isApprovedAndActive: Boolean
-        get() = estadoAprobacion == "aprobado" && !isSubscriptionExpired
+        get() = estadoAprobacion == "aprobado" && !isSubscriptionExpired && expiryTimestampMillis > ServerClock.nowMillis()
 
     /**
      * Días restantes de vigencia de la suscripción con redondeo hacia arriba (ceil)
