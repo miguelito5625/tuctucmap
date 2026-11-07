@@ -65,6 +65,8 @@ fun AdminCrashLogsScreen(
     var crashToReopen by remember { mutableStateOf<AdminCrashLog?>(null) }
     var solutionInput by remember { mutableStateOf("") }
     var isResolvingCrash by remember { mutableStateOf(false) }
+    var isReopeningCrash by remember { mutableStateOf(false) }
+    var isDeletingCrash by remember { mutableStateOf(false) }
 
     fun loadCrashes() {
         scope.launch {
@@ -537,7 +539,7 @@ fun AdminCrashLogsScreen(
     if (crashToReopen != null) {
         val targetCrash = crashToReopen!!
         AlertDialog(
-            onDismissRequest = { crashToReopen = null },
+            onDismissRequest = { if (!isReopeningCrash) crashToReopen = null },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -560,28 +562,47 @@ fun AdminCrashLogsScreen(
             confirmButton = {
                 Button(
                     onClick = {
+                        isReopeningCrash = true
                         scope.launch {
-                            val res = adminRepo.setCrashLogResolved(targetCrash.id, false)
-                            if (res.isSuccess) {
-                                loadCrashes()
-                                if (selectedCrashForDetail?.id == targetCrash.id) {
-                                    selectedCrashForDetail = selectedCrashForDetail?.copy(resolved = false, solution = null)
+                            try {
+                                val res = adminRepo.setCrashLogResolved(targetCrash.id, false)
+                                if (res.isSuccess) {
+                                    loadCrashes()
+                                    if (selectedCrashForDetail?.id == targetCrash.id) {
+                                        selectedCrashForDetail = selectedCrashForDetail?.copy(resolved = false, solution = null)
+                                    }
+                                    Toast.makeText(context, "Incidencia reabierta como pendiente", Toast.LENGTH_SHORT).show()
+                                    crashToReopen = null
+                                } else {
+                                    Toast.makeText(context, "Error al reabrir", Toast.LENGTH_SHORT).show()
                                 }
-                                Toast.makeText(context, "Incidencia reabierta como pendiente", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "Error al reabrir", Toast.LENGTH_SHORT).show()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                            } finally {
+                                isReopeningCrash = false
                             }
-                            crashToReopen = null
                         }
                     },
+                    enabled = !isReopeningCrash,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Reabrir", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    if (isReopeningCrash) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Reabrir", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
                 }
             },
             dismissButton = {
-                TextButton(onClick = { crashToReopen = null }) {
+                TextButton(
+                    onClick = { crashToReopen = null },
+                    enabled = !isReopeningCrash
+                ) {
                     Text("Cancelar", color = Color(0xFF94A3B8))
                 }
             },
@@ -593,7 +614,7 @@ fun AdminCrashLogsScreen(
     if (crashToDelete != null) {
         val item = crashToDelete!!
         AlertDialog(
-            onDismissRequest = { crashToDelete = null },
+            onDismissRequest = { if (!isDeletingCrash) crashToDelete = null },
             title = { Text("¿Eliminar reporte de error?", fontWeight = FontWeight.Bold, color = Color.White) },
             text = {
                 Text(
@@ -605,23 +626,38 @@ fun AdminCrashLogsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
+                        isDeletingCrash = true
                         scope.launch {
-                            val res = adminRepo.deleteCrashLog(item.id)
-                            if (res.isSuccess) {
-                                loadCrashes()
-                                Toast.makeText(context, "Reporte eliminado", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "Error al eliminar", Toast.LENGTH_SHORT).show()
+                            try {
+                                val res = adminRepo.deleteCrashLog(item.id)
+                                if (res.isSuccess) {
+                                    loadCrashes()
+                                    Toast.makeText(context, "Reporte eliminado", Toast.LENGTH_SHORT).show()
+                                    crashToDelete = null
+                                } else {
+                                    Toast.makeText(context, "Error al eliminar", Toast.LENGTH_SHORT).show()
+                                }
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                            } finally {
+                                isDeletingCrash = false
                             }
-                            crashToDelete = null
                         }
-                    }
+                    },
+                    enabled = !isDeletingCrash
                 ) {
-                    Text("Eliminar", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
+                    if (isDeletingCrash) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color(0xFFEF4444), strokeWidth = 2.dp)
+                    } else {
+                        Text("Eliminar", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
+                    }
                 }
             },
             dismissButton = {
-                TextButton(onClick = { crashToDelete = null }) {
+                TextButton(
+                    onClick = { crashToDelete = null },
+                    enabled = !isDeletingCrash
+                ) {
                     Text("Cancelar", color = Color(0xFF94A3B8))
                 }
             },

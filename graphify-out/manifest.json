@@ -840,9 +840,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt": {
-    "mtime": 1794011420.0080428,
-    "seen": 1794011453.9091337,
-    "ast_hash": "6217c01d7d85de6e07230c4c340e878b",
+    "mtime": 1794012882.7257147,
+    "seen": 1794012919.9157772,
+    "ast_hash": "14553f8ea73bf6139980fb56bb023f21",
     "semantic_hash": ""
   },
   "databaseTuctucApp/migration_crash_solution.sql": {
