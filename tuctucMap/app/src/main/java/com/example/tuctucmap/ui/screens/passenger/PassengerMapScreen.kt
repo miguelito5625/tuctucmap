@@ -632,6 +632,20 @@ fun PassengerMapScreen(
                         }
                     },
                     update = { mapView ->
+                        // Función auxiliar para garantizar que el marcador del pasajero siempre se dibuje
+                        // en la capa superior absoluta (último en overlays), por encima de conductores y rutas.
+                        fun bringPassengerOverlayToFront() {
+                            val pOverlay = myLocationOverlayInstance ?: mapView.overlays.firstOrNull { it is PassengerLocationOverlay }
+                            if (pOverlay != null && mapView.overlays.contains(pOverlay)) {
+                                val lastIndex = mapView.overlays.size - 1
+                                val currentIndex = mapView.overlays.indexOf(pOverlay)
+                                if (currentIndex in 0 until lastIndex) {
+                                    mapView.overlays.removeAt(currentIndex)
+                                    mapView.overlays.add(pOverlay)
+                                }
+                            }
+                        }
+
                         // Evitar re-ejecutar el bucle de marcadores e invalidar el mapa cuando el usuario
                         // escribe texto en los formularios (tripMessage, guestName, guestPhone).
                         val currentSignature = Triple(
@@ -641,7 +655,10 @@ fun PassengerMapScreen(
                         )
                         val shouldSkip = (currentSignature == lastMapRenderSignature) &&
                             (rawDriverLocations.isEmpty() || driverMarkers.isNotEmpty())
-                        if (shouldSkip) return@AndroidView
+                        if (shouldSkip) {
+                            bringPassengerOverlayToFront()
+                            return@AndroidView
+                        }
                         lastMapRenderSignature = currentSignature
 
                         // Sincronizar trazado de ruta por calles con doble contorno de alto contraste
@@ -659,7 +676,8 @@ fun PassengerMapScreen(
                                 routeCasingPolyline = casing
                             }
                             if (!mapView.overlays.contains(routeCasingPolyline)) {
-                                mapView.overlays.add(routeCasingPolyline)
+                                // Insertar en la base (debajo de conductores y pasajero)
+                                mapView.overlays.add(0, routeCasingPolyline)
                             }
                             routeCasingPolyline?.setPoints(routePointsToPassenger)
 
@@ -676,7 +694,9 @@ fun PassengerMapScreen(
                                 routePolyline = mainLine
                             }
                             if (!mapView.overlays.contains(routePolyline)) {
-                                mapView.overlays.add(routePolyline)
+                                val casingIdx = mapView.overlays.indexOf(routeCasingPolyline)
+                                val targetIdx = if (casingIdx >= 0) casingIdx + 1 else 0
+                                mapView.overlays.add(targetIdx, routePolyline)
                             }
                             routePolyline?.setPoints(routePointsToPassenger)
                         } else {
@@ -751,7 +771,15 @@ fun PassengerMapScreen(
                                     setOnMarkerClickListener { _, _ -> true }
                                 }
                                 driverMarkers[driverLoc.uid] = marker
-                                mapView.overlays.add(marker)
+
+                                // Insertar el marcador del conductor ANTES del overlay del pasajero para mantener al pasajero siempre encima
+                                val passengerOverlay = myLocationOverlayInstance ?: mapView.overlays.firstOrNull { it is PassengerLocationOverlay }
+                                val passengerIdx = passengerOverlay?.let { mapView.overlays.indexOf(it) } ?: -1
+                                if (passengerIdx >= 0) {
+                                    mapView.overlays.add(passengerIdx, marker)
+                                } else {
+                                    mapView.overlays.add(marker)
+                                }
 
                                 val entranceAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
                                     duration = 800L
@@ -809,6 +837,11 @@ fun PassengerMapScreen(
                                 marker.setAlpha(targetAlpha)
                             }
                         }
+
+                        // Asegurar de manera estricta que el marcador animado del pasajero
+                        // siempre permanezca en la capa superior absoluta (último en overlays)
+                        bringPassengerOverlayToFront()
+
                         mapView.invalidate()
                     },
                     modifier = Modifier.fillMaxSize()

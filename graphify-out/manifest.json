@@ -306,8 +306,8 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt": {
-    "mtime": 1794091422.7941382,
-    "seen": 1794091526.3918602,
+    "mtime": 1794091618.7915828,
+    "seen": 1794092510.060483,
     "ast_hash": "9ae98f6b8b639d1221617fdcd7b0d3f0",
     "semantic_hash": ""
   },
@@ -408,9 +408,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerMapScreen.kt": {
-    "mtime": 1794085398.9749093,
-    "seen": 1794091526.391894,
-    "ast_hash": "3034b27aee11e4e7ca66492ee1bfad36",
+    "mtime": 1794092467.3451753,
+    "seen": 1794092510.0605242,
+    "ast_hash": "8789963ad1c77a27ece7a891dd512901",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerProfileScreen.kt": {
@@ -849,6 +849,48 @@
     "mtime": 1794087060.2028496,
     "seen": 1794091526.3919356,
     "ast_hash": "edb046185b93e4b5136dfdb66cbebaf7",
+    "semantic_hash": ""
+  },
+  "reportes/ANALISIS_COSTOS_Y_RENTABILIDAD.md": {
+    "mtime": 1794091549.3287914,
+    "seen": 1794092510.0605848,
+    "ast_hash": "f28dfc77d6138520b761948b3efc25d9",
+    "semantic_hash": ""
+  },
+  "reportes/AUDITORIA_FUNCIONAL_ANDROID.md": {
+    "mtime": 1794091549.329786,
+    "seen": 1794092510.0605862,
+    "ast_hash": "feff9f15d33435a3e503544357d4e828",
+    "semantic_hash": ""
+  },
+  "reportes/AUDITORIA_RENDIMIENTO_APP.md": {
+    "mtime": 1794091549.3309453,
+    "seen": 1794092510.060588,
+    "ast_hash": "4f9ea8f92617d97547aff78564edc856",
+    "semantic_hash": ""
+  },
+  "reportes/GUIA_PUBLICACION_PLAY_STORE.md": {
+    "mtime": 1794091549.331951,
+    "seen": 1794092510.0605924,
+    "ast_hash": "72011d04ef0253d7ad4f64930a8d3c2e",
+    "semantic_hash": ""
+  },
+  "reportes/REPORTE_COSTOS_Y_RENTABILIDAD.md": {
+    "mtime": 1794091549.3329513,
+    "seen": 1794092510.060597,
+    "ast_hash": "8c72344c9199ef8ce51f69be3e642081",
+    "semantic_hash": ""
+  },
+  "reportes/REPORTE_FUNCIONAMIENTO.md": {
+    "mtime": 1794091549.333953,
+    "seen": 1794092510.0605984,
+    "ast_hash": "1f1c5ef09891936af4aa905bf2483e3d",
+    "semantic_hash": ""
+  },
+  "reportes/REPORTE_SEGURIDAD.md": {
+    "mtime": 1794091549.3351233,
+    "seen": 1794092510.0605993,
+    "ast_hash": "b8510089b7600b02a37b27b47918e88e",
     "semantic_hash": ""
   }
 }
