@@ -75,6 +75,10 @@ fun AdminDriversTab(
     var driverToToggleSuspend by remember { mutableStateOf<AdminDriver?>(null) }
     var isTogglingSuspend by remember { mutableStateOf(false) }
 
+    // Estado para Aprobación de Conductor con Período de Prueba
+    var driverToApprove by remember { mutableStateOf<AdminDriver?>(null) }
+    var isApprovingDriver by remember { mutableStateOf(false) }
+
     // Estado para diálogo de confirmación de eliminación
     var driverToDelete by remember { mutableStateOf<AdminDriver?>(null) }
     var isDeletingDriver by remember { mutableStateOf(false) }
@@ -324,7 +328,7 @@ fun AdminDriversTab(
                         AdminDriverCard(
                             driver = driver,
                             appConfig = appConfig,
-                            isApproving = approvingDriverIds.contains(driver.id),
+                            isApproving = approvingDriverIds.contains(driver.id) || (isApprovingDriver && driverToApprove?.id == driver.id),
                             isRejecting = rejectingDriverIds.contains(driver.id),
                             onOpenDossier = {
                                 driverToViewDossier = driver
@@ -337,24 +341,7 @@ fun AdminDriversTab(
                                 driverToToggleSuspend = driver
                             },
                             onApprove = {
-                                val driverId = driver.id
-                                approvingDriverIds = approvingDriverIds + driverId
-                                scope.launch {
-                                    try {
-                                        val res = adminRepo.approveDriver(driverId)
-                                        if (res.isSuccess) {
-                                            Toast.makeText(context, "Conductor aprobado con éxito", Toast.LENGTH_SHORT).show()
-                                            loadData()
-                                        } else {
-                                            val err = res.exceptionOrNull()?.localizedMessage ?: "Error al aprobar"
-                                            Toast.makeText(context, "Error: $err", Toast.LENGTH_SHORT).show()
-                                        }
-                                    } catch (e: Exception) {
-                                        Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
-                                    } finally {
-                                        approvingDriverIds = approvingDriverIds - driverId
-                                    }
-                                }
+                                driverToApprove = driver
                             },
                             onReject = {
                                 val driverId = driver.id
@@ -536,6 +523,44 @@ fun AdminDriversTab(
                 }
             },
             isProcessing = isTogglingSuspend
+        )
+    }
+
+    // ── Diálogo de Aprobación de Conductor y Período de Prueba ─────────────
+    driverToApprove?.let { target ->
+        ApproveDriverDialog(
+            driver = target,
+            onDismiss = { driverToApprove = null },
+            onConfirm = { grantTrial, trialDays ->
+                isApprovingDriver = true
+                scope.launch {
+                    try {
+                        val res = adminRepo.approveDriver(
+                            uid = target.id,
+                            grantTrial = grantTrial,
+                            trialDays = trialDays
+                        )
+                        if (res.isSuccess) {
+                            val msg = if (grantTrial) {
+                                "Conductor aprobado con $trialDays días de prueba gratuita"
+                            } else {
+                                "Conductor aprobado sin prueba (requiere membresía para operar)"
+                            }
+                            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                            loadData()
+                            driverToApprove = null
+                        } else {
+                            val err = res.exceptionOrNull()?.localizedMessage ?: "Error al aprobar conductor"
+                            Toast.makeText(context, "Error: $err", Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                    } finally {
+                        isApprovingDriver = false
+                    }
+                }
+            },
+            isProcessing = isApprovingDriver
         )
     }
 
@@ -1288,6 +1313,312 @@ private fun SuspendToggleDialog(
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
                 } else {
                     Text(actionText, color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isProcessing) {
+                Text("Cancelar", color = Color(0xFF94A3B8))
+            }
+        },
+        containerColor = Color(0xFF1E293B)
+    )
+}
+
+@Composable
+private fun ApproveDriverDialog(
+    driver: AdminDriver,
+    onDismiss: () -> Unit,
+    onConfirm: (grantTrial: Boolean, trialDays: Int) -> Unit,
+    isProcessing: Boolean
+) {
+    var grantTrial by remember { mutableStateOf(true) }
+    var trialDaysText by remember { mutableStateOf("7") }
+    val quickDays = listOf(3, 7, 15, 30)
+
+    val trialDays = trialDaysText.toIntOrNull() ?: 0
+    val isFormValid = !grantTrial || trialDays > 0
+
+    val expiryPreview = remember(grantTrial, trialDays) {
+        if (!grantTrial || trialDays <= 0) null
+        else {
+            val cal = Calendar.getInstance()
+            cal.add(Calendar.DAY_OF_YEAR, trialDays)
+            val fmt = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+            fmt.format(cal.time)
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = { if (!isProcessing) onDismiss() },
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = Color(0xFF10B981)
+                )
+                Text(
+                    text = "Aprobar Conductor",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .imePadding()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                // Tarjeta de Identificación del Conductor
+                Surface(
+                    color = Color(0xFF0F172A),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF334155)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = Color(0xFFF59E0B)
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = driver.nombre.ifBlank { "Sin nombre" },
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            )
+                            Text(
+                                text = "${driver.displayIdentifier} • 📞 ${driver.telefono.ifBlank { "Sin teléfono" }}",
+                                color = Color(0xFF94A3B8),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+
+                // Switch de Período de Prueba
+                Surface(
+                    color = Color(0xFF0F172A).copy(alpha = 0.6f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                            Text(
+                                text = "Asignar período de prueba",
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = if (grantTrial) "El conductor tendrá acceso inmediato sin costo inicial" else "El conductor requerirá abonar membresía antes de operar",
+                                color = Color(0xFF94A3B8),
+                                fontSize = 11.sp,
+                                lineHeight = 14.sp
+                            )
+                        }
+                        Switch(
+                            checked = grantTrial,
+                            onCheckedChange = { grantTrial = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color(0xFF10B981),
+                                checkedTrackColor = Color(0xFF10B981).copy(alpha = 0.3f),
+                                uncheckedThumbColor = Color(0xFF64748B),
+                                uncheckedTrackColor = Color(0xFF1E293B)
+                            )
+                        )
+                    }
+                }
+
+                if (grantTrial) {
+                    // Selección de días
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Duración del período de prueba",
+                            color = Color(0xFFCBD5E1),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        // Chips rápidos
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            quickDays.forEach { days ->
+                                val isSelected = trialDaysText == days.toString()
+                                Surface(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { trialDaysText = days.toString() },
+                                    color = if (isSelected) Color(0xFF10B981) else Color(0xFF0F172A),
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        1.dp,
+                                        if (isSelected) Color(0xFF10B981) else Color(0xFF334155)
+                                    )
+                                ) {
+                                    Box(
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "$days d",
+                                            color = if (isSelected) Color(0xFF0F172A) else Color.White,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Input manual de días
+                        OutlinedTextField(
+                            value = trialDaysText,
+                            onValueChange = { input ->
+                                if (input.all { it.isDigit() } && input.length <= 3) {
+                                    trialDaysText = input
+                                }
+                            },
+                            label = { Text("Cantidad de días") },
+                            suffix = { Text("días", color = Color(0xFF94A3B8)) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = Color(0xFF10B981),
+                                unfocusedBorderColor = Color(0xFF475569)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // Preview de vigencia
+                        if (trialDays > 0 && expiryPreview != null) {
+                            Surface(
+                                color = Color(0x1A10B981),
+                                shape = RoundedCornerShape(8.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x3310B981)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Event,
+                                        contentDescription = null,
+                                        tint = Color(0xFF10B981),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Column {
+                                        Text(
+                                            text = "Vigencia hasta: $expiryPreview",
+                                            color = Color(0xFF10B981),
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 12.sp
+                                        )
+                                        Text(
+                                            text = "Al término, requerirá membresía activa.",
+                                            color = Color(0xFF94A3B8),
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            Text(
+                                text = "Ingresa un número de días válido mayor a 0.",
+                                color = Color(0xFFEF4444),
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+                } else {
+                    // Advertencia de aprobación sin período de prueba
+                    Surface(
+                        color = Color(0x1AF59E0B),
+                        shape = RoundedCornerShape(8.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x33F59E0B)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(10.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = Color(0xFFF59E0B),
+                                modifier = Modifier.size(18.dp).padding(top = 2.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = "Aprobación sin prueba",
+                                    color = Color(0xFFF59E0B),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = "El conductor será aprobado pero figurará 'Sin suscripción'. No podrá conectarse hasta registrar su primer pago.",
+                                    color = Color(0xFFCBD5E1),
+                                    fontSize = 11.sp,
+                                    lineHeight = 14.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(grantTrial, trialDays) },
+                enabled = !isProcessing && isFormValid,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+            ) {
+                if (isProcessing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = if (grantTrial) "Aprobar ($trialDays d)" else "Aprobar sin prueba",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         },

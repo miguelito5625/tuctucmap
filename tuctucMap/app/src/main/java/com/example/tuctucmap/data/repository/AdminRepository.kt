@@ -69,16 +69,57 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
         }
     }
 
-    suspend fun approveDriver(uid: String): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun approveDriver(
+        uid: String,
+        grantTrial: Boolean = true,
+        trialDays: Int = 7
+    ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val payload = mapOf("approval_status" to "aprobado")
-            supabase.postgrest["profiles"].update(payload) {
-                filter { eq("id", uid) }
-            }
+            val params = ApproveDriverRpcParams(
+                driverId = uid,
+                grantTrial = grantTrial,
+                trialDays = trialDays
+            )
+            supabase.postgrest.rpc("approve_driver_by_admin", params)
             refreshPendingCounts()
             Result.success(Unit)
         } catch (e: Exception) {
-            Result.failure(e)
+            // Fallback transaccional por PostgREST directo
+            try {
+                val payload = mutableMapOf<String, Any?>("approval_status" to "aprobado")
+                if (grantTrial && trialDays > 0) {
+                    val cal = Calendar.getInstance()
+                    cal.add(Calendar.DAY_OF_YEAR, trialDays)
+                    val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+                        timeZone = TimeZone.getTimeZone("UTC")
+                    }
+                    val newEndDate = isoFormat.format(cal.time)
+                    payload["subscription_end_date"] = newEndDate
+                    supabase.postgrest["profiles"].update(payload) {
+                        filter { eq("id", uid) }
+                    }
+                    supabase.postgrest["driver_subscriptions"].insert(
+                        mapOf(
+                            "driver_id" to uid,
+                            "start_date" to isoFormat.format(Date()),
+                            "end_date" to newEndDate,
+                            "plan_type" to "trial",
+                            "amount_paid" to 0.0,
+                            "payment_method" to "gratis_prueba",
+                            "reference_number" to "TRIAL-${trialDays}D"
+                        )
+                    )
+                } else {
+                    payload["subscription_end_date"] = null
+                    supabase.postgrest["profiles"].update(payload) {
+                        filter { eq("id", uid) }
+                    }
+                }
+                refreshPendingCounts()
+                Result.success(Unit)
+            } catch (fallbackEx: Exception) {
+                Result.failure(e)
+            }
         }
     }
 

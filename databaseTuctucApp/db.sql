@@ -320,6 +320,73 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;
 
+-- Función RPC para que el Administrador apruebe un conductor inicialmente con opción de asignar días de prueba (Trial)
+CREATE OR REPLACE FUNCTION public.approve_driver_by_admin(
+    p_driver_id UUID,
+    p_grant_trial BOOLEAN DEFAULT TRUE,
+    p_trial_days INT DEFAULT 7
+)
+RETURNS JSONB AS $$
+DECLARE
+    v_driver RECORD;
+    v_new_end_date TIMESTAMPTZ := NULL;
+    v_effective_trial_days INT := COALESCE(p_trial_days, 7);
+BEGIN
+    IF NOT public.is_admin() THEN
+        RAISE EXCEPTION 'Acceso denegado: solo administradores pueden aprobar conductores.';
+    END IF;
+
+    SELECT * INTO v_driver 
+    FROM public.profiles 
+    WHERE id = p_driver_id AND role = 'driver';
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'No se encontró el conductor con ID %', p_driver_id;
+    END IF;
+
+    IF p_grant_trial AND v_effective_trial_days > 0 THEN
+        v_new_end_date := NOW() + (v_effective_trial_days || ' days')::INTERVAL;
+
+        INSERT INTO public.driver_subscriptions (
+            driver_id,
+            start_date,
+            end_date,
+            plan_type,
+            amount_paid,
+            payment_method,
+            reference_number,
+            created_at
+        ) VALUES (
+            p_driver_id,
+            NOW(),
+            v_new_end_date,
+            'trial',
+            0.00,
+            'gratis_prueba',
+            'TRIAL-' || v_effective_trial_days || 'D',
+            NOW()
+        );
+    END IF;
+
+    UPDATE public.profiles
+    SET 
+        approval_status = 'aprobado',
+        subscription_end_date = v_new_end_date
+    WHERE id = p_driver_id;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'driver_id', p_driver_id,
+        'approval_status', 'aprobado',
+        'granted_trial', (p_grant_trial AND v_effective_trial_days > 0),
+        'trial_days', CASE WHEN p_grant_trial THEN v_effective_trial_days ELSE 0 END,
+        'subscription_end_date', v_new_end_date
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+GRANT EXECUTE ON FUNCTION public.approve_driver_by_admin(UUID, BOOLEAN, INT) TO authenticated;
+
 -- Función RPC para que el Administrador apruebe una solicitud de renovación y extienda vigencia automáticamente
 CREATE OR REPLACE FUNCTION public.approve_subscription_payment_request(
   p_request_id UUID,

@@ -227,6 +227,16 @@ data class ApprovePaymentRequestRpcParams(
 )
 
 @Serializable
+data class ApproveDriverRpcParams(
+    @SerialName("p_driver_id")
+    val driverId: String,
+    @SerialName("p_grant_trial")
+    val grantTrial: Boolean = true,
+    @SerialName("p_trial_days")
+    val trialDays: Int = 7
+)
+
+@Serializable
 data class RejectPaymentRequestRpcParams(
     @SerialName("p_request_id")
     val requestId: String,

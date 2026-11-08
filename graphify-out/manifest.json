@@ -6,9 +6,9 @@
     "semantic_hash": "7daf02761977558e589ecb5a5cb7835c"
   },
   "databaseTuctucApp/db.sql": {
-    "mtime": 1794023560.9482293,
-    "seen": 1794024041.695794,
-    "ast_hash": "f28a3ee8ef2edd54e17ab2574d18a45d",
+    "mtime": 1794102873.9839115,
+    "seen": 1794103746.1229782,
+    "ast_hash": "da9a643216255204d8bc7944aecc7bde",
     "semantic_hash": ""
   },
   "databaseTuctucApp/db_config.js": {
@@ -318,8 +318,8 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/AppDrawer.kt": {
-    "mtime": 1794099084.6857882,
-    "seen": 1794099762.5416725,
+    "mtime": 1794099840.780892,
+    "seen": 1794103746.1230507,
     "ast_hash": "6c848dbf3f9fd7a7fb80573fc627d819",
     "semantic_hash": ""
   },
@@ -648,15 +648,15 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt": {
-    "mtime": 1794098833.1686444,
-    "seen": 1794099762.5416617,
-    "ast_hash": "a2e566bdfe8ff69472861fb6cb39f9eb",
+    "mtime": 1794102902.0228186,
+    "seen": 1794103746.123041,
+    "ast_hash": "70ee7170d0bd3cb2a253227fcdf8e0b5",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt": {
-    "mtime": 1794098937.4731028,
-    "seen": 1794099762.5416665,
-    "ast_hash": "65d0cac3992ca058c8aec6f3e7a77f44",
+    "mtime": 1794102922.3271973,
+    "seen": 1794103746.1230452,
+    "ast_hash": "82418ead5bca8d64c94f8c1de1cdc920",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminBusinessConfigTab.kt": {
@@ -666,9 +666,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminDriversTab.kt": {
-    "mtime": 1794099640.6017685,
-    "seen": 1794099762.5416813,
-    "ast_hash": "08ceb2a63682b50917cca1cdd233035b",
+    "mtime": 1794103148.7112646,
+    "seen": 1794103746.1230602,
+    "ast_hash": "abbb5c7520321e0f18de1e6c0894e29c",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminFleetMapTab.kt": {
@@ -684,20 +684,20 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminPassengersScreen.kt": {
-    "mtime": 1794099494.1935923,
-    "seen": 1794099762.5416844,
+    "mtime": 1794099841.9736118,
+    "seen": 1794103746.123063,
     "ast_hash": "0cfe6afc623fba497897cebcb944b9dd",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt": {
-    "mtime": 1794099436.8712862,
-    "seen": 1794099762.5416865,
+    "mtime": 1794099842.5413754,
+    "seen": 1794103746.1230645,
     "ast_hash": "5517135d7fe6a40ffe9a1225c83caa50",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt": {
-    "mtime": 1794099467.2355783,
-    "seen": 1794099762.5416875,
+    "mtime": 1794099842.7997787,
+    "seen": 1794103746.1230652,
     "ast_hash": "84e5ef77090fa1b57620808794929221",
     "semantic_hash": ""
   },
@@ -798,8 +798,8 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt": {
-    "mtime": 1794099537.8763628,
-    "seen": 1794099762.5416803,
+    "mtime": 1794099841.2244723,
+    "seen": 1794103746.123059,
     "ast_hash": "fbbc891854832fc5c88ef895048d2c84",
     "semantic_hash": ""
   },
@@ -900,15 +900,15 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminProfileScreen.kt": {
-    "mtime": 1794099659.023826,
-    "seen": 1794099762.5416856,
+    "mtime": 1794099842.2208278,
+    "seen": 1794103746.1230638,
     "ast_hash": "bdb349d1531e617b5385b90b20129109",
     "semantic_hash": ""
   },
   "reportes/AUDITORIA_ADMIN_ANDROID.md": {
-    "mtime": 1794094288.7424307,
-    "seen": 1794099762.5417416,
-    "ast_hash": "88ff1e59115a23de73889b4642be9b7f",
+    "mtime": 1794103734.3533535,
+    "seen": 1794103746.1231103,
+    "ast_hash": "3333235fa727ad637371d40d9fbba7d5",
     "semantic_hash": ""
   }
 }
