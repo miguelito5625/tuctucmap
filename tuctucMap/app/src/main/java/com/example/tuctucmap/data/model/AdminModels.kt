@@ -2,12 +2,45 @@ package com.example.tuctucmap.data.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 @Serializable
 data class UserRoleDto(
     val id: String = "",
     val role: String = "passenger",
     val name: String? = null
+)
+
+@Serializable
+data class AdminProfileDto(
+    val id: String = "",
+    val email: String? = null,
+    val name: String? = null,
+    val phone: String? = null,
+    val role: String = "admin",
+    @SerialName("created_at") val createdAt: String? = null
+)
+
+@Serializable
+data class AdminUserDto(
+    val id: String = "",
+    val email: String? = null,
+    val name: String? = null,
+    val phone: String? = null,
+    val role: String = "admin",
+    @SerialName("created_at") val createdAt: String? = null
+) {
+    val displayName: String get() = name?.trim()?.ifBlank { email ?: "Admin" } ?: (email ?: "Admin")
+}
+
+@Serializable
+data class DriverDossierDto(
+    val driver: AdminDriver,
+    val totalPaidSubscriptions: Double = 0.0,
+    val subscriptionsCount: Int = 0,
+    val subscriptions: List<AdminSubscriptionHistory> = emptyList(),
+    val totalTripsCompleted: Int = 0,
+    val totalFaresEarned: Double = 0.0
 )
 
 @Serializable
@@ -229,6 +262,7 @@ data class AdminCrashLog(
     val resolved: Boolean = false,
     @SerialName("resolved_at") val resolvedAt: String? = null,
     @SerialName("resolved_by") val resolvedBy: String? = null,
+    @SerialName("extra_metadata") val extraMetadata: JsonElement? = null,
     val solution: String? = null,
     @SerialName("created_at") val createdAt: String = ""
 ) {

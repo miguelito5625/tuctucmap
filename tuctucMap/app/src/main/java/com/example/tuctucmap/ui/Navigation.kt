@@ -16,6 +16,8 @@ import com.example.tuctucmap.ui.screens.admin.AdminMainScreen
 import com.example.tuctucmap.ui.screens.admin.AdminTripsScreen
 import com.example.tuctucmap.ui.screens.admin.AdminPassengersScreen
 import com.example.tuctucmap.ui.screens.admin.AdminCrashLogsScreen
+import com.example.tuctucmap.ui.screens.admin.AdminProfileScreen
+import com.example.tuctucmap.ui.screens.admin.AdminAdminsScreen
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.filter
@@ -48,6 +50,8 @@ sealed class Screen {
     object AdminTrips : Screen()
     object AdminPassengers : Screen()
     object AdminCrashLogs : Screen()
+    object AdminProfile : Screen()
+    object AdminAdmins : Screen()
 }
 
 // Mapea el perfil del conductor a la pantalla correspondiente
@@ -468,6 +472,12 @@ fun AppNavigation(
                 onNavigateToCrashLogs = {
                     navigate(Screen.AdminCrashLogs)
                 },
+                onNavigateToAdmins = {
+                    navigate(Screen.AdminAdmins)
+                },
+                onNavigateToProfile = {
+                    navigate(Screen.AdminProfile)
+                },
                 onExploreMapAsPassenger = {
                     navigate(Screen.PassengerMap)
                 }
@@ -492,6 +502,22 @@ fun AppNavigation(
         }
         is Screen.AdminCrashLogs -> {
             AdminCrashLogsScreen(
+                adminRepo = repository.adminRepository,
+                onBack = {
+                    backStack.removeAt(backStack.lastIndex)
+                }
+            )
+        }
+        is Screen.AdminProfile -> {
+            AdminProfileScreen(
+                adminRepo = repository.adminRepository,
+                onBack = {
+                    backStack.removeAt(backStack.lastIndex)
+                }
+            )
+        }
+        is Screen.AdminAdmins -> {
+            AdminAdminsScreen(
                 adminRepo = repository.adminRepository,
                 onBack = {
                     backStack.removeAt(backStack.lastIndex)

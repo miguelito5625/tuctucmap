@@ -217,6 +217,15 @@ private fun PassengerCard(
                     fontSize = 12.sp,
                     color = Color(0xFF94A3B8)
                 )
+                if (passenger.email.isNotBlank()) {
+                    Text(
+                        text = "✉️ ${passenger.email}",
+                        fontSize = 11.sp,
+                        color = Color(0xFF38BDF8),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
                 Text(
                     text = "Viajes solicitados: ${passenger.tripsCount} • Desde: ${formatDateShort(passenger.createdAtEpoch)}",
                     fontSize = 11.sp,
@@ -225,7 +234,7 @@ private fun PassengerCard(
             }
 
             // Botones de acción
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (passenger.telefono.isNotBlank()) {
                     IconButton(
                         onClick = onWhatsApp,
@@ -252,7 +261,9 @@ private fun PassengerCard(
 
 private fun formatDateShort(epochMs: Long): String {
     if (epochMs <= 0L) return "N/D"
-    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.US)
+    val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.US).apply {
+        timeZone = TimeZone.getTimeZone("America/Guatemala")
+    }
     return sdf.format(Date(epochMs))
 }
 

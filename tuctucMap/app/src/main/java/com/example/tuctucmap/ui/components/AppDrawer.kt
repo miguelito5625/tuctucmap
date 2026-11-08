@@ -55,6 +55,8 @@ enum class AdminDrawerItem {
     TRIPS,
     PASSENGERS,
     CONFIG,
+    ADMINS,
+    PROFILE,
     CRASH_LOGS
 }
 
@@ -887,6 +889,20 @@ fun AdminDrawerSheet(
                 )
 
                 DrawerNavigationItem(
+                    label = "Gestión de Administradores",
+                    icon = Icons.Default.AdminPanelSettings,
+                    isSelected = selectedItem == AdminDrawerItem.ADMINS,
+                    onClick = { onSelectItem(AdminDrawerItem.ADMINS) }
+                )
+
+                DrawerNavigationItem(
+                    label = "Mi Perfil y Contraseña",
+                    icon = Icons.Default.AccountCircle,
+                    isSelected = selectedItem == AdminDrawerItem.PROFILE,
+                    onClick = { onSelectItem(AdminDrawerItem.PROFILE) }
+                )
+
+                DrawerNavigationItem(
                     label = "Compartir aplicación",
                     icon = Icons.Default.Share,
                     isSelected = false,
@@ -951,12 +967,16 @@ private fun DrawerEasterEggVersionText(
                     val remaining = 5 - tapCount
                     android.widget.Toast.makeText(
                         context,
-                        "Estás a $remaining toque(s) de generar crash de prueba...",
+                        "Estás a $remaining toque(s) de ver información de compilación...",
                         android.widget.Toast.LENGTH_SHORT
                     ).show()
                 } else if (tapCount >= 5) {
                     tapCount = 0
-                    throw RuntimeException("Prueba de Telemetría TucTuc Map - Crash intencional")
+                    android.widget.Toast.makeText(
+                        context,
+                        "TucTuc Map v${com.example.tuctucmap.BuildConfig.VERSION_NAME} (${com.example.tuctucmap.BuildConfig.VERSION_CODE}) • Compilación Segura",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
                 }
             }
     )

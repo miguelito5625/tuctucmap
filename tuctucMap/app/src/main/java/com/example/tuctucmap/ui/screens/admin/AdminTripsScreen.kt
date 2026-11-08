@@ -1057,38 +1057,34 @@ private fun TripRouteModal(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(
+                                            if (trip.isRegisteredPassenger) Color(0xFF064E3B)
+                                            else Color(0xFF1E3A8A)
+                                        )
+                                        .padding(horizontal = 5.dp, vertical = 2.dp)
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(
-                                                if (trip.isRegisteredPassenger) Color(0xFF064E3B)
-                                                else Color(0xFF1E3A8A)
-                                            )
-                                            .padding(horizontal = 5.dp, vertical = 2.dp)
-                                    ) {
-                                        Text(
-                                            text = if (trip.isRegisteredPassenger) "Cuenta Registrada" else "Sin cuenta (Invitado)",
-                                            fontSize = 9.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            color = if (trip.isRegisteredPassenger) Color(0xFF34D399) else Color(
-                                                0xFF93C5FD
-                                            ),
-                                            maxLines = 1
-                                        )
-                                    }
-                                    if (trip.resolvedPassengerPhone.isNotBlank()) {
-                                        Text(
-                                            text = "📞 ${trip.resolvedPassengerPhone}",
-                                            fontSize = 11.sp,
-                                            color = Color(0xFF38BDF8),
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
+                                    Text(
+                                        text = if (trip.isRegisteredPassenger) "Cuenta Registrada" else "Sin cuenta (Invitado)",
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (trip.isRegisteredPassenger) Color(0xFF34D399) else Color(
+                                            0xFF93C5FD
+                                        ),
+                                        maxLines = 1
+                                    )
+                                }
+                                if (trip.resolvedPassengerPhone.isNotBlank()) {
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "📞 ${trip.resolvedPassengerPhone}",
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF38BDF8),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
                             }
 
@@ -1461,7 +1457,9 @@ private fun LegendItem(color: Color, text: String) {
 
 private fun formatTripDate(epochMs: Long): String {
     if (epochMs <= 0L) return "N/A"
-    val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.US)
+    val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.US).apply {
+        timeZone = TimeZone.getTimeZone("America/Guatemala")
+    }
     return sdf.format(Date(epochMs))
 }
 

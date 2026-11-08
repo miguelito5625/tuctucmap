@@ -30,6 +30,8 @@ fun AdminMainScreen(
     onNavigateToTrips: () -> Unit,
     onNavigateToPassengers: () -> Unit,
     onNavigateToCrashLogs: () -> Unit = {},
+    onNavigateToAdmins: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
     onExploreMapAsPassenger: () -> Unit,
     initialTab: Int = 0
 ) {
@@ -92,6 +94,8 @@ fun AdminMainScreen(
                         AdminDrawerItem.TRIPS -> onNavigateToTrips()
                         AdminDrawerItem.PASSENGERS -> onNavigateToPassengers()
                         AdminDrawerItem.CRASH_LOGS -> onNavigateToCrashLogs()
+                        AdminDrawerItem.ADMINS -> onNavigateToAdmins()
+                        AdminDrawerItem.PROFILE -> onNavigateToProfile()
                     }
                 },
                 onLogout = {

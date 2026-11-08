@@ -1381,7 +1381,7 @@ private fun CrashDetailContent(
             }
         }
 
-        if (crash.resolved && !crash.solution.isNullOrBlank()) {
+        if (crash.resolved) {
             Spacer(modifier = Modifier.height(10.dp))
             Surface(
                 shape = RoundedCornerShape(10.dp),
@@ -1399,19 +1399,31 @@ private fun CrashDetailContent(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "SOLUCIÓN APLICADA",
+                            text = "INCIDENCIA RESUELTA",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF34D399)
                         )
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = crash.solution,
-                        fontSize = 13.sp,
-                        color = Color(0xFFF1F5F9),
-                        lineHeight = 18.sp
-                    )
+                    if (!crash.solution.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = crash.solution,
+                            fontSize = 13.sp,
+                            color = Color(0xFFF1F5F9),
+                            lineHeight = 18.sp
+                        )
+                    }
+                    if (!crash.resolvedAt.isNullOrBlank() || !crash.resolvedBy.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        val resolvedByText = crash.resolvedBy ?: "Administrador"
+                        val resolvedAtText = crash.resolvedAt?.take(19)?.replace('T', ' ') ?: ""
+                        Text(
+                            text = "Resuelto por: $resolvedByText" + if (resolvedAtText.isNotBlank()) " • $resolvedAtText" else "",
+                            fontSize = 11.sp,
+                            color = Color(0xFF6EE7B7)
+                        )
+                    }
                 }
             }
         }
@@ -1437,6 +1449,32 @@ private fun CrashDetailContent(
             lineHeight = 18.sp,
             color = Color(0xFFCBD5E1)
         )
+
+        val extraStr = crash.extraMetadata?.toString()
+        if (!extraStr.isNullOrBlank() && extraStr != "null" && extraStr != "{}") {
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "METADATOS ADICIONALES (EXTRA_METADATA)",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF64748B)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = Color(0xFF0F172A),
+                border = BorderStroke(1.dp, Color(0xFF334155)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = extraStr,
+                    fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = Color(0xFF38BDF8),
+                    modifier = Modifier.padding(10.dp)
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 

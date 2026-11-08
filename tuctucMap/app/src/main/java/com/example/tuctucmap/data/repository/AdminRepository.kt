@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.tuctucmap.data.model.*
 import com.example.tuctucmap.data.supabase
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.postgrest.query.Order
@@ -88,6 +89,205 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
                 filter { eq("id", uid) }
             }
             refreshPendingCounts()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun setDriverSuspended(uid: String, suspend: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val status = if (suspend) "suspendido" else "aprobado"
+            val payload = mutableMapOf<String, Any>(
+                "approval_status" to status
+            )
+            if (suspend) {
+                payload["is_available"] = false
+                payload["is_busy"] = false
+            }
+            supabase.postgrest["profiles"].update(payload) {
+                filter { eq("id", uid) }
+            }
+            refreshPendingCounts()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateDriverDetails(
+        driverId: String,
+        name: String,
+        phone: String,
+        plateNumber: String,
+        unitNumber: String
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val payload = mapOf(
+                "name" to name.trim(),
+                "phone" to phone.trim(),
+                "plate_number" to plateNumber.trim().uppercase(),
+                "unit_number" to unitNumber.trim()
+            )
+            supabase.postgrest["profiles"].update(payload) {
+                filter { eq("id", driverId) }
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun fetchDriverDossier(driverId: String): Result<DriverDossierDto> = withContext(Dispatchers.IO) {
+        try {
+            val driver = supabase.postgrest["profiles"].select {
+                filter { eq("id", driverId) }
+            }.decodeSingle<AdminDriver>()
+
+            val subs = supabase.postgrest["driver_subscriptions"].select {
+                filter { eq("driver_id", driverId) }
+                order("created_at", Order.DESCENDING)
+            }.decodeList<AdminSubscriptionHistory>()
+
+            for (s in subs) {
+                s.driverName = driver.nombre
+                s.driverPlate = driver.placas
+            }
+
+            val totalPaid = subs.filter { it.status != "rechazado" && it.planType != "trial" }
+                .sumOf { it.amountPaid }
+
+            @Serializable
+            data class TripStatDto(val fare: Double? = null, val status: String? = null)
+
+            val trips = try {
+                supabase.postgrest["trips"].select(Columns.list("fare", "status")) {
+                    filter {
+                        eq("driver_id", driverId)
+                        eq("status", "completed")
+                    }
+                }.decodeList<TripStatDto>()
+            } catch (_: Exception) {
+                emptyList()
+            }
+
+            val totalCompleted = trips.size
+            val totalFares = trips.sumOf { it.fare ?: 0.0 }
+
+            Result.success(
+                DriverDossierDto(
+                    driver = driver,
+                    totalPaidSubscriptions = totalPaid,
+                    subscriptionsCount = subs.size,
+                    subscriptions = subs,
+                    totalTripsCompleted = totalCompleted,
+                    totalFaresEarned = totalFares
+                )
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun fetchAdminProfile(): Result<AdminProfileDto> = withContext(Dispatchers.IO) {
+        val uid = currentAdminUid ?: return@withContext Result.failure(Exception("No hay sesión de administrador activa"))
+        try {
+            val prof = supabase.postgrest["profiles"].select {
+                filter { eq("id", uid) }
+            }.decodeSingle<AdminProfileDto>()
+            Result.success(prof)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateAdminProfile(name: String, phone: String): Result<Unit> = withContext(Dispatchers.IO) {
+        val uid = currentAdminUid ?: return@withContext Result.failure(Exception("No autenticado"))
+        try {
+            supabase.postgrest["profiles"].update(
+                mapOf("name" to name.trim(), "phone" to phone.trim())
+            ) {
+                filter { eq("id", uid) }
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun changePasswordSecurely(currentPassword: String, newPassword: String): Result<Unit> = withContext(Dispatchers.IO) {
+        val email = currentAdminEmail ?: return@withContext Result.failure(Exception("No hay correo asociado a la sesión"))
+        if (newPassword.length < 6) {
+            return@withContext Result.failure(Exception("La nueva contraseña debe tener al menos 6 caracteres"))
+        }
+        try {
+            // Reautenticar primero para verificar que la contraseña actual es legítima
+            supabase.auth.signInWith(Email) {
+                this.email = email
+                this.password = currentPassword
+            }
+        } catch (_: Exception) {
+            return@withContext Result.failure(Exception("La contraseña actual es incorrecta. Verifica e intenta de nuevo."))
+        }
+
+        try {
+            supabase.auth.updateUser {
+                password = newPassword
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun fetchAdminAccounts(): Result<List<AdminUserDto>> = withContext(Dispatchers.IO) {
+        try {
+            val list = supabase.postgrest["profiles"].select {
+                filter { eq("role", "admin") }
+                order("created_at", Order.ASCENDING)
+            }.decodeList<AdminUserDto>()
+            Result.success(list)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun promoteUserToAdmin(emailToPromote: String): Result<Unit> = withContext(Dispatchers.IO) {
+        val targetEmail = emailToPromote.trim().lowercase()
+        if (targetEmail.isBlank()) {
+            return@withContext Result.failure(Exception("Ingresa un correo electrónico"))
+        }
+        try {
+            val target = supabase.postgrest["profiles"].select {
+                filter { eq("email", targetEmail) }
+            }.decodeSingleOrNull<AdminUserDto>()
+
+            if (target == null) {
+                return@withContext Result.failure(Exception("No se encontró ningún usuario registrado con el correo '$targetEmail'."))
+            }
+
+            if (target.role == "admin") {
+                return@withContext Result.failure(Exception("El usuario ya tiene rol de administrador."))
+            }
+
+            supabase.postgrest["profiles"].update(mapOf("role" to "admin")) {
+                filter { eq("id", target.id) }
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun revokeAdminRole(targetAdminId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        val myUid = currentAdminUid
+        if (targetAdminId == myUid) {
+            return@withContext Result.failure(Exception("Por seguridad, no puedes revocar tu propia cuenta de administrador."))
+        }
+        try {
+            supabase.postgrest["profiles"].update(mapOf("role" to "passenger")) {
+                filter { eq("id", targetAdminId) }
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -463,6 +663,7 @@ class AdminRepository(private val supabaseRepo: SupabaseRepository) {
 
             val trips = supabase.postgrest["trips"].select(columns = tripCols) {
                 filter {
+                    eq("status", "completed")
                     if (!startDateIso.isNullOrBlank()) {
                         gte("created_at", startDateIso)
                     }

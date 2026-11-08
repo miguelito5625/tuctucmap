@@ -46,6 +46,8 @@ enum class SubscriptionHistoryPeriodFilter(val label: String) {
     TODAY("Hoy"),
     LAST_3_DAYS("3 días"),
     LAST_7_DAYS("7 días"),
+    THIS_MONTH("Este Mes"),
+    ALL("Todo"),
     CUSTOM("Rango personalizado")
 }
 
@@ -76,11 +78,42 @@ private fun getSubscriptionPeriodRangeIso(
         return Pair(isoSdf.format(startCal.time), isoSdf.format(endCal.time))
     }
 
+    if (filter == SubscriptionHistoryPeriodFilter.ALL) {
+        val startCal = Calendar.getInstance().apply {
+            set(2020, Calendar.JANUARY, 1, 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val endCal = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }
+        return Pair(isoSdf.format(startCal.time), isoSdf.format(endCal.time))
+    }
+
+    if (filter == SubscriptionHistoryPeriodFilter.THIS_MONTH) {
+        val startCal = Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val endCal = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }
+        return Pair(isoSdf.format(startCal.time), isoSdf.format(endCal.time))
+    }
+
     val daysBack = when (filter) {
         SubscriptionHistoryPeriodFilter.TODAY -> 0
         SubscriptionHistoryPeriodFilter.LAST_3_DAYS -> 2
         SubscriptionHistoryPeriodFilter.LAST_7_DAYS -> 6
-        SubscriptionHistoryPeriodFilter.CUSTOM -> 0
+        else -> 0
     }
 
     val startCal = Calendar.getInstance().apply {
@@ -268,7 +301,7 @@ fun AdminSubscriptionsTab(
                     modifier = Modifier
                         .fillMaxSize()
                         .imePadding(),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     // Encabezado descriptivo de la bandeja de acción
@@ -378,7 +411,7 @@ fun AdminSubscriptionsTab(
             // ── PESTAÑA 2: HISTORIAL GLOBAL DE MEMBRESÍAS ─────────────────────
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 // Filtros de Período de Fecha
@@ -408,6 +441,22 @@ fun AdminSubscriptionsTab(
                                 selected = historyPeriodFilter == SubscriptionHistoryPeriodFilter.LAST_7_DAYS,
                                 onClick = { historyPeriodFilter = SubscriptionHistoryPeriodFilter.LAST_7_DAYS },
                                 label = { Text("7 días") },
+                                colors = filterChipColors()
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = historyPeriodFilter == SubscriptionHistoryPeriodFilter.THIS_MONTH,
+                                onClick = { historyPeriodFilter = SubscriptionHistoryPeriodFilter.THIS_MONTH },
+                                label = { Text("Este Mes") },
+                                colors = filterChipColors()
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = historyPeriodFilter == SubscriptionHistoryPeriodFilter.ALL,
+                                onClick = { historyPeriodFilter = SubscriptionHistoryPeriodFilter.ALL },
+                                label = { Text("Todo") },
                                 colors = filterChipColors()
                             )
                         }
@@ -468,17 +517,28 @@ fun AdminSubscriptionsTab(
                 }
 
                 item {
+                    val totalFilteredAmount = remember(filteredHistory) {
+                        filteredHistory.filter { it.status != "rechazado" }.sumOf { it.amountPaid }
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "${filteredHistory.size} Registros (${historyPeriodFilter.label})",
-                            color = Color(0xFF94A3B8),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                        Column {
+                            Text(
+                                text = "${filteredHistory.size} Registros (${historyPeriodFilter.label})",
+                                color = Color(0xFF94A3B8),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "Total: ${appConfig.currencySymbol} ${String.format(Locale.US, "%.2f", totalFilteredAmount)}",
+                                color = Color(0xFF10B981),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
 
                         Button(
                             onClick = {
@@ -1048,6 +1108,15 @@ private fun SubscriptionHistoryCard(
                         fontSize = 10.sp,
                         color = Color(0xFF64748B)
                     )
+                    if (item.paymentMethod.isNotBlank() || item.referenceNumber.isNotBlank()) {
+                        val methodText = item.paymentMethod.replace("_", " ").replaceFirstChar { it.uppercase() }
+                        val refText = if (item.referenceNumber.isNotBlank()) " • Ref: ${item.referenceNumber}" else ""
+                        Text(
+                            text = "Pago: $methodText$refText",
+                            fontSize = 11.sp,
+                            color = Color(0xFF38BDF8)
+                        )
+                    }
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
