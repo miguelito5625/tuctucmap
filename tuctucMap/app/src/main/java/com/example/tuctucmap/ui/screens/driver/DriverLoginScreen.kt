@@ -254,24 +254,25 @@ fun DriverLoginScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF37474F))
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.15f))
                     Text(
-                        text = " O ",
-                        color = Color(0xFF90A4AE),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        text = "O BIEN",
+                        color = Color(0xFF94A3B8),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(horizontal = 12.dp)
                     )
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF37474F))
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.15f))
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
                 GoogleSignInButton(
                     onClick = {
@@ -389,8 +390,9 @@ fun DriverLoginScreen(
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier
+                    .navigationBarsPadding()
                     .clickable { onExploreMapAsGuest() }
-                    .padding(bottom = 20.dp)
+                    .padding(bottom = 16.dp)
             )
         }
     }

@@ -356,8 +356,10 @@ fun AdminCrashLogsScreen(
                         }
                     } else {
                         LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .navigationBarsPadding(),
+                            contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 36.dp),
                             verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
                             items(filteredCrashes, key = { it.id }) { crash ->
@@ -1067,6 +1069,7 @@ private fun AnalyticsDashboardView(crashes: List<AdminCrashLog>) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .navigationBarsPadding()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -1190,7 +1193,7 @@ private fun AnalyticsDashboardView(crashes: List<AdminCrashLog>) {
             barGradient = Brush.horizontalGradient(listOf(Color(0xFF475569), Color(0xFF94A3B8)))
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(28.dp))
     }
 }
 

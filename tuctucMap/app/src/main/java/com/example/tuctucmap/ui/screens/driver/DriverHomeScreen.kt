@@ -1253,13 +1253,22 @@ fun DriverHomeScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "${driverProfile?.nombre ?: "Conductor"} • Tel: ${driverProfile?.telefono ?: "---"}",
+                                    text = driverProfile?.nombre ?: "Conductor",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp,
                                     color = Color.White,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
+                                if (!driverProfile?.telefono.isNullOrBlank()) {
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "📞 ${driverProfile?.telefono}",
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF94A3B8),
+                                        maxLines = 1
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(3.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
@@ -1270,7 +1279,7 @@ fun DriverHomeScreen(
                                     )
                                     Spacer(modifier = Modifier.width(5.dp))
                                     Text(
-                                        text = "Suscripción vence: $formattedExpiryDate",
+                                        text = "Vence: $formattedExpiryDate",
                                         fontSize = 12.sp,
                                         color = Color(0xFF94A3B8),
                                         maxLines = 1,
@@ -2151,7 +2160,7 @@ fun DriverHomeScreen(
                         )
                     },
                     title = {
-                        Text("Renovar Suscripción de Conductor", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text("Renovar Suscripción de Conductor", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.White)
                     },
                     text = {
                         Column(
@@ -2397,6 +2406,7 @@ fun DriverHomeScreen(
                         }
                     },
                     containerColor = Color(0xFF0F172A),
+                    titleContentColor = Color.White,
                     textContentColor = Color.White
                 )
             }

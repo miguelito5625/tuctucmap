@@ -141,8 +141,9 @@ fun DriverSubscriptionExpiredScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .imePadding()
+                .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 36.dp),
+                .padding(horizontal = 24.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Ícono de advertencia latiendo con fondo rojo/naranja
@@ -613,7 +614,7 @@ fun DriverSubscriptionExpiredScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

@@ -195,10 +195,11 @@ fun PassengerDrawerSheet(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = passenger?.nombre?.ifBlank { "Pasajero" } ?: "Pasajero",
-                                    fontSize = 19.sp,
+                                    fontSize = 17.sp,
+                                    lineHeight = 22.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,
-                                    maxLines = 1,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -283,6 +284,7 @@ fun PassengerDrawerSheet(
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 12.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
@@ -359,7 +361,9 @@ fun PassengerDrawerSheet(
             HorizontalDivider(color = Color.White.copy(alpha = 0.12f), thickness = 1.dp)
 
             Column(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .padding(horizontal = 12.dp, vertical = 12.dp)
             ) {
                 if (!isGuest) {
                     NavigationDrawerItem(
@@ -469,10 +473,11 @@ fun DriverDrawerSheet(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = driver?.nombre?.ifBlank { "Conductor" } ?: "Conductor",
-                                fontSize = 19.sp,
+                                fontSize = 17.sp,
+                                lineHeight = 22.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
-                                maxLines = 1,
+                                maxLines = 2,
                                 overflow = TextOverflow.Ellipsis
                             )
                             Spacer(modifier = Modifier.height(4.dp))
@@ -616,6 +621,7 @@ fun DriverDrawerSheet(
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 12.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
@@ -677,7 +683,9 @@ fun DriverDrawerSheet(
             HorizontalDivider(color = Color.White.copy(alpha = 0.12f), thickness = 1.dp)
 
             Column(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .padding(horizontal = 12.dp, vertical = 12.dp)
             ) {
                 NavigationDrawerItem(
                     label = {
@@ -834,6 +842,7 @@ fun AdminDrawerSheet(
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    .navigationBarsPadding()
                     .padding(horizontal = 12.dp, vertical = 12.dp)
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(4.dp)

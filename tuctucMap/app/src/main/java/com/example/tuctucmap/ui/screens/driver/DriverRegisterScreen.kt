@@ -202,7 +202,8 @@ fun DriverRegisterScreen(
                     telefono = it
                     errorMessage = null
                 },
-                label = { Text("Número de Teléfono (8 dígitos)", color = Color.LightGray) },
+                label = { Text("Teléfono", color = Color.LightGray) },
+                placeholder = { Text("8 dígitos (ej. 55554444)", color = Color.Gray) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Phone,
@@ -233,7 +234,8 @@ fun DriverRegisterScreen(
                     placas = it
                     errorMessage = null
                 },
-                label = { Text("Número de Placas del TucTuc", color = Color.LightGray) },
+                label = { Text("Placas del TucTuc", color = Color.LightGray) },
+                placeholder = { Text("Ej. M-123XYZ", color = Color.Gray) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.DirectionsCar,
@@ -264,7 +266,8 @@ fun DriverRegisterScreen(
                     numeroUnidad = it
                     errorMessage = null
                 },
-                label = { Text("N° de TucTuc / Padrón (Ej. TucTuc #14 - Opcional)", color = Color.LightGray) },
+                label = { Text("N° de Unidad / TucTuc (Opcional)", color = Color.LightGray) },
+                placeholder = { Text("Ej. #14", color = Color.Gray) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.DirectionsCar,
@@ -326,7 +329,8 @@ fun DriverRegisterScreen(
                     password = it
                     errorMessage = null
                 },
-                label = { Text("Contraseña (mínimo 6 caracteres)", color = Color.LightGray) },
+                label = { Text("Contraseña", color = Color.LightGray) },
+                placeholder = { Text("Mínimo 6 caracteres", color = Color.Gray) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Lock,
@@ -390,24 +394,25 @@ fun DriverRegisterScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF37474F))
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.15f))
                 Text(
-                    text = " O ",
-                    color = Color(0xFF90A4AE),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    text = "O BIEN",
+                    color = Color(0xFF94A3B8),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.padding(horizontal = 12.dp)
                 )
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF37474F))
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.15f))
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             GoogleSignInButton(
                 onClick = {
@@ -460,7 +465,9 @@ fun DriverRegisterScreen(
 
             // Enlace para volver a Iniciar Sesión
             Row(
-                modifier = Modifier.padding(bottom = 16.dp),
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .padding(bottom = 20.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(

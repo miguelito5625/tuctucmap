@@ -189,6 +189,7 @@ fun DriverSubscriptionScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .imePadding()
+                    .navigationBarsPadding()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -581,7 +582,7 @@ fun DriverSubscriptionScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }

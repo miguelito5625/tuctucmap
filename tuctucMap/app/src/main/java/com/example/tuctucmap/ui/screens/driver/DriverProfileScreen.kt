@@ -144,6 +144,7 @@ fun DriverProfileScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .imePadding()
+                        .navigationBarsPadding()
                         .verticalScroll(rememberScrollState())
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -701,7 +702,7 @@ fun DriverProfileScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }

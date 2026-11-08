@@ -219,6 +219,7 @@ fun AdminDriversTab(
                 item {
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(end = 16.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         item {
@@ -1869,37 +1870,46 @@ private fun DriverDossierBottomSheetContent(
         ) {
             OutlinedButton(
                 onClick = onWhatsApp,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(44.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF10B981)),
                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.5f)),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
             ) {
-                Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(15.dp))
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("WhatsApp", fontSize = 12.sp)
+                Text("WhatsApp", fontSize = 11.5.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.SemiBold)
             }
 
             OutlinedButton(
                 onClick = onEdit,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(44.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF38BDF8)),
                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF38BDF8).copy(alpha = 0.5f)),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
             ) {
-                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(15.dp))
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Editar", fontSize = 12.sp)
+                Text("Editar", fontSize = 11.5.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.SemiBold)
             }
 
             Button(
                 onClick = onRenew,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(44.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
             ) {
-                Icon(Icons.Default.AddCard, contentDescription = null, tint = Color(0xFF0F172A), modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.AddCard, contentDescription = null, tint = Color(0xFF0F172A), modifier = Modifier.size(15.dp))
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Renovar", color = Color(0xFF0F172A), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("Renovar", color = Color(0xFF0F172A), fontSize = 11.5.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
             }
         }
 

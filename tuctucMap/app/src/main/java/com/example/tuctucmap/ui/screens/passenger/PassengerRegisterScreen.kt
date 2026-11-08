@@ -213,7 +213,8 @@ fun PassengerRegisterScreen(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it; errorMessage = null },
-                    label = { Text("Contraseña (min. 6 caracteres)") },
+                    label = { Text("Contraseña", color = Color(0xFF78909C)) },
+                    placeholder = { Text("Mínimo 6 caracteres", color = Color.Gray) },
                     leadingIcon = {
                         Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF78909C))
                     },
@@ -281,24 +282,25 @@ fun PassengerRegisterScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF37474F))
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.15f))
                     Text(
-                        text = " O ",
-                        color = Color(0xFF90A4AE),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        text = "O BIEN",
+                        color = Color(0xFF94A3B8),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(horizontal = 12.dp)
                     )
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF37474F))
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.15f))
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
                 GoogleSignInButton(
                     onClick = {
@@ -356,13 +358,16 @@ fun PassengerRegisterScreen(
                     onClick = onExploreMapAsGuest,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
+                        .height(50.dp)
+                        .navigationBarsPadding(),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFF9D423)),
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF9D423)),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("🗺️ Explorar Mapa sin Registrarse", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

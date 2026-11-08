@@ -1,16 +1,16 @@
 # Graph Report - tuctucmap  (2026-11-07)
 
 ## Corpus Check
-- 144 files · ~174,422 words
+- 144 files · ~174,779 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1400 nodes · 2281 edges · 103 communities (77 shown, 26 thin omitted)
+- 1400 nodes · 2282 edges · 102 communities (76 shown, 26 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `fb516f93`
+- Built from commit: `a312aa4c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -58,7 +58,7 @@
 - CrashLogsComponent
 - Skill: Angular Dashboard (TucTuc Map)
 - DriverTripHistoryScreen.kt
-- AdminBusinessConfigTab.kt
+- @angular/platform-browser
 - Contexto del Proyecto: TucTuc Map (Monorepo)
 - gradlew
 - ExampleInstrumentedTest
@@ -85,9 +85,8 @@
 - 💰 Reporte de Costos Operativos y Rentabilidad en Producción: TucTuc Map
 - 2. El Flujo de Trabajo en 3 Fases (El Ciclo Consultivo)
 - 2. Errores Funcionales y Bugs Detectados
-- @angular/cdk
-- DriverSubscriptionScreen.kt
-- GoogleAuthCancellationException
+- DriverHomeScreen.kt
+- GoogleAuthHelper
 - MainActivity.kt
 - public.app_crash_logs
 - .saveTripRecord
@@ -136,7 +135,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (103 total, 26 thin omitted)
+## Communities (102 total, 26 thin omitted)
 
 ### Community 2 - "3. Escenarios y Pruebas Ejecutadas"
 Cohesion: 0.08
@@ -172,7 +171,7 @@ Nodes (29): Configuración del Proyecto y Dependencias, Manifiesto de Android y 
 
 ### Community 10 - "dependencies"
 Cohesion: 0.13
-Nodes (15): @angular/animations, @angular/compiler, @angular/forms, @angular/platform-browser, @angular/router, leaflet, dependencies, @angular/animations (+7 more)
+Nodes (15): @angular/animations, @angular/cdk, @angular/compiler, @angular/forms, @angular/router, leaflet, dependencies, @angular/animations (+7 more)
 
 ### Community 11 - "devDependencies"
 Cohesion: 0.13
@@ -247,7 +246,7 @@ Cohesion: 0.25
 Nodes (7): Decisiones Técnicas, Estructura de Archivos a Crear/Modificar, Flujo de Datos, Módulos de Angular Material a Importar, Objetivo, TucTucMap Dashboard — Plan de Implementación, Verificación
 
 ### Community 32 - "AppNavigation"
-Cohesion: 0.24
+Cohesion: 0.27
 Nodes (10): AppNavigation(), DriverRouteToPassenger, Driver, resolveDriverScreen(), AdminAdminsScreen(), AdminProfileScreen(), DriverSubscriptionExpiredScreen(), PassengerProfileScreen() (+2 more)
 
 ### Community 33 - "TucTucMap Dashboard — Tasks"
@@ -286,10 +285,6 @@ Nodes (5): 1. Stack Tecnológico & Dependencias, 2. Autenticación, Secretos y S
 Cohesion: 0.19
 Nodes (10): DriverHistoryPeriodFilter, CUSTOM_RANGE, TODAY, YESTERDAY, DriverTripCard(), DriverTripHistoryScreen(), SelectableDates, Context (+2 more)
 
-### Community 43 - "AdminBusinessConfigTab.kt"
-Cohesion: 0.46
-Nodes (7): AppConfig, AdminBusinessConfigTab(), configFieldColors(), ConfigSectionTitle(), Context, Modifier, testWhatsAppNumber()
-
 ### Community 44 - "Contexto del Proyecto: TucTuc Map (Monorepo)"
 Cohesion: 0.40
 Nodes (5): 1. Estructura del Monorepo y Límites de Subsistemas, 2. Skills de Trabajo Disponibles (`.agents/skills/`), 3. Reglas Obligatorias del Agente (AI Rules), 4. Documentos de Análisis y Planes Estratégicos, Contexto del Proyecto: TucTuc Map (Monorepo)
@@ -311,8 +306,8 @@ Cohesion: 0.22
 Nodes (8): 1. La Gran Ventaja del Modelo de Negocio de TucTuc Map, 2. El Semáforo de Crecimiento: Métricas y Puntos de Inflexión, 3. Análisis de Frentes Regulatorios, 4. Plan de Acción Recomendado, A. Superintendencia de Administración Tributaria (SAT) e Impuestos, B. Municipalidades y Policía Municipal de Tránsito (PMT), C. Términos y Condiciones Contractuales (Desde el Lanzamiento Público), Guía Regulatoria, Fiscal (SAT) y Ruta de Formalización — TucTuc Map
 
 ### Community 62 - "Color.kt"
-Cohesion: 0.22
-Nodes (7): Brush, CompleteDriverGoogleRegistrationDialog(), GoogleSignInButton(), Modifier, DriverLoginScreen(), DriverRegisterScreen(), PassengerLoginScreen()
+Cohesion: 0.21
+Nodes (8): Brush, GoogleAuthCancellationException, CompleteDriverGoogleRegistrationDialog(), GoogleSignInButton(), Modifier, DriverLoginScreen(), DriverRegisterScreen(), PassengerLoginScreen()
 
 ### Community 63 - "scripts"
 Cohesion: 0.33
@@ -335,20 +330,20 @@ Cohesion: 0.12
 Nodes (16): 1.1 Diagnóstico de Estabilidad Técnica y Rendimiento (Findings), 1.2 Oportunidades de Mejora Identificadas por los Evaluadores, 1. Resumen Ejecutivo del Reporte de Pruebas, 2.1 Implementación de Onboarding / Walkthrough Dinámico por Rol, 2.2 Botón "Compartir App" (Viralidad Hiperlocal vía WhatsApp), 2.3 Botón "Calificar la Aplicación" e In-App Review, 2.4 Renovación Gráfica de la Ficha de Google Play (ASO & Capturas), 2.5 Canal de Soporte y Sugerencias In-App (+8 more)
 
 ### Community 68 - "AdminSubscriptionsTab.kt"
-Cohesion: 0.11
-Nodes (22): AdminPaymentRequest, AdminSubscriptionHistory, AdminSubscriptionsTab(), exportAndShareCsv(), filterChipColors(), formatEpochDate(), getSubscriptionPeriodRangeIso(), Context (+14 more)
+Cohesion: 0.09
+Nodes (29): AdminPaymentRequest, AdminSubscriptionHistory, AppConfig, AdminBusinessConfigTab(), configFieldColors(), ConfigSectionTitle(), Context, Modifier (+21 more)
 
 ### Community 69 - "shell.component.ts"
 Cohesion: 0.24
 Nodes (4): ChangeNameDialogComponent, Component, ChangePasswordDialogComponent, Component
 
 ### Community 70 - "AppDrawer.kt"
-Cohesion: 0.05
-Nodes (47): DriverFarePreferences, Context, Passenger, AdminDrawerItem, ADMINS, CONFIG, CRASH_LOGS, DRIVERS (+39 more)
+Cohesion: 0.06
+Nodes (42): parseIsoTimestamp(), Passenger, AdminDrawerItem, ADMINS, CONFIG, CRASH_LOGS, DRIVERS, FLEET_MAP (+34 more)
 
 ### Community 73 - "DriverReportsScreen.kt"
-Cohesion: 0.16
-Nodes (14): parseIsoTimestamp(), DriverProfileScreen(), formatExpiryDate(), DailyReportGroup, DriverReportsPeriodFilter, CUSTOM_RANGE, TODAY, YESTERDAY (+6 more)
+Cohesion: 0.20
+Nodes (11): DailyReportGroup, DriverReportsPeriodFilter, CUSTOM_RANGE, TODAY, YESTERDAY, DriverReportsScreen(), SelectableDates, DriverWeeklyBarChart() (+3 more)
 
 ### Community 74 - "Auditoría Funcional Completa — TucTuc Map (App Android)"
 Cohesion: 0.09
@@ -366,17 +361,17 @@ Nodes (6): 2. El Flujo de Trabajo en 3 Fases (El Ciclo Consultivo), Fase 1: Refo
 Cohesion: 0.14
 Nodes (13): 1. Resumen Ejecutivo, 2. Errores Funcionales y Bugs Detectados, 3. Evaluación de Rendimiento por Subsistema, 4. Hoja de Ruta de Optimización Recomendada, 🔴 [BUG-01] Tormenta de Consultas `O(N)` por Canales Realtime sin Filtro en `public.profiles`, 🔴 [BUG-02] Viajes Broadcast de Pasajeros Invitados Expirados Nunca se Eliminan de Firebase RTDB, 🟠 [BUG-03] Descarga Innecesaria de Polilíneas `route_points` (JSONB) en `getDriverTripHistory()`, 🟠 [BUG-04] Escaneo Completo de Tablas y Truncamiento Silencioso a 1,000 Filas en `AdminRepository` (+5 more)
 
-### Community 79 - "DriverSubscriptionScreen.kt"
-Cohesion: 0.31
-Nodes (7): calculateRemainingDays(), Driver, ServerClock, SubscriptionRenewalRequest, DriverSubscriptionScreen(), Quadruple, RenewalRequestItem()
+### Community 79 - "DriverHomeScreen.kt"
+Cohesion: 0.10
+Nodes (18): Activity, DriverFarePreferences, Context, calculateRemainingDays(), Driver, ServerClock, SubscriptionRenewalRequest, DriverHomeScreen() (+10 more)
 
-### Community 80 - "GoogleAuthCancellationException"
+### Community 80 - "GoogleAuthHelper"
 Cohesion: 0.36
-Nodes (6): GoogleAuthCancellationException, GoogleAuthHelper, GoogleUserData, Context, Exception, Result
+Nodes (5): GoogleAuthHelper, GoogleUserData, Context, Exception, Result
 
 ### Community 81 - "MainActivity.kt"
-Cohesion: 0.16
-Nodes (12): Activity, Bundle, ComponentActivity, Intent, MainActivity, AnimatedAppName(), AnimatedSplashScreen(), Modifier (+4 more)
+Cohesion: 0.25
+Nodes (9): Bundle, ComponentActivity, Intent, MainActivity, AnimatedAppName(), AnimatedSplashScreen(), Modifier, SmokePuffDef (+1 more)
 
 ### Community 83 - ".saveTripRecord"
 Cohesion: 0.39
@@ -414,11 +409,11 @@ Nodes (9): MutableData, SessionStatus, AcceptTripResult, AlreadyTaken, DriverGoo
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `SupabaseRepository` connect `SupabaseRepository` to `AppNavigation`, `DriverLocation`, `LocationTrackingService`, `AppDrawer.kt`, `AdminSubscriptionsTab.kt`, `SupabaseRepository.kt`, `DriverPendingScreen.kt`, `DriverReportsScreen.kt`, `AdminBusinessConfigTab.kt`, `DriverTripHistoryScreen.kt`, `SettingsScreen.kt`, `DataSnapshot`, `DriverSubscriptionScreen.kt`, `MainActivity.kt`, `PassengerMapScreen.kt`, `.saveTripRecord`, `AdminTripsScreen.kt`, `Color.kt`?**
+- **Why does `SupabaseRepository` connect `SupabaseRepository` to `AppNavigation`, `DriverLocation`, `LocationTrackingService`, `AdminSubscriptionsTab.kt`, `AppDrawer.kt`, `SupabaseRepository.kt`, `DriverPendingScreen.kt`, `DriverReportsScreen.kt`, `DriverTripHistoryScreen.kt`, `SettingsScreen.kt`, `DataSnapshot`, `DriverHomeScreen.kt`, `MainActivity.kt`, `PassengerMapScreen.kt`, `.saveTripRecord`, `AdminTripsScreen.kt`, `Color.kt`?**
   _High betweenness centrality (0.090) - this node is a cross-community bridge._
 - **Why does `SecurePrefs` connect `SecurePrefs` to `MainActivity.kt`, `LocationTrackingService`, `Color.kt`?**
   _High betweenness centrality (0.027) - this node is a cross-community bridge._
-- **Why does `AppNavigation()` connect `AppNavigation` to `Screen`, `AppDrawer.kt`, `DriverPendingScreen.kt`, `SettingsScreen.kt`, `DriverReportsScreen.kt`, `DriverTripHistoryScreen.kt`, `DriverSubscriptionScreen.kt`, `MainActivity.kt`, `SecurePrefs`, `PassengerMapScreen.kt`, `SupabaseRepository`, `AdminTripsScreen.kt`, `Color.kt`?**
+- **Why does `AppNavigation()` connect `AppNavigation` to `Screen`, `AppDrawer.kt`, `DriverPendingScreen.kt`, `SettingsScreen.kt`, `DriverReportsScreen.kt`, `DriverTripHistoryScreen.kt`, `DriverHomeScreen.kt`, `MainActivity.kt`, `SecurePrefs`, `PassengerMapScreen.kt`, `SupabaseRepository`, `AdminTripsScreen.kt`, `Color.kt`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
 - **Are the 9 inferred relationships involving `AppNavigation()` (e.g. with `DriverHomeScreen()` and `DriverLoginScreen()`) actually correct?**
   _`AppNavigation()` has 9 INFERRED edges - model-reasoned connections that need verification._

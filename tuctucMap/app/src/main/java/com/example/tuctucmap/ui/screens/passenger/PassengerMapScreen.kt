@@ -997,8 +997,10 @@ fun PassengerMapScreen(
             // ══════════════════════════════════════════════════════════════════════
             if (showBroadcastDialog) {
                 val broadcastScrollState = rememberScrollState()
+                val broadcastSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
                 ModalBottomSheet(
                     onDismissRequest = { showBroadcastDialog = false },
+                    sheetState = broadcastSheetState,
                     containerColor = Color(0xFF0F172A),
                     contentColor = Color.White,
                     shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
@@ -1228,7 +1230,7 @@ fun PassengerMapScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(28.dp))
 
                         val effectivePassengerName = if (repository.isUserLoggedIn) {
                             passengerProfile?.nombre ?: "Pasajero"
@@ -1348,7 +1350,7 @@ fun PassengerMapScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(28.dp))
                     }
                 }
             }

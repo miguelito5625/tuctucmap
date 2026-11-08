@@ -95,20 +95,33 @@ fun AdminBusinessConfigTab(
                 .background(Color(0xFF0F172A))
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(20.dp),
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "Configuración Comercial",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            Text(
-                text = "Estos datos se sincronizan en tiempo real con la app de todos los conductores para cobros y geocerca.",
-                fontSize = 13.sp,
-                color = Color(0xFF94A3B8)
-            )
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Sync,
+                        contentDescription = null,
+                        tint = Color(0xFFF59E0B),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = "Estos parámetros comerciales se sincronizan en vivo con todos los tuctucs para geocerca, cobro de suscripciones y depósitos.",
+                        fontSize = 12.sp,
+                        color = Color(0xFF94A3B8),
+                        lineHeight = 16.sp
+                    )
+                }
+            }
 
             // ── WhatsApp de Atención Administrativa ─────────────────────────
             ConfigSectionTitle("WhatsApp Administrativo")
@@ -311,7 +324,7 @@ fun AdminBusinessConfigTab(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(36.dp))
         }
     }
 }

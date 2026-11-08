@@ -124,6 +124,7 @@ fun AdminProfileScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .imePadding()
+                    .navigationBarsPadding()
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -401,6 +402,8 @@ fun AdminProfileScreen(
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(28.dp))
             }
         }
     }

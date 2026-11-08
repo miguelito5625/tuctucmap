@@ -263,24 +263,25 @@ fun PassengerLoginScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF37474F))
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.15f))
                     Text(
-                        text = " O ",
-                        color = Color(0xFF90A4AE),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        text = "O BIEN",
+                        color = Color(0xFF94A3B8),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(horizontal = 12.dp)
                     )
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF37474F))
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.15f))
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
                 GoogleSignInButton(
                     onClick = {
@@ -351,7 +352,10 @@ fun PassengerLoginScreen(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 // ── Conductor ─────────────────────────────────────────────────────
-                TextButton(onClick = onSelectDriver) {
+                TextButton(
+                    onClick = onSelectDriver,
+                    modifier = Modifier.navigationBarsPadding()
+                ) {
                     Text(
                         text = "🛺 ¿Eres Conductor? Entrar o Registrar TucTuc",
                         color = Color(0xFFF9D423),
@@ -359,6 +363,8 @@ fun PassengerLoginScreen(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
