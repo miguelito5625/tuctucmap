@@ -52,7 +52,7 @@ fun DriverRegisterScreen(
     var numeroUnidad by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    
+
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var isGoogleLoading by remember { mutableStateOf(false) }
@@ -384,7 +384,11 @@ fun DriverRegisterScreen(
                 )
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp, color = Color(0xFF0F2027))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        strokeWidth = 2.dp,
+                        color = Color(0xFF0F2027)
+                    )
                 } else {
                     Text(
                         text = "Registrarme",
@@ -434,6 +438,7 @@ fun DriverRegisterScreen(
                                         is DriverGoogleLoginResult.Success -> {
                                             onRegisterSuccess()
                                         }
+
                                         is DriverGoogleLoginResult.NeedsProfile -> {
                                             pendingGoogleProfile = status
                                         }

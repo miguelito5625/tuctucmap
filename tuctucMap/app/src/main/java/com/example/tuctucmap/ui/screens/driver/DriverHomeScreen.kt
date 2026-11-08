@@ -132,6 +132,8 @@ fun DriverHomeScreen(
     }
 
     var showFinishTripDialog by remember { mutableStateOf(false) }
+    var showNoMovementWarningDialog by remember { mutableStateOf(false) }
+    var isCancellingTrip by remember { mutableStateOf(false) }
     var isFinishingTrip by remember { mutableStateOf(false) }
     var isUpdatingStatus by remember { mutableStateOf(false) }
     var fareInputText by remember { mutableStateOf("") }
@@ -1559,14 +1561,19 @@ fun DriverHomeScreen(
 
                         Button(
                             onClick = {
-                                val list = DriverFarePreferences.getRecentFares(context)
-                                suggestedFares = list
-                                if (fareInputText.isBlank() && list.isNotEmpty()) {
-                                    val first = list.first()
-                                    fareInputText =
-                                        if (first % 1.0 == 0.0) first.toInt().toString() else first.toString()
+                                val currentPoints = LocationTrackingService.getTripRoutePointsSnapshot()
+                                if (liveTripDistanceMeters < 50.0 && currentPoints.size < 2) {
+                                    showNoMovementWarningDialog = true
+                                } else {
+                                    val list = DriverFarePreferences.getRecentFares(context)
+                                    suggestedFares = list
+                                    if (fareInputText.isBlank() && list.isNotEmpty()) {
+                                        val first = list.first()
+                                        fareInputText =
+                                            if (first % 1.0 == 0.0) first.toInt().toString() else first.toString()
+                                    }
+                                    showFinishTripDialog = true
                                 }
-                                showFinishTripDialog = true
                             },
                             modifier = Modifier.fillMaxWidth().height(48.dp),
                             shape = RoundedCornerShape(10.dp),
@@ -1778,6 +1785,14 @@ fun DriverHomeScreen(
                     confirmButton = {
                         Button(
                             onClick = {
+                                val currentPoints = LocationTrackingService.getTripRoutePointsSnapshot()
+                                val currentMeters = LocationTrackingService.activeTripDistanceMeters.value
+                                if (currentMeters < 50.0 && currentPoints.size < 2) {
+                                    showFinishTripDialog = false
+                                    showNoMovementWarningDialog = true
+                                    return@Button
+                                }
+
                                 val fareValue = fareInputText.toDoubleOrNull()
                                 if (fareValue == null || fareValue <= 0.0) {
                                     Toast.makeText(
@@ -1868,6 +1883,95 @@ fun DriverHomeScreen(
                             colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF94A3B8))
                         ) {
                             Text("Cancelar")
+                        }
+                    }
+                )
+            }
+
+            // ── DIÁLOGO DE ADVERTENCIA POR FALTA DE MOVIMIENTO (MENOS DE 50 METROS) ────
+            if (showNoMovementWarningDialog && activeAcceptedTrip != null) {
+                val tripToCancel = activeAcceptedTrip!!
+                AlertDialog(
+                    onDismissRequest = { if (!isCancellingTrip) showNoMovementWarningDialog = false },
+                    containerColor = Color(0xFF0F172A),
+                    shape = RoundedCornerShape(20.dp),
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = Color(0xFFF59E0B),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "¿Cancelar o continuar viaje?",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 17.sp,
+                                color = Color.White
+                            )
+                        }
+                    },
+                    text = {
+                        Column {
+                            Text(
+                                text = "Se ha registrado menos de 50 metros de desplazamiento GPS. Para registrar un viaje completado con cobro debe existir recorrido real del TucTuc.",
+                                color = Color(0xFFCBD5E1),
+                                fontSize = 13.sp
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Si el pasajero no se presentó o canceló la carrera, puedes cancelar la solicitud sin generar cobros ni registros erróneos en el sistema.",
+                                color = Color(0xFF94A3B8),
+                                fontSize = 12.sp
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                isCancellingTrip = true
+                                coroutineScope.launch {
+                                    try {
+                                        val tid = tripToCancel.tripId
+                                        LocationTrackingService.finishTripTracking()
+                                        if (tid.isNotBlank()) {
+                                            repository.updateTripStatus(tid, "cancelled")
+                                            repository.deleteTrip(tid)
+                                        }
+                                        LocationTrackingService.driverStatus.value = "disponible"
+                                        repository.updateDriverStatus(uid, "disponible")
+
+                                        LocationTrackingService.activeAcceptedTrip.value = null
+                                        tripSharedPrefs.edit().clear().apply()
+
+                                        showNoMovementWarningDialog = false
+                                        LocationTrackingService.stopSpeaking()
+                                        refreshTripStats()
+                                        Toast.makeText(context, "Viaje cancelado sin cobro", Toast.LENGTH_SHORT).show()
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Error al cancelar viaje: ${e.localizedMessage ?: "Error desconocido"}", Toast.LENGTH_SHORT).show()
+                                    } finally {
+                                        isCancellingTrip = false
+                                    }
+                                }
+                            },
+                            enabled = !isCancellingTrip,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
+                        ) {
+                            if (isCancellingTrip) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
+                            } else {
+                                Text("Cancelar Solicitud", fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { showNoMovementWarningDialog = false },
+                            enabled = !isCancellingTrip
+                        ) {
+                            Text("Continuar en ruta", color = Color(0xFF38BDF8), fontWeight = FontWeight.SemiBold)
                         }
                     }
                 )
