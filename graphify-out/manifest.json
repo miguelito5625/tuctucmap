@@ -336,8 +336,8 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverHomeScreen.kt": {
-    "mtime": 1794121631.8886178,
-    "seen": 1794121821.5958366,
+    "mtime": 1794121883.0487967,
+    "seen": 1794122061.807315,
     "ast_hash": "52c531ce4cc13b411309f79f1b497b62",
     "semantic_hash": ""
   },
@@ -843,54 +843,6 @@
     "mtime": 1794084535.3559492,
     "seen": 1794085234.398266,
     "ast_hash": "e864b56027fb385dd17216fe685cfd3a",
-    "semantic_hash": ""
-  },
-  "reportes/AUDITORIA_SOLICITUDES_VIAJE.md": {
-    "mtime": 1794121780.636575,
-    "seen": 1794121821.5959582,
-    "ast_hash": "248564c4ad51c4f5db6abba87ceb1352",
-    "semantic_hash": ""
-  },
-  "reportes/ANALISIS_COSTOS_Y_RENTABILIDAD.md": {
-    "mtime": 1794121780.6306589,
-    "seen": 1794121821.5959477,
-    "ast_hash": "f28dfc77d6138520b761948b3efc25d9",
-    "semantic_hash": ""
-  },
-  "reportes/AUDITORIA_FUNCIONAL_ANDROID.md": {
-    "mtime": 1794121780.6332064,
-    "seen": 1794121821.5959535,
-    "ast_hash": "feff9f15d33435a3e503544357d4e828",
-    "semantic_hash": ""
-  },
-  "reportes/AUDITORIA_RENDIMIENTO_APP.md": {
-    "mtime": 1794121780.635201,
-    "seen": 1794121821.5959563,
-    "ast_hash": "4f9ea8f92617d97547aff78564edc856",
-    "semantic_hash": ""
-  },
-  "reportes/GUIA_PUBLICACION_PLAY_STORE.md": {
-    "mtime": 1794091549.331951,
-    "seen": 1794092510.0605924,
-    "ast_hash": "72011d04ef0253d7ad4f64930a8d3c2e",
-    "semantic_hash": ""
-  },
-  "reportes/REPORTE_COSTOS_Y_RENTABILIDAD.md": {
-    "mtime": 1794121780.6380908,
-    "seen": 1794121821.595972,
-    "ast_hash": "8c72344c9199ef8ce51f69be3e642081",
-    "semantic_hash": ""
-  },
-  "reportes/REPORTE_FUNCIONAMIENTO.md": {
-    "mtime": 1794121780.6380908,
-    "seen": 1794121821.5959747,
-    "ast_hash": "1f1c5ef09891936af4aa905bf2483e3d",
-    "semantic_hash": ""
-  },
-  "reportes/REPORTE_SEGURIDAD.md": {
-    "mtime": 1794121780.6402116,
-    "seen": 1794121821.5959766,
-    "ast_hash": "b8510089b7600b02a37b27b47918e88e",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminAdminsScreen.kt": {
