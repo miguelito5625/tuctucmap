@@ -222,9 +222,9 @@
     "semantic_hash": "bd7d8d4dcf7261c37c6a35a892af2f35"
   },
   "tuctucMap/app/build.gradle.kts": {
-    "mtime": 1794025164.7523634,
-    "seen": 1794085234.3983524,
-    "ast_hash": "b777528e6f81b3eafa763fdd97d57925",
+    "mtime": 1794263469.350564,
+    "seen": 1794263671.7066789,
+    "ast_hash": "f0770d311ba724fed8ab199927a16dcb",
     "semantic_hash": ""
   },
   "tuctucMap/app/google-services.json": {
