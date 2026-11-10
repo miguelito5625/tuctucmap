@@ -504,9 +504,9 @@
     "semantic_hash": "7feb4e4b4c4b05593c15b372340f3b0f"
   },
   ".agents/AGENTS.md": {
-    "mtime": 1794275716.583579,
-    "seen": 1794275730.2800875,
-    "ast_hash": "11e502f917e4d1835c3bee6b60fe99f4",
+    "mtime": 1794276025.741902,
+    "seen": 1794276042.643456,
+    "ast_hash": "cdde288e97ac187c4fc13a6aa01b326d",
     "semantic_hash": ""
   },
   ".agents/rules/graphify.md": {
@@ -516,9 +516,9 @@
     "semantic_hash": "a0e4d192b9e2e17256124dbfc8e24e6a"
   },
   ".agents/skills/tuctuc-android/SKILL.md": {
-    "mtime": 1793984217.692176,
-    "seen": 1793985015.7169054,
-    "ast_hash": "a84fdc77041b673be65674711fbf6552",
+    "mtime": 1794276000.9033694,
+    "seen": 1794276042.6434634,
+    "ast_hash": "1874de6185d794e92cea91b8c8ba8edf",
     "semantic_hash": ""
   },
   ".agents/skills/tuctuc-database/SKILL.md": {
@@ -855,6 +855,12 @@
     "mtime": 1794103937.218097,
     "seen": 1794111585.909456,
     "ast_hash": "3333235fa727ad637371d40d9fbba7d5",
+    "semantic_hash": ""
+  },
+  ".agents/skills/tuctuc-android-ui/SKILL.md": {
+    "mtime": 1794275984.8727436,
+    "seen": 1794276042.6434615,
+    "ast_hash": "4edc799bf50e733aba898615ddf0165c",
     "semantic_hash": ""
   }
 }

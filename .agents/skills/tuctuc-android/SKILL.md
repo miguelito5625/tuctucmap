@@ -22,22 +22,23 @@ Esta guía define las convenciones de arquitectura, patrones de interfaz de usua
 
 ---
 
-## 2. Convenciones Críticas de UI & Jetpack Compose
-1. **Edge-to-Edge y Teclado:**
-   - La actividad principal utiliza `enableEdgeToEdge()`.
-   - **Regla estricta:** TODA pantalla que contenga campos de texto (`TextField`, `OutlinedTextField`) debe incluir:
-     - `.imePadding()` en su modificador raíz o contenedor.
-     - `.verticalScroll(rememberScrollState())` para garantizar que el teclado virtual nunca oculte los campos de entrada ni los botones de acción.
-2. **Navegación y Menú Lateral (Drawer):**
+## 2. Arquitectura de UI, Restricciones y Delegación
+
+> [!IMPORTANT]
+> **Desarrollo y Calidad Visual de Interfaces Jetpack Compose:**
+> Para toda tarea que involucre crear, rediseñar, corregir o modificar pantallas, diálogos, componentes o layouts en `tuctucMap/`, **es mandatorio activar y aplicar la skill especializada:** [`tuctuc-android-ui`](../tuctuc-android-ui/SKILL.md). Dicha skill contiene los estándares obligatorios de Edge-to-Edge, `.imePadding()`, `.verticalScroll()`, prevención de fallos de teclado, contraste en tema oscuro (`SlateBackground`/`TextPrimary`), áreas de toque y optimización de listas con claves estables.
+
+### Restricciones Globales de la App:
+1. **Navegación y Menú Lateral (Drawer):**
    - Utilizar componentes de `tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/AppDrawer.kt` (`PassengerDrawerSheet` y `DriverDrawerSheet`).
    - El estado del drawer se controla mediante `rememberDrawerState()` y `CoroutineScope`.
-3. **Orientación Fija Vertical (Anti-Reinicio):**
+2. **Orientación Fija Vertical (Anti-Reinicio):**
    - Para evitar reinicios de ciclo de vida y pérdida de estado al girar el dispositivo físico o si el usuario tiene activado el giro automático, `MainActivity` está bloqueada permanentemente en vertical mediante `android:screenOrientation="portrait"` y `requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT`, además de gestionar `android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize"`.
-4. **Formulario de Solicitud de TucTuc y Sugerencias de Destino (`PassengerDestinationPreferences`):**
+3. **Formulario de Solicitud de TucTuc y Sugerencias de Destino (`PassengerDestinationPreferences`):**
    - En `PassengerMapScreen`, el campo de destino está unificado en el mismo formulario/tarjeta de datos de contacto (nombre y teléfono) con label `"Destino"`.
    - **Límite Anti-Abuso de Destino (`MAX_DESTINATION_LENGTH = 100`):** El campo `"Destino"` (`tripMessage`), `PassengerDestinationPreferences.sanitizeDestination()` y `SupabaseRepository.sanitizeTripMessage()` limitan y truncan la entrada a un máximo de **100 caracteres** (eliminando saltos de línea y mostrando el contador `0/100 caracteres máx.`), además de limitar el nombre (`50` caracteres) y teléfono (`15` caracteres) de pasajeros invitados para evitar inyección de textos gigantes que inflen el Egress en Firebase RTDB, Supabase o `TextToSpeech`.
    - `PassengerDestinationPreferences` persiste en `SharedPreferences` (`tuctuc_prefs`) los últimos 5 destinos ingresados por el pasajero, mostrándolos como chips interactivos. Si es la primera vez que se usa la app, no se muestran datos de ejemplo.
-5. **Exclusividad para Smartphones (Restricción de Tablets en Google Play):**
+4. **Exclusividad para Smartphones (Restricción de Tablets en Google Play):**
    - `AndroidManifest.xml` restringe la compatibilidad a teléfonos inteligentes mediante:
      - `<uses-feature android:name="android.hardware.telephony" android:required="true" />` para filtrar dispositivos sin módem celular (tablets Wi-Fi, Chromebooks).
      - `<supports-screens>` con `largeScreens="false"`, `xlargeScreens="false"` y `largestWidthLimitDp="600"` para filtrar tablets celulares de pantallas grandes.

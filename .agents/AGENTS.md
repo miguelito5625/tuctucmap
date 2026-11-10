@@ -11,7 +11,7 @@ Este monorepo se compone de tres proyectos interconectados. **Nunca modifiques a
 | Directorio | Propósito | Stack Tecnológico | Skill Especializado |
 | :--- | :--- | :--- | :--- |
 | [`/databaseTuctucApp`](../databaseTuctucApp) | Backend, esquema relacional, scripts administrativos y RLS | PostgreSQL en Supabase, Node.js (`pg`) | [`tuctuc-database`](./skills/tuctuc-database/SKILL.md) |
-| [`/tuctucMap`](../tuctucMap) | Aplicación móvil nativa para pasajeros y conductores de tuctucs | Kotlin, Jetpack Compose (M3), OSMDroid, Firebase RTDB, Supabase | [`tuctuc-android`](./skills/tuctuc-android/SKILL.md) |
+| [`/tuctucMap`](../tuctucMap) | Aplicación móvil nativa para pasajeros y conductores de tuctucs | Kotlin, Jetpack Compose (M3), OSMDroid, Firebase RTDB, Supabase | [`tuctuc-android`](./skills/tuctuc-android/SKILL.md), [`tuctuc-android-ui`](./skills/tuctuc-android-ui/SKILL.md) |
 | [`/tuctucMapDashboard`](../tuctucMapDashboard) | Panel administrativo web para gestión de flota, aprobaciones y finanzas | Angular (v22), Angular Material, Leaflet, Supabase JS, Firebase RTDB | N/A |
 
 ---
@@ -21,39 +21,47 @@ Este monorepo se compone de tres proyectos interconectados. **Nunca modifiques a
 Para optimizar el uso de tokens y mantener procedimientos estandarizados, este proyecto cuenta con runbooks especializados en `.agents/skills/`:
 
 1. **[`tuctuc-android`](./skills/tuctuc-android/SKILL.md):**
-   - Convenciones Jetpack Compose, Edge-to-Edge (`.imePadding()`, `.verticalScroll()`).
+   - Arquitectura base, ciclo de vida y compilación de la app móvil Android.
    - Política de tiles OSMDroid (User-Agent y caché aislada `"TucTucOsmLive"` para evitar HTTP 403).
-   - Animación de pasajero saludando (`PassengerLocationOverlay`).
+   - Animación de pasajero saludando (`PassengerLocationOverlay`) y renderizado WebP.
    - Telemetría adaptativa GPS (desplazamiento >= 8m o heartbeat de 45s, Haversine, TTL 3 min).
    - Ciclo de vida y bloqueo de suscripciones del conductor.
    - Compilación y verificación con Gradle (`.\gradlew.bat assembleDebug`).
 
-2. **[`tuctuc-database`](./skills/tuctuc-database/SKILL.md):**
+2. **[`tuctuc-android-ui`](./skills/tuctuc-android-ui/SKILL.md):**
+   - **Activación obligatoria** cada vez que se cree, rediseñe o modifique cualquier pantalla, diálogo o componente en `tuctucMap`.
+   - Prevención de fallos de teclado virtual e insets: uso estricto de `.imePadding()` y `.verticalScroll()`.
+   - Paleta de diseño y tema oscuro (`TucTucYellow`, `SlateBackground`, `TextPrimary`, etc.).
+   - Dimensión responsiva, áreas de toque mínimas (`48.dp`) y fuentes adaptables sin desbordes.
+   - Manejo exhaustivo de 4 estados visuales (Loading, Empty, Error con reintento y Success).
+   - Claves estables (`key`) en listas `LazyColumn`/`LazyRow` para eliminar parpadeos y pérdida de scroll.
+
+3. **[`tuctuc-database`](./skills/tuctuc-database/SKILL.md):**
    - Tablas maestras: `profiles`, `trips`, `driver_subscriptions`, `driver_locations`.
    - Principios mandatorios de Row Level Security (RLS) en PostgreSQL.
    - Ejecución segura de sentencias SQL mediante `node run_sql.js "<SQL>"`.
    - Sincronización obligatoria de cambios en `databaseTuctucApp/db.sql`.
 
-3. **[`tuctuc-git-sync`](./skills/tuctuc-git-sync/SKILL.md):**
+4. **[`tuctuc-git-sync`](./skills/tuctuc-git-sync/SKILL.md):**
    - Protocolo de versionamiento y push automático a GitHub tras agregar o modificar funciones.
    - Mensajes semánticos, prevención de fuga de credenciales y sincronización remota con `origin/main`.
 
-4. **[`tuctuc-playstore-release`](./skills/tuctuc-playstore-release/SKILL.md):**
+5. **[`tuctuc-playstore-release`](./skills/tuctuc-playstore-release/SKILL.md):**
    - Generación del paquete oficial firmado `.aab` (`.\gradlew.bat bundleRelease`).
    - Incremento secuencial de `versionCode` y `versionName` en `build.gradle.kts`.
    - Extracción y síntesis de commits desde la fecha de modificación del último `.aab` para redactar el Nombre y las Notas de la versión en formato Google Play Console (`<es-419>`).
 
-5. **[`graphify`](C:/Users/exbinario/.gemini/config/skills/graphify/SKILL.md):**
+6. **[`graphify`](C:/Users/exbinario/.gemini/config/skills/graphify/SKILL.md):**
    - Grafo de conocimiento y navegación arquitectónica (GraphRAG) en `graphify-out/`.
    - Consultas con token-budget reducido (`python -m graphify query "<pregunta>"`), trazabilidad de rutas entre conceptos (`python -m graphify path "A" "B"`) y análisis de impacto (`python -m graphify affected "X"`).
    - Sincronización incremental sin costo de API (`python -m graphify update .`).
 
-6. **[`prompt-engineer`](./skills/prompt-engineer/SKILL.md):**
+7. **[`prompt-engineer`](./skills/prompt-engineer/SKILL.md):**
    - Protocolo consultivo y de ingeniería de prompts para estructurar requerimientos del usuario en especificaciones técnicas de alta precisión.
    - Detección activa de lagunas y formulación de dudas críticas (edge cases, arquitectura, UI/UX, persistencia).
    - Asesoramiento y recomendación experta: presentación de opciones ponderadas destacando la solución técnica óptima con `(Recomendado)` justificado.
 
-7. **[`tuctuc-crash-resolver`](./skills/tuctuc-crash-resolver/SKILL.md):**
+8. **[`tuctuc-crash-resolver`](./skills/tuctuc-crash-resolver/SKILL.md):**
    - Auditoría, diagnóstico y solución de errores y crashes almacenados en `public.app_crash_logs`.
    - Consulta de fallos pendientes en Supabase, formulación de propuestas de solución técnicas con validación del usuario, aplicación de parches, verificación de compilación y marcado de incidencias resueltas (`UPDATE ... SET resolved = true`).
 
@@ -61,15 +69,17 @@ Para optimizar el uso de tokens y mantener procedimientos estandarizados, este p
 
 ## 3. Reglas Obligatorias del Agente (AI Rules)
 
-Las siguientes 7 reglas tienen carácter mandatorio e ineludible en toda tarea:
+Las siguientes reglas tienen carácter mandatorio e ineludible en toda tarea:
 
 1. **Analizar el entorno correcto:**
    - Si la tarea involucra la web administrativa, trabajar en `tuctucMapDashboard/`.
    - Si involucra la app de tuctucs o pasajeros, trabajar en `tuctucMap/`.
    - Si involucra estados de viaje o entidades de persistencia, iniciar en `databaseTuctucApp/db.sql`.
-2. **Convenciones UI Móvil:**
-   - Mantener soporte Edge-to-Edge.
-   - TODA pantalla Compose con campos de texto (`TextField`) debe implementar `.imePadding()` y `.verticalScroll()`.
+2. **Convenciones y Calidad de UI Móvil (`tuctuc-android-ui`):**
+   - Activar y aplicar **OBLIGATORIAMENTE** el skill [`tuctuc-android-ui`](./skills/tuctuc-android-ui/SKILL.md) cada vez que se cree o modifique una interfaz de la aplicación `tuctucMap`.
+   - Mantener soporte Edge-to-Edge y respetar `innerPadding` de `Scaffold`.
+   - TODA pantalla Compose con campos de texto (`TextField`, `OutlinedTextField`) debe implementar `.imePadding()` y `.verticalScroll()`.
+   - Garantizar áreas de toque de al menos `48.dp`, fuentes responsivas sin desbordes y claves estables (`key`) en listas `LazyColumn`/`LazyRow`.
 3. **Disciplina en Librerías:**
    - No agregar dependencias innecesarias o redundantes (como Retrofit o Mapbox). El stack consolidado (Supabase SDK, OSMDroid, Firebase) cubre todos los requisitos.
 4. **Respetar RLS:**
