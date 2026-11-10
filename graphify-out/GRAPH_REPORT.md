@@ -1,16 +1,16 @@
 # Graph Report - tuctucmap  (2026-11-09)
 
 ## Corpus Check
-- 142 files · ~155,651 words
+- 142 files · ~155,489 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1271 nodes · 2248 edges · 95 communities (70 shown, 25 thin omitted)
+- 1271 nodes · 2248 edges · 96 communities (70 shown, 26 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 22 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9cc2f7fb`
+- Built from commit: `d6fac62d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -84,7 +84,8 @@
 - LoginComponent
 - 4. Tipografía, Dimensionamiento y Accesibilidad Visual
 - @angular/core
-- @angular/cdk
+- SubscriptionHistory
+- @angular/material
 - DriverTripHistoryScreen.kt
 - .saveTripRecord
 - @angular/common
@@ -128,11 +129,11 @@
 ## Import Cycles
 - None detected.
 
-## Communities (95 total, 25 thin omitted)
+## Communities (96 total, 26 thin omitted)
 
 ### Community 0 - "SupabaseService"
-Cohesion: 0.08
-Nodes (4): Injectable, AppConfig, SubscriptionHistory, SupabaseService
+Cohesion: 0.09
+Nodes (3): Injectable, AppConfig, SupabaseService
 
 ### Community 2 - "AdminTripsScreen.kt"
 Cohesion: 0.06
@@ -168,7 +169,7 @@ Nodes (29): Configuración del Proyecto y Dependencias, Manifiesto de Android y 
 
 ### Community 10 - "dependencies"
 Cohesion: 0.13
-Nodes (15): @angular/animations, @angular/compiler, @angular/forms, @angular/material, @angular/router, leaflet, dependencies, @angular/animations (+7 more)
+Nodes (15): @angular/animations, @angular/cdk, @angular/compiler, @angular/forms, @angular/router, leaflet, dependencies, @angular/animations (+7 more)
 
 ### Community 11 - "devDependencies"
 Cohesion: 0.13
@@ -373,7 +374,7 @@ Nodes (9): AppConfig, kotlinx, DriverTodaySummary, Driver, PaymentRequestInsertD
 ## Knowledge Gaps
 - **333 isolated node(s):** `{ Client }`, `{ dbConfig }`, `{ Client }`, `{ dbConfig }`, `fs` (+328 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **25 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **26 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -389,6 +390,6 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `{ Client }`, `{ dbConfig }`, `{ Client }` to the rest of the system?**
   _333 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `SupabaseService` be split into smaller, more focused modules?**
-  _Cohesion score 0.08392603129445235 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._
 - **Should `AdminTripsScreen.kt` be split into smaller, more focused modules?**
   _Cohesion score 0.05605499735589635 - nodes in this community are weakly interconnected._

@@ -586,103 +586,13 @@ fun NativeCameraScreen(
             )
         }
 
-        if (!isScanStarted) {
-            // Pantalla de preparación: No inicia automático hasta que el usuario esté listo
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xCC0F172A))
-                    .padding(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFF9D423))
-                ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(60.dp)
-                                .background(Color(0x33F9D423), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("🛺", fontSize = 30.sp)
-                        }
-                        Spacer(modifier = Modifier.height(14.dp))
-                        Text(
-                            text = "Escaneo 360° del Vehículo",
-                            fontSize = 19.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFF9D423),
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "Capturaremos los 4 ángulos cardinales:\n1. Frente (0°)\n2. Costado Derecho (90°)\n3. Parte Trasera (180°)\n4. Costado Izquierdo (270°)",
-                            fontSize = 13.sp,
-                            color = Color.White,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 19.sp
-                        )
-                        Spacer(modifier = Modifier.height(14.dp))
-                        Surface(
-                            color = Color(0xFF0F172A),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text(
-                                text = "💡 Ponte de pie frente a tu TucTuc a unos 2 o 3 metros. Cuando estés preparado, pulsa el botón para comenzar. La brújula giroscópica tomará la foto sola cuando te alinees.",
-                                fontSize = 12.sp,
-                                color = Color(0xFF94A3B8),
-                                modifier = Modifier.padding(12.dp),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(22.dp))
-                        Button(
-                            onClick = {
-                                gyroManager.calibrateInitialHeading()
-                                isScanStarted = true
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9D423))
-                        ) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "¡Estoy Listo, Iniciar!",
-                                color = Color.Black,
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = 15.sp
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        OutlinedButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.LightGray)
-                        ) {
-                            Text("Cancelar", fontSize = 13.sp)
-                        }
-                    }
-                }
-            }
-        } else {
-            // Controles superiores cuando el escaneo está en curso
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 40.dp, start = 16.dp, end = 16.dp)
-                    .align(Alignment.TopCenter),
-                horizontalArrangement = Arrangement.SpaceBetween,
+        // Controles superiores de la cámara
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 40.dp, start = 16.dp, end = 16.dp)
+                .align(Alignment.TopCenter),
+            horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
@@ -784,7 +694,13 @@ fun NativeCameraScreen(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = if (isAutoCaptureEnabled) "Camina rodeando el vehículo. La foto se tomará sola al alinearte." else step.instruction,
+                            text = if (!isScanStarted) {
+                                "Encuadra el frente del vehículo y presiona el botón cuando estés listo"
+                            } else if (isAutoCaptureEnabled) {
+                                "Camina rodeando el vehículo. La foto se tomará sola al alinearte."
+                            } else {
+                                step.instruction
+                            },
                             fontSize = 12.sp,
                             color = Color.White,
                             textAlign = TextAlign.Center
@@ -811,13 +727,23 @@ fun NativeCameraScreen(
                     .height(240.dp)
                     .align(Alignment.Center)
                     .border(
-                        width = if (isCurrentlyAligned) 2.5.dp else 1.5.dp,
-                        color = if (isCurrentlyAligned) Color(0xFF10B981) else Color(0x6600E5FF),
+                        width = if (isCurrentlyAligned && isScanStarted) 2.5.dp else 1.5.dp,
+                        color = if (isCurrentlyAligned && isScanStarted) Color(0xFF10B981) else Color(0x6600E5FF),
                         shape = RoundedCornerShape(16.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (isCurrentlyAligned) {
+                if (!isScanStarted) {
+                    Text(
+                        text = "Encuadra el frente del vehículo",
+                        color = Color(0xFFF9D423),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                            .background(Color(0x88000000), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                } else if (isCurrentlyAligned) {
                     Surface(
                         color = Color(0xCC10B981),
                         shape = RoundedCornerShape(10.dp)
@@ -905,6 +831,20 @@ fun NativeCameraScreen(
                 }
 
                 // Disparador manual
+                if (!isScanStarted) {
+                    Text(
+                        text = "📸 Presiona para capturar Frente e iniciar 360°",
+                        color = Color(0xFFF9D423),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(bottom = 10.dp)
+                            .background(Color(0xCC0F172A), RoundedCornerShape(8.dp))
+                            .border(1.dp, Color(0xFFF9D423).copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 12.dp, vertical = 5.dp)
+                    )
+                }
+
                 Box(
                     modifier = Modifier
                         .size(76.dp)
@@ -918,6 +858,10 @@ fun NativeCameraScreen(
                                     showFlashEffect = true
                                     delay(140)
                                     showFlashEffect = false
+                                }
+                                if (!isScanStarted) {
+                                    gyroManager.calibrateInitialHeading()
+                                    isScanStarted = true
                                 }
                                 if (currentStepIndex < 3) {
                                     currentStepIndex++
@@ -938,7 +882,11 @@ fun NativeCameraScreen(
                                 .size(60.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (isCurrentlyAligned) Color(0xFF10B981) else Color(0xFF00E5FF)
+                                    when {
+                                        !isScanStarted -> Color(0xFFF9D423)
+                                        isCurrentlyAligned -> Color(0xFF10B981)
+                                        else -> Color(0xFF00E5FF)
+                                    }
                                 )
                         )
                     }
@@ -946,4 +894,3 @@ fun NativeCameraScreen(
             }
         }
     }
-}
