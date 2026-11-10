@@ -42,9 +42,24 @@ object CameraUtils {
     }
 
     /**
-     * Corrige la orientación del bitmap basada en los metadatos EXIF del sensor de la cámara.
+     * Invierte horizontalmente el bitmap (efecto espejo).
+     * Se aplica en capturas con la cámara frontal para que la foto final coincida con exactitud
+     * con lo que el usuario estaba viendo en el visor en vivo antes de presionar el botón de disparo.
      */
-    fun fixExifOrientation(bytes: ByteArray): Bitmap {
+    fun flipHorizontal(bitmap: Bitmap): Bitmap {
+        val matrix = Matrix().apply { postScale(-1f, 1f) }
+        val flipped = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        if (flipped != bitmap) {
+            bitmap.recycle()
+        }
+        return flipped
+    }
+
+    /**
+     * Corrige la orientación del bitmap basada en los metadatos EXIF del sensor de la cámara
+     * o en los grados de rotación reportados por CameraX (fallbackRotation).
+     */
+    fun fixExifOrientation(bytes: ByteArray, fallbackRotation: Int = 0): Bitmap {
         val original = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             ?: throw IllegalArgumentException("No se pudo decodificar el bitmap")
 
@@ -55,11 +70,15 @@ object CameraUtils {
                 ExifInterface.ORIENTATION_NORMAL
             )
 
-            val rotationDegrees = when (orientation) {
+            var rotationDegrees = when (orientation) {
                 ExifInterface.ORIENTATION_ROTATE_90 -> 90f
                 ExifInterface.ORIENTATION_ROTATE_180 -> 180f
                 ExifInterface.ORIENTATION_ROTATE_270 -> 270f
                 else -> 0f
+            }
+
+            if (rotationDegrees == 0f && fallbackRotation != 0) {
+                rotationDegrees = fallbackRotation.toFloat()
             }
 
             if (rotationDegrees != 0f) {
@@ -73,7 +92,18 @@ object CameraUtils {
                 original
             }
         } catch (_: Exception) {
-            original
+            if (fallbackRotation != 0) {
+                try {
+                    val matrix = Matrix().apply { postRotate(fallbackRotation.toFloat()) }
+                    val rotated = Bitmap.createBitmap(original, 0, 0, original.width, original.height, matrix, true)
+                    if (rotated != original) original.recycle()
+                    rotated
+                } catch (__: Exception) {
+                    original
+                }
+            } else {
+                original
+            }
         }
     }
 

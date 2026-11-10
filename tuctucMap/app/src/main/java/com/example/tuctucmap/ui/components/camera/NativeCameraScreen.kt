@@ -166,16 +166,24 @@ fun NativeCameraScreen(
         if (isCapturing) return
         isCapturing = true
 
+        val isFrontCamera = lensFacing == CameraSelector.LENS_FACING_FRONT
+
         capture.takePicture(
             ContextCompat.getMainExecutor(context),
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
+                    val rotation = image.imageInfo.rotationDegrees
                     scope.launch(Dispatchers.Default) {
                         try {
                             val buffer: ByteBuffer = image.planes[0].buffer
                             val bytes = ByteArray(buffer.remaining())
                             buffer.get(bytes)
-                            val bitmap = CameraUtils.fixExifOrientation(bytes)
+                            var bitmap = CameraUtils.fixExifOrientation(bytes, fallbackRotation = rotation)
+                            // Si se capturó con la cámara frontal, reflejar horizontalmente (modo espejo)
+                            // para que la imagen final sea idéntica a lo que el conductor vio en el visor antes de disparar
+                            if (isFrontCamera) {
+                                bitmap = CameraUtils.flipHorizontal(bitmap)
+                            }
                             withContext(Dispatchers.Main) {
                                 isCapturing = false
                                 onBitmapReady(bitmap)
