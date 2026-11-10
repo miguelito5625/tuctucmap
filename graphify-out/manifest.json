@@ -882,9 +882,21 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt": {
-    "mtime": 1794277727.4792879,
-    "seen": 1794277888.7889378,
-    "ast_hash": "c33aacc55510b14be2f02baf5ee7687f",
+    "mtime": 1794278764.1827896,
+    "seen": 1794278765.3950515,
+    "ast_hash": "63d662d762fe7e61eaac2aa7d5964c4f",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt": {
+    "mtime": 1794278746.1609902,
+    "seen": 1794278765.3950498,
+    "ast_hash": "69c0c161bc77fc7efb0f55062f23b0a8",
+    "semantic_hash": ""
+  },
+  "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/OrbitGyroscopeHud.kt": {
+    "mtime": 1794278746.4323366,
+    "seen": 1794278765.3950531,
+    "ast_hash": "ddcc3e3571de916d5b016e7a4fedc2f9",
     "semantic_hash": ""
   }
 }

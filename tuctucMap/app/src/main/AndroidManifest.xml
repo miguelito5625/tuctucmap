@@ -16,6 +16,7 @@
     
     <!-- Permiso para notificaciones persistentes (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- Permisos para cámara nativa (Foto del conductor y escaneo 360 del vehículo) -->
     <uses-permission android:name="android.permission.CAMERA" />

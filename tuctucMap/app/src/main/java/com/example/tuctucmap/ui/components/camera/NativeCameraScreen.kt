@@ -2,10 +2,16 @@ package com.example.tuctucmap.ui.components.camera
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -35,6 +41,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.tuctucmap.ui.components.Vehicle360Viewer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
@@ -73,6 +80,53 @@ fun NativeCameraScreen(
     var currentStepIndex by remember { mutableIntStateOf(0) }
     val capturedVehicleBitmaps = remember { mutableStateListOf<Bitmap?>().apply { repeat(8) { add(null) } } }
     var show360VerificationPreview by remember { mutableStateOf(false) }
+
+    // Estados para asistencia guiada por Giroscopio / Orientación
+    var relativeAngle by remember { mutableFloatStateOf(0f) }
+    var isSensorAvailable by remember { mutableStateOf(true) }
+    var isAutoCaptureEnabled by remember { mutableStateOf(true) }
+    var alignmentProgress by remember { mutableFloatStateOf(0f) }
+    var showFlashEffect by remember { mutableStateOf(false) }
+
+    // Instancia del gestor de giroscopio
+    val gyroManager = remember(context) {
+        GyroscopeGuideManager(context) { angle, available ->
+            relativeAngle = angle
+            isSensorAvailable = available
+        }
+    }
+
+    // Inicializar y detener escucha del giroscopio
+    DisposableEffect(mode) {
+        if (mode == CameraCaptureMode.VEHICLE_360_SCAN) {
+            gyroManager.startListening()
+        }
+        onDispose {
+            gyroManager.stopListening()
+        }
+    }
+
+    // Servicio de vibración para confirmación sensorial
+    val vibrator = remember(context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+            vm?.defaultVibrator ?: (context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+        }
+    }
+
+    fun triggerSnapFeedback() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator?.vibrate(VibrationEffect.createOneShot(120, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(120)
+            }
+        } catch (_: Exception) {}
+    }
 
     // Vincular CameraX cuando cambia lensFacing
     LaunchedEffect(lensFacing) {
@@ -137,6 +191,53 @@ fun NativeCameraScreen(
                 }
             }
         )
+    }
+
+    // Ángulo objetivo del paso actual
+    val currentTargetAngle = remember(currentStepIndex) {
+        VEHICLE_360_STEPS.getOrElse(currentStepIndex) { VEHICLE_360_STEPS[0] }.angleDegrees.toFloat()
+    }
+
+    val isCurrentlyAligned = remember(relativeAngle, currentTargetAngle, isSensorAvailable) {
+        isSensorAvailable && GyroscopeGuideManager.isWithinTolerance(relativeAngle, currentTargetAngle, toleranceDegrees = 12f)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Temporizador de disparo automático por giroscopio:
+    // Al alinearse con el ángulo objetivo por 350ms, dispara la captura automáticamente.
+    // ─────────────────────────────────────────────────────────────────────────
+    LaunchedEffect(isCurrentlyAligned, currentStepIndex, isCapturing, isAutoCaptureEnabled, show360VerificationPreview) {
+        if (mode == CameraCaptureMode.VEHICLE_360_SCAN &&
+            isCurrentlyAligned &&
+            !isCapturing &&
+            isAutoCaptureEnabled &&
+            !show360VerificationPreview
+        ) {
+            for (step in 1..8) {
+                delay(40)
+                alignmentProgress = step / 8f
+            }
+
+            takePhoto { bitmap ->
+                capturedVehicleBitmaps[currentStepIndex] = bitmap
+                triggerSnapFeedback()
+                scope.launch {
+                    showFlashEffect = true
+                    delay(140)
+                    showFlashEffect = false
+                }
+                alignmentProgress = 0f
+                if (currentStepIndex < 7) {
+                    currentStepIndex++
+                } else {
+                    if (capturedVehicleBitmaps.all { it != null }) {
+                        show360VerificationPreview = true
+                    }
+                }
+            }
+        } else {
+            alignmentProgress = 0f
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -244,7 +345,7 @@ fun NativeCameraScreen(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Prueba mover el vehículo con el dedo para verificar los 8 ángulos:",
+                    text = "Prueba mover el vehículo con el dedo para verificar los 8 ángulos capturados automáticamente:",
                     fontSize = 13.sp,
                     color = Color.LightGray,
                     textAlign = TextAlign.Center
@@ -267,6 +368,7 @@ fun NativeCameraScreen(
                         onClick = {
                             show360VerificationPreview = false
                             currentStepIndex = 0
+                            gyroManager.calibrateInitialHeading()
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -298,7 +400,7 @@ fun NativeCameraScreen(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Pantalla de Cámara Nativa en Vivo con Guías Visuales
+    // Pantalla de Cámara Nativa en Vivo con Asistencia de Giroscopio y Auto-Disparo
     // ─────────────────────────────────────────────────────────────────────────
     Box(
         modifier = Modifier
@@ -316,7 +418,21 @@ fun NativeCameraScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Barra superior de controles (Cerrar y Cambiar Cámara)
+        // Destello visual de obturador al disparar automáticamente
+        AnimatedVisibility(
+            visible = showFlashEffect,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White.copy(alpha = 0.65f))
+            )
+        }
+
+        // Barra superior de controles (Cerrar, Calibrar, Alternar Auto y Cambiar Cámara)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -332,6 +448,54 @@ fun NativeCameraScreen(
                     .background(Color(0x88000000), CircleShape)
             ) {
                 Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.White)
+            }
+
+            if (mode == CameraCaptureMode.VEHICLE_360_SCAN) {
+                // Botón de calibración a 0° inicial
+                Surface(
+                    onClick = {
+                        gyroManager.calibrateInitialHeading()
+                        alignmentProgress = 0f
+                    },
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color(0xAA0F172A),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF9D423))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Default.Explore, contentDescription = null, tint = Color(0xFFF9D423), modifier = Modifier.size(16.dp))
+                        Text("Calibrar 0°", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+
+                // Switch de disparo automático
+                Surface(
+                    onClick = { isAutoCaptureEnabled = !isAutoCaptureEnabled },
+                    shape = RoundedCornerShape(20.dp),
+                    color = if (isAutoCaptureEnabled) Color(0xCC10B981) else Color(0xAA334155)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isAutoCaptureEnabled) Icons.Default.Bolt else Icons.Default.TouchApp,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = if (isAutoCaptureEnabled) "Auto: SÍ" else "Manual",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
             }
 
             // Cambiar lente cámara (frontal/trasera)
@@ -373,7 +537,7 @@ fun NativeCameraScreen(
                 )
             }
         } else {
-            // Guía del Escaneo 360 del Vehículo
+            // Guía del Escaneo 360 del Vehículo asistida por Giroscopio
             val step = VEHICLE_360_STEPS.getOrElse(currentStepIndex) { VEHICLE_360_STEPS[0] }
 
             Column(
@@ -389,7 +553,7 @@ fun NativeCameraScreen(
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF9D423))
                 ) {
                     Column(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
@@ -398,38 +562,68 @@ fun NativeCameraScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFF9D423)
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = step.instruction,
+                            text = if (isAutoCaptureEnabled) "Camina rodeando el vehículo. La foto se tomará sola al alinearte." else step.instruction,
                             fontSize = 12.sp,
                             color = Color.White,
                             textAlign = TextAlign.Center
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Brújula / Radar Giroscópico Interactivo
+                OrbitGyroscopeHud(
+                    relativeAngle = relativeAngle,
+                    targetAngle = currentTargetAngle,
+                    isAligned = isCurrentlyAligned,
+                    alignmentProgress = alignmentProgress,
+                    isSensorAvailable = isSensorAvailable
+                )
             }
 
             // Marco guía para el vehículo
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.90f)
-                    .height(280.dp)
+                    .height(240.dp)
                     .align(Alignment.Center)
-                    .border(2.dp, Color(0xAA00E5FF), RoundedCornerShape(16.dp)),
+                    .border(
+                        width = if (isCurrentlyAligned) 2.5.dp else 1.5.dp,
+                        color = if (isCurrentlyAligned) Color(0xFF10B981) else Color(0x6600E5FF),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Encuadra el TucTuc completo",
-                    color = Color(0xFF00E5FF),
-                    fontSize = 12.sp,
-                    modifier = Modifier
-                        .background(Color(0x88000000), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                )
+                if (isCurrentlyAligned) {
+                    Surface(
+                        color = Color(0xCC10B981),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text(
+                            text = "📸 ¡TOMANDO FOTO AUTOMÁTICA!",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "Mantén el vehículo centrado",
+                        color = Color(0xFF00E5FF),
+                        fontSize = 11.sp,
+                        modifier = Modifier
+                            .background(Color(0x88000000), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
             }
         }
 
-        // Barra inferior: Miniaturas (en modo 360) y Botón de Captura
+        // Barra inferior: Miniaturas (en modo 360) y Botón de Captura (respaldo manual)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -447,7 +641,7 @@ fun NativeCameraScreen(
                 LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp),
+                        .padding(bottom = 14.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -466,6 +660,7 @@ fun NativeCameraScreen(
                                 )
                                 .clickable {
                                     currentStepIndex = index
+                                    alignmentProgress = 0f
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -492,7 +687,7 @@ fun NativeCameraScreen(
                 }
             }
 
-            // Disparador de foto central
+            // Disparador de foto central (Manual o forzar disparo inmediato)
             Box(
                 modifier = Modifier
                     .size(76.dp)
@@ -500,15 +695,19 @@ fun NativeCameraScreen(
                     .background(Color(0x44FFFFFF))
                     .clickable(enabled = !isCapturing) {
                         takePhoto { bitmap ->
+                            triggerSnapFeedback()
                             if (mode == CameraCaptureMode.DRIVER_PORTRAIT) {
                                 capturedDriverPhoto = bitmap
                             } else {
                                 capturedVehicleBitmaps[currentStepIndex] = bitmap
-                                // Avanzar al siguiente ángulo si no es el último
+                                scope.launch {
+                                    showFlashEffect = true
+                                    delay(140)
+                                    showFlashEffect = false
+                                }
                                 if (currentStepIndex < 7) {
                                     currentStepIndex++
                                 } else {
-                                    // Todos los ángulos completados
                                     if (capturedVehicleBitmaps.all { it != null }) {
                                         show360VerificationPreview = true
                                     }
@@ -525,11 +724,16 @@ fun NativeCameraScreen(
                         modifier = Modifier
                             .size(60.dp)
                             .clip(CircleShape)
-                            .background(if (mode == CameraCaptureMode.DRIVER_PORTRAIT) Color(0xFFF9D423) else Color(0xFF00E5FF))
+                            .background(
+                                when {
+                                    mode == CameraCaptureMode.DRIVER_PORTRAIT -> Color(0xFFF9D423)
+                                    isCurrentlyAligned -> Color(0xFF10B981)
+                                    else -> Color(0xFF00E5FF)
+                                }
+                            )
                     )
                 }
             }
         }
     }
 }
-

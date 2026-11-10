@@ -30,19 +30,6 @@
       "source_location": "L21"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_completedtripdto",
-      "label": "CompletedTripDto",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 100,
-      "community_name": "SupabaseRepository",
-      "file_type": "code",
-      "norm_label": "completedtripdto",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
-      "source_location": "L884"
-    },
-    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_paymentrequestinsertdto",
       "label": "PaymentRequestInsertDto",
       "_callable": true,
@@ -56,19 +43,6 @@
       "source_location": "L222"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_routepoint",
-      "label": "RoutePoint",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 100,
-      "community_name": "SupabaseRepository",
-      "file_type": "code",
-      "norm_label": "routepoint",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
-      "source_location": "L851"
-    },
-    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository",
       "label": "SupabaseRepository",
       "_callable": true,
@@ -80,19 +54,6 @@
       "norm_label": "supabaserepository",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
       "source_location": "L60"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_tripinfo",
-      "label": "TripInfo",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 100,
-      "community_name": "SupabaseRepository",
-      "file_type": "code",
-      "norm_label": "tripinfo",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
-      "source_location": "L858"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_tripsummarydto",
@@ -134,6 +95,32 @@
       "source_location": "L696"
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter_excelexporter",
+      "label": "ExcelExporter",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "ExcelExporter",
+      "file_type": "code",
+      "norm_label": "excelexporter",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExcelExporter.kt",
+      "source_location": "L20"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripsscreen_object_selectabledates_l188",
+      "label": "SelectableDates",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 102,
+      "community_name": "SelectableDates",
+      "file_type": "code",
+      "norm_label": "selectabledates",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
+      "source_location": "L188"
+    },
+    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_driverlocation_driverlocation",
       "label": "DriverLocation",
       "_callable": true,
@@ -158,6 +145,32 @@
       "norm_label": "passengerdestinationpreferences",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/PassengerDestinationPreferences.kt",
       "source_location": "L11"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverreportsscreen_driverreportsperiodfilter",
+      "label": "DriverReportsPeriodFilter",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "DriverReportsPeriodFilter",
+      "file_type": "code",
+      "norm_label": "driverreportsperiodfilter",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverReportsScreen.kt",
+      "source_location": "L42"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_csvsecurityutils_csvsecurityutils",
+      "label": "CsvSecurityUtils",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "CsvSecurityUtils",
+      "file_type": "code",
+      "norm_label": "csvsecurityutils",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/CsvSecurityUtils.kt",
+      "source_location": "L10"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_ensurefirebaseclocksync_object_valueeventlistener_l122",
@@ -391,20 +404,7 @@
       "file_type": "code",
       "norm_label": "cameracapturemode",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L42"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_admincrashlog",
-      "label": "AdminCrashLog",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "admincrashlog",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
-      "source_location": "L258"
+      "source_location": "L49"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_admindriver",
@@ -420,45 +420,6 @@
       "source_location": "L46"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_adminfinancialsummarydto",
-      "label": "AdminFinancialSummaryDto",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "adminfinancialsummarydto",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
-      "source_location": "L196"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_adminpassenger",
-      "label": "AdminPassenger",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "adminpassenger",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
-      "source_location": "L204"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_adminprofiledto",
-      "label": "AdminProfileDto",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "adminprofiledto",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
-      "source_location": "L14"
-    },
-    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_admintrip",
       "label": "AdminTrip",
       "_callable": true,
@@ -470,136 +431,6 @@
       "norm_label": "admintrip",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
       "source_location": "L164"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_adminuserdto",
-      "label": "AdminUserDto",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "adminuserdto",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
-      "source_location": "L24"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_approvedriverrpcparams",
-      "label": "ApproveDriverRpcParams",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "approvedriverrpcparams",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
-      "source_location": "L233"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_approvepaymentrequestrpcparams",
-      "label": "ApprovePaymentRequestRpcParams",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "approvepaymentrequestrpcparams",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
-      "source_location": "L225"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_deleteuserbyadminrpcparams",
-      "label": "DeleteUserByAdminRpcParams",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "deleteuserbyadminrpcparams",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
-      "source_location": "L251"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_driverdossierdto",
-      "label": "DriverDossierDto",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "driverdossierdto",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
-      "source_location": "L36"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_rejectpaymentrequestrpcparams",
-      "label": "RejectPaymentRequestRpcParams",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "rejectpaymentrequestrpcparams",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
-      "source_location": "L243"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_userroledto",
-      "label": "UserRoleDto",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "userroledto",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
-      "source_location": "L7"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_adminrepository",
-      "label": "AdminRepository",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "adminrepository",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
-      "source_location": "L26"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripperiodfilter",
-      "label": "AdminTripPeriodFilter",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "admintripperiodfilter",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L55"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripsscreen_object_selectabledates_l188",
-      "label": "SelectableDates",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "selectabledates",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L188"
     },
     {
       "id": "tuctucmapdashboard_src_app_features_fleet_map_fleet_map_component_fleetmapcomponent",
@@ -667,17 +498,17 @@
       "source_location": "L167"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_appshareutils_appshareutils",
-      "label": "AppShareUtils",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager",
+      "label": "GyroscopeGuideManager",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 32,
-      "community_name": "parseIsoTimestamp",
+      "community_name": "GyroscopeGuideManager",
       "file_type": "code",
-      "norm_label": "appshareutils",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/AppShareUtils.kt",
-      "source_location": "L13"
+      "norm_label": "gyroscopeguidemanager",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L15"
     },
     {
       "id": "tuctucmapdashboard_src_app_app_app",
@@ -1174,6 +1005,19 @@
       "source_location": "L12"
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_driverfarepreferences_driverfarepreferences",
+      "label": "DriverFarePreferences",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 49,
+      "community_name": "PassengerMapScreen",
+      "file_type": "code",
+      "norm_label": "driverfarepreferences",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/DriverFarePreferences.kt",
+      "source_location": "L10"
+    },
+    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_passengerlocationpreferences_passengerlocationpreferences",
       "label": "PassengerLocationPreferences",
       "_callable": true,
@@ -1356,19 +1200,6 @@
       "source_location": "L41"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_service_locationtrackingservice_locationtrackingservice_createboundedset_object_java_l109",
-      "label": "java",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "LocationTrackingService",
-      "file_type": "code",
-      "norm_label": "java",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt",
-      "source_location": "L109"
-    },
-    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_service_locationtrackingservice_locationtrackingservice_oncreate_object_locationcallback_l417",
       "label": "LocationCallback",
       "_callable": true,
@@ -1440,7 +1271,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "DriverSubscriptionScreen.kt",
+      "community_name": "DriverHomeScreen.kt",
       "file_type": "code",
       "norm_label": "driver",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt",
@@ -1453,7 +1284,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "DriverSubscriptionScreen.kt",
+      "community_name": "DriverHomeScreen.kt",
       "file_type": "code",
       "norm_label": "serverclock",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt",
@@ -1466,7 +1297,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "DriverSubscriptionScreen.kt",
+      "community_name": "DriverHomeScreen.kt",
       "file_type": "code",
       "norm_label": "subscriptionrenewalrequest",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt",
@@ -1479,7 +1310,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "DriverSubscriptionScreen.kt",
+      "community_name": "DriverHomeScreen.kt",
       "file_type": "code",
       "norm_label": "quadruple",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverSubscriptionScreen.kt",
@@ -1525,45 +1356,6 @@
       "source_location": "L125"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter",
-      "label": "SubscriptionHistoryPeriodFilter",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": "subscriptionhistoryperiodfilter",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
-      "source_location": "L45"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_csvsecurityutils_csvsecurityutils",
-      "label": "CsvSecurityUtils",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": "csvsecurityutils",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/CsvSecurityUtils.kt",
-      "source_location": "L10"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter_excelexporter",
-      "label": "ExcelExporter",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": "excelexporter",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExcelExporter.kt",
-      "source_location": "L20"
-    },
-    {
       "id": "tuctucmapdashboard_src_app_shared_dialogs_change_name_dialog_component_changenamedialogcomponent",
       "label": "ChangeNameDialogComponent",
       "_callable": true,
@@ -1588,19 +1380,6 @@
       "norm_label": "changepassworddialogcomponent",
       "source_file": "tuctucMapDashboard/src/app/shared/dialogs/change-password-dialog.component.ts",
       "source_location": "L89"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_driverfarepreferences_driverfarepreferences",
-      "label": "DriverFarePreferences",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 70,
-      "community_name": "AppDrawer.kt",
-      "file_type": "code",
-      "norm_label": "driverfarepreferences",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/DriverFarePreferences.kt",
-      "source_location": "L10"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_passenger_passenger",
@@ -1655,17 +1434,17 @@
       "source_location": "L33"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_externalnavigationutils_externalnavigationutils",
-      "label": "ExternalNavigationUtils",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_appshareutils_appshareutils",
+      "label": "AppShareUtils",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 70,
       "community_name": "AppDrawer.kt",
       "file_type": "code",
-      "norm_label": "externalnavigationutils",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExternalNavigationUtils.kt",
-      "source_location": "L12"
+      "norm_label": "appshareutils",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/AppShareUtils.kt",
+      "source_location": "L13"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverreportsscreen_dailyreportgroup",
@@ -1679,19 +1458,6 @@
       "norm_label": "dailyreportgroup",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverReportsScreen.kt",
       "source_location": "L59"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverreportsscreen_driverreportsperiodfilter",
-      "label": "DriverReportsPeriodFilter",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "DriverReportsScreen.kt",
-      "file_type": "code",
-      "norm_label": "driverreportsperiodfilter",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverReportsScreen.kt",
-      "source_location": "L42"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverreportsscreen_driverreportsscreen_object_selectabledates_l122",
@@ -1726,7 +1492,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 74,
-      "community_name": "PassengerRegisterScreen.kt",
+      "community_name": "PassengerLoginScreen.kt",
       "file_type": "code",
       "norm_label": "googleauthcancellationexception",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/service/GoogleAuthHelper.kt",
@@ -1739,7 +1505,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 74,
-      "community_name": "PassengerRegisterScreen.kt",
+      "community_name": "PassengerLoginScreen.kt",
       "file_type": "code",
       "norm_label": "googleauthhelper",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/service/GoogleAuthHelper.kt",
@@ -1752,11 +1518,37 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 74,
-      "community_name": "PassengerRegisterScreen.kt",
+      "community_name": "PassengerLoginScreen.kt",
       "file_type": "code",
       "norm_label": "googleuserdata",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/service/GoogleAuthHelper.kt",
       "source_location": "L19"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_admincrashlog",
+      "label": "AdminCrashLog",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "AdminCrashLogsScreen.kt",
+      "file_type": "code",
+      "norm_label": "admincrashlog",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
+      "source_location": "L258"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_service_locationtrackingservice_locationtrackingservice_createboundedset_object_java_l109",
+      "label": "java",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "DriverTripHistoryScreen.kt",
+      "file_type": "code",
+      "norm_label": "java",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt",
+      "source_location": "L109"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_drivertriphistoryscreen_driverhistoryperiodfilter",
@@ -1783,6 +1575,19 @@
       "norm_label": "selectabledates",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverTripHistoryScreen.kt",
       "source_location": "L195"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_externalnavigationutils_externalnavigationutils",
+      "label": "ExternalNavigationUtils",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "DriverTripHistoryScreen.kt",
+      "file_type": "code",
+      "norm_label": "externalnavigationutils",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExternalNavigationUtils.kt",
+      "source_location": "L12"
     },
     {
       "id": "tuctucmapdashboard_src_app_core_models_driver_model_driver",
@@ -1848,6 +1653,149 @@
       "norm_label": "subscriptiondialogdata",
       "source_file": "tuctucMapDashboard/src/app/features/drivers/drivers.component.ts",
       "source_location": "L47"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_completedtripdto",
+      "label": "CompletedTripDto",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 80,
+      "community_name": ".saveTripRecord",
+      "file_type": "code",
+      "norm_label": "completedtripdto",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
+      "source_location": "L884"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_routepoint",
+      "label": "RoutePoint",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 80,
+      "community_name": ".saveTripRecord",
+      "file_type": "code",
+      "norm_label": "routepoint",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
+      "source_location": "L851"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_tripinfo",
+      "label": "TripInfo",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 80,
+      "community_name": ".saveTripRecord",
+      "file_type": "code",
+      "norm_label": "tripinfo",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
+      "source_location": "L858"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_adminfinancialsummarydto",
+      "label": "AdminFinancialSummaryDto",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "AdminModels.kt",
+      "file_type": "code",
+      "norm_label": "adminfinancialsummarydto",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
+      "source_location": "L196"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_adminprofiledto",
+      "label": "AdminProfileDto",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "AdminModels.kt",
+      "file_type": "code",
+      "norm_label": "adminprofiledto",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
+      "source_location": "L14"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_adminuserdto",
+      "label": "AdminUserDto",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "AdminModels.kt",
+      "file_type": "code",
+      "norm_label": "adminuserdto",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
+      "source_location": "L24"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_approvepaymentrequestrpcparams",
+      "label": "ApprovePaymentRequestRpcParams",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "AdminModels.kt",
+      "file_type": "code",
+      "norm_label": "approvepaymentrequestrpcparams",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
+      "source_location": "L225"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_deleteuserbyadminrpcparams",
+      "label": "DeleteUserByAdminRpcParams",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "AdminModels.kt",
+      "file_type": "code",
+      "norm_label": "deleteuserbyadminrpcparams",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
+      "source_location": "L251"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_driverdossierdto",
+      "label": "DriverDossierDto",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "AdminModels.kt",
+      "file_type": "code",
+      "norm_label": "driverdossierdto",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
+      "source_location": "L36"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_rejectpaymentrequestrpcparams",
+      "label": "RejectPaymentRequestRpcParams",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "AdminModels.kt",
+      "file_type": "code",
+      "norm_label": "rejectpaymentrequestrpcparams",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
+      "source_location": "L243"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_userroledto",
+      "label": "UserRoleDto",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "AdminModels.kt",
+      "file_type": "code",
+      "norm_label": "userroledto",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
+      "source_location": "L7"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_accepttripresult",
@@ -1941,6 +1889,45 @@
       "source_location": "L1322"
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_adminpassenger",
+      "label": "AdminPassenger",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 85,
+      "community_name": "AdminRepository",
+      "file_type": "code",
+      "norm_label": "adminpassenger",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
+      "source_location": "L204"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_adminrepository",
+      "label": "AdminRepository",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 85,
+      "community_name": "AdminRepository",
+      "file_type": "code",
+      "norm_label": "adminrepository",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
+      "source_location": "L26"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels_approvedriverrpcparams",
+      "label": "ApproveDriverRpcParams",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "AdminRepository.kt",
+      "file_type": "code",
+      "norm_label": "approvedriverrpcparams",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
+      "source_location": "L233"
+    },
+    {
       "id": "tuctucmapdashboard_src_app_features_crash_logs_crash_detail_dialog_component_crashdetaildialogcomponent",
       "label": "CrashDetailDialogComponent",
       "_callable": true,
@@ -1954,6 +1941,19 @@
       "source_location": "L423"
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter",
+      "label": "SubscriptionHistoryPeriodFilter",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 95,
+      "community_name": "SubscriptionHistoryPeriodFilter",
+      "file_type": "code",
+      "norm_label": "subscriptionhistoryperiodfilter",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
+      "source_location": "L45"
+    },
+    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_driver_appconfig",
       "label": "AppConfig",
       "_callable": true,
@@ -1965,6 +1965,19 @@
       "norm_label": "appconfig",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt",
       "source_location": "L38"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripperiodfilter",
+      "label": "AdminTripPeriodFilter",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 99,
+      "community_name": "AdminTripPeriodFilter",
+      "file_type": "code",
+      "norm_label": "admintripperiodfilter",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
+      "source_location": "L55"
     },
     {
       "id": "tuctucmapdashboard_src_app_services_supabase_service_supabaseservice_approvedriver",
@@ -2423,66 +2436,6 @@
       "source_location": "L843"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_requestbroadcasttrip",
-      "label": ".requestBroadcastTrip()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 100,
-      "community_name": "SupabaseRepository",
-      "file_type": "code",
-      "norm_label": ".requestbroadcasttrip()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
-      "source_location": "L1247"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_requesttrip",
-      "label": ".requestTrip()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 100,
-      "community_name": "SupabaseRepository",
-      "file_type": "code",
-      "norm_label": ".requesttrip()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
-      "source_location": "L1285"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_sanitizetripmessage",
-      "label": ".sanitizeTripMessage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 100,
-      "community_name": "SupabaseRepository",
-      "file_type": "code",
-      "norm_label": ".sanitizetripmessage()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
-      "source_location": "L67"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_savecompletedtriptosupabase",
-      "label": ".saveCompletedTripToSupabase()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 100,
-      "community_name": "SupabaseRepository",
-      "file_type": "code",
-      "norm_label": ".savecompletedtriptosupabase()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
-      "source_location": "L1046"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_savetriprecord",
-      "label": ".saveTripRecord()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 100,
-      "community_name": "SupabaseRepository",
-      "file_type": "code",
-      "norm_label": ".savetriprecord()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
-      "source_location": "L977"
-    },
-    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_submitpaymentrequest",
       "label": ".submitPaymentRequest()",
       "_callable": true,
@@ -2541,6 +2494,114 @@
       "norm_label": ".finishtriptracking()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt",
       "source_location": "L329"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_service_locationtrackingservice_locationtrackingservice_gettriproutepointssnapshot",
+      "label": ".getTripRoutePointsSnapshot()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 100,
+      "community_name": "SupabaseRepository",
+      "file_type": "code",
+      "norm_label": ".gettriproutepointssnapshot()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt",
+      "source_location": "L382"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter_excelexporter_colletter",
+      "label": ".colLetter()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "ExcelExporter",
+      "file_type": "code",
+      "norm_label": ".colletter()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExcelExporter.kt",
+      "source_location": "L30"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter_excelexporter_escapexml",
+      "label": ".escapeXml()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "ExcelExporter",
+      "file_type": "code",
+      "norm_label": ".escapexml()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExcelExporter.kt",
+      "source_location": "L22"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter_excelexporter_exportandsharesubscriptionsexcel",
+      "label": ".exportAndShareSubscriptionsExcel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "ExcelExporter",
+      "file_type": "code",
+      "norm_label": ".exportandsharesubscriptionsexcel()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExcelExporter.kt",
+      "source_location": "L40"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter_excelexporter_writexlsx",
+      "label": ".writeXlsx()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "ExcelExporter",
+      "file_type": "code",
+      "norm_label": ".writexlsx()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExcelExporter.kt",
+      "source_location": "L124"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripsscreen_object_selectabledates_l188_isselectabledate",
+      "label": ".isSelectableDate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 102,
+      "community_name": "SelectableDates",
+      "file_type": "code",
+      "norm_label": ".isselectabledate()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
+      "source_location": "L189"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripsscreen_object_selectabledates_l188_isselectableyear",
+      "label": ".isSelectableYear()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 102,
+      "community_name": "SelectableDates",
+      "file_type": "code",
+      "norm_label": ".isselectableyear()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
+      "source_location": "L193"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverpendingscreen_driverpendingscreen",
+      "label": "DriverPendingScreen()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 103,
+      "community_name": "DriverPendingScreen.kt",
+      "file_type": "code",
+      "norm_label": "driverpendingscreen()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverPendingScreen.kt",
+      "source_location": "L34"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverpendingscreen_openadminwhatsapp",
+      "label": "openAdminWhatsApp()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 103,
+      "community_name": "DriverPendingScreen.kt",
+      "file_type": "code",
+      "norm_label": "openadminwhatsapp()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverPendingScreen.kt",
+      "source_location": "L231"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_driverlocation_driverlocation_distancemetersto",
@@ -2639,6 +2700,30 @@
       "source_location": "L55"
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud_orbitgyroscopehud",
+      "label": "OrbitGyroscopeHud()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 107,
+      "community_name": "OrbitGyroscopeHud.kt",
+      "file_type": "code",
+      "norm_label": "orbitgyroscopehud()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/OrbitGyroscopeHud.kt",
+      "source_location": "L35"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_csvsecurityutils_csvsecurityutils_escapecsvcell",
+      "label": ".escapeCsvCell()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "CsvSecurityUtils",
+      "file_type": "code",
+      "norm_label": ".escapecsvcell()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/CsvSecurityUtils.kt",
+      "source_location": "L11"
+    },
+    {
       "id": "databasetuctucapp_apply_improvements_sql_main",
       "label": "main()",
       "_callable": true,
@@ -2723,6 +2808,18 @@
       "source_location": "L6"
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_accepttripatomically_object_transaction_l1322_oncomplete",
+      "label": ".onComplete()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 14,
+      "community_name": "DataSnapshot",
+      "file_type": "code",
+      "norm_label": ".oncomplete()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
+      "source_location": "L1342"
+    },
+    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_ensurefirebaseclocksync",
       "label": ".ensureFirebaseClockSync()",
       "_callable": true,
@@ -2769,18 +2866,6 @@
       "norm_label": ".getdriverrenewalrequests()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
       "source_location": "L264"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_haversinemeters",
-      "label": ".haversineMeters()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 14,
-      "community_name": "DataSnapshot",
-      "file_type": "code",
-      "norm_label": ".haversinemeters()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
-      "source_location": "L139"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_observeacceptedtripfordriver",
@@ -2913,18 +2998,6 @@
       "norm_label": ".oncancelled()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
       "source_location": "L1412"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_observependingtripsfordriver_object_valueeventlistener_l1364_ondatachange",
-      "label": ".onDataChange()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 14,
-      "community_name": "DataSnapshot",
-      "file_type": "code",
-      "norm_label": ".ondatachange()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
-      "source_location": "L1365"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_observetrip",
@@ -3500,7 +3573,7 @@
       "file_type": "code",
       "norm_label": "nativecamerascreen()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L47"
+      "source_location": "L54"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_completedrivergoogleregistrationdialog_completedrivergoogleregistrationdialog",
@@ -3539,198 +3612,6 @@
       "source_location": "L63"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_approvedriver",
-      "label": "approveDriver()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "approvedriver()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
-      "source_location": "L72"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_fetchdrivers",
-      "label": "fetchDrivers()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "fetchdrivers()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
-      "source_location": "L59"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_getuserrole",
-      "label": "getUserRole()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "getuserrole()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
-      "source_location": "L42"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_iscurrentuseradmin",
-      "label": "isCurrentUserAdmin()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "iscurrentuseradmin()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
-      "source_location": "L53"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_rejectdriver",
-      "label": "rejectDriver()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "rejectdriver()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
-      "source_location": "L126"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_admincrashlogsscreen",
-      "label": "AdminCrashLogsScreen()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "admincrashlogsscreen()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L47"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_analyticsbarchartcard",
-      "label": "AnalyticsBarChartCard()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "analyticsbarchartcard()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1201"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_analyticsdashboardview",
-      "label": "AnalyticsDashboardView()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "analyticsdashboardview()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1004"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_cleancrashlogcard",
-      "label": "CleanCrashLogCard()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "cleancrashlogcard()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L707"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_crashdetailcontent",
-      "label": "CrashDetailContent()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "crashdetailcontent()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1338"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_formatcrashdate",
-      "label": "formatCrashDate()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "formatcrashdate()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1571"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_kpiminicard",
-      "label": "KpiMiniCard()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "kpiminicard()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L672"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminpassengersscreen_adminpassengersscreen",
-      "label": "AdminPassengersScreen()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "adminpassengersscreen()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminPassengersScreen.kt",
-      "source_location": "L33"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminpassengersscreen_formatdateshort",
-      "label": "formatDateShort()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "formatdateshort()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminPassengersScreen.kt",
-      "source_location": "L264"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminpassengersscreen_openwhatsapp",
-      "label": "openWhatsApp()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "openwhatsapp()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminPassengersScreen.kt",
-      "source_location": "L272"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminpassengersscreen_passengercard",
-      "label": "PassengerCard()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "passengercard()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminPassengersScreen.kt",
-      "source_location": "L173"
-    },
-    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripcard",
       "label": "AdminTripCard()",
       "_callable": true,
@@ -3753,30 +3634,6 @@
       "norm_label": "admintripsscreen()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
       "source_location": "L118"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripsscreen_object_selectabledates_l188_isselectabledate",
-      "label": ".isSelectableDate()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": ".isselectabledate()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L189"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripsscreen_object_selectabledates_l188_isselectableyear",
-      "label": ".isSelectableYear()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": ".isselectableyear()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L193"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_createcirclemarkerdrawable",
@@ -3825,18 +3682,6 @@
       "norm_label": "formattripdate()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
       "source_location": "L1460"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_getperiodrangeiso",
-      "label": "getPeriodRangeIso()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "getperiodrangeiso()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L63"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_legenditem",
@@ -4247,88 +4092,88 @@
       "source_location": "L269"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_driver_parseisotimestamp",
-      "label": "parseIsoTimestamp()",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_calibrateinitialheading",
+      "label": ".calibrateInitialHeading()",
       "_callable": true,
       "_origin": "ast",
       "community": 32,
-      "community_name": "parseIsoTimestamp",
+      "community_name": "GyroscopeGuideManager",
       "file_type": "code",
-      "norm_label": "parseisotimestamp()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt",
-      "source_location": "L222"
+      "norm_label": ".calibrateinitialheading()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L47"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverprofilescreen_driverprofilescreen",
-      "label": "DriverProfileScreen()",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_getshortestangledelta",
+      "label": ".getShortestAngleDelta()",
       "_callable": true,
       "_origin": "ast",
       "community": 32,
-      "community_name": "parseIsoTimestamp",
+      "community_name": "GyroscopeGuideManager",
       "file_type": "code",
-      "norm_label": "driverprofilescreen()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverProfileScreen.kt",
-      "source_location": "L37"
+      "norm_label": ".getshortestangledelta()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L81"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverprofilescreen_formatexpirydate",
-      "label": "formatExpiryDate()",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_iswithintolerance",
+      "label": ".isWithinTolerance()",
       "_callable": true,
       "_origin": "ast",
       "community": 32,
-      "community_name": "parseIsoTimestamp",
+      "community_name": "GyroscopeGuideManager",
       "file_type": "code",
-      "norm_label": "formatexpirydate()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverProfileScreen.kt",
-      "source_location": "L712"
+      "norm_label": ".iswithintolerance()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L90"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_passenger_passengerprofilescreen_passengerprofilescreen",
-      "label": "PassengerProfileScreen()",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_onaccuracychanged",
+      "label": ".onAccuracyChanged()",
       "_callable": true,
       "_origin": "ast",
       "community": 32,
-      "community_name": "parseIsoTimestamp",
+      "community_name": "GyroscopeGuideManager",
       "file_type": "code",
-      "norm_label": "passengerprofilescreen()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerProfileScreen.kt",
-      "source_location": "L32"
+      "norm_label": ".onaccuracychanged()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L75"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_appshareutils_appshareutils_openplaystoreforrating",
-      "label": ".openPlayStoreForRating()",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_onsensorchanged",
+      "label": ".onSensorChanged()",
       "_callable": true,
       "_origin": "ast",
       "community": 32,
-      "community_name": "parseIsoTimestamp",
+      "community_name": "GyroscopeGuideManager",
       "file_type": "code",
-      "norm_label": ".openplaystoreforrating()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/AppShareUtils.kt",
-      "source_location": "L49"
+      "norm_label": ".onsensorchanged()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L52"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_appshareutils_appshareutils_openplaystorewebfallback",
-      "label": ".openPlayStoreWebFallback()",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_startlistening",
+      "label": ".startListening()",
       "_callable": true,
       "_origin": "ast",
       "community": 32,
-      "community_name": "parseIsoTimestamp",
+      "community_name": "GyroscopeGuideManager",
       "file_type": "code",
-      "norm_label": ".openplaystorewebfallback()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/AppShareUtils.kt",
-      "source_location": "L72"
+      "norm_label": ".startlistening()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L33"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_appshareutils_appshareutils_shareapp",
-      "label": ".shareApp()",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_stoplistening",
+      "label": ".stopListening()",
       "_callable": true,
       "_origin": "ast",
       "community": 32,
-      "community_name": "parseIsoTimestamp",
+      "community_name": "GyroscopeGuideManager",
       "file_type": "code",
-      "norm_label": ".shareapp()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/AppShareUtils.kt",
-      "source_location": "L23"
+      "norm_label": ".stoplistening()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L43"
     },
     {
       "id": "tuctucmapdashboard_src_app_services_supabase_service_supabaseservice_getcrashlogs",
@@ -4653,6 +4498,30 @@
       "norm_label": ".addition_iscorrect()",
       "source_file": "tuctucMap/app/src/test/java/com/example/tuctucmap/ExampleUnitTest.kt",
       "source_location": "L13"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_driverfarepreferences_driverfarepreferences_getrecentfares",
+      "label": ".getRecentFares()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 49,
+      "community_name": "PassengerMapScreen",
+      "file_type": "code",
+      "norm_label": ".getrecentfares()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/DriverFarePreferences.kt",
+      "source_location": "L21"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_driverfarepreferences_driverfarepreferences_savefare",
+      "label": ".saveFare()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 49,
+      "community_name": "PassengerMapScreen",
+      "file_type": "code",
+      "norm_label": ".savefare()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/DriverFarePreferences.kt",
+      "source_location": "L48"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_passengerlocationpreferences_passengerlocationpreferences_calculatedistancemeters",
@@ -5075,30 +4944,6 @@
       "source_location": "L95"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_service_locationtrackingservice_locationtrackingservice_createboundedset",
-      "label": ".createBoundedSet()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "LocationTrackingService",
-      "file_type": "code",
-      "norm_label": ".createboundedset()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt",
-      "source_location": "L106"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_service_locationtrackingservice_locationtrackingservice_createboundedset_object_java_l109_removeeldestentry",
-      "label": ".removeEldestEntry()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "LocationTrackingService",
-      "file_type": "code",
-      "norm_label": ".removeeldestentry()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt",
-      "source_location": "L110"
-    },
-    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_service_locationtrackingservice_locationtrackingservice_createnotification",
       "label": ".createNotification()",
       "_callable": true,
@@ -5169,18 +5014,6 @@
       "norm_label": ".gettriprequestcode()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt",
       "source_location": "L83"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_service_locationtrackingservice_locationtrackingservice_gettriproutepointssnapshot",
-      "label": ".getTripRoutePointsSnapshot()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "LocationTrackingService",
-      "file_type": "code",
-      "norm_label": ".gettriproutepointssnapshot()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt",
-      "source_location": "L382"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_service_locationtrackingservice_locationtrackingservice_onbind",
@@ -5433,18 +5266,6 @@
       "norm_label": "getsecretproperty()",
       "source_file": "tuctucMap/app/build.gradle.kts",
       "source_location": "L29"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_driver_getoperationalcalendar",
-      "label": "getOperationalCalendar()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "Result",
-      "file_type": "code",
-      "norm_label": "getoperationalcalendar()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt",
-      "source_location": "L34"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_completedrivergoogleregistration",
@@ -5716,7 +5537,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "DriverSubscriptionScreen.kt",
+      "community_name": "DriverHomeScreen.kt",
       "file_type": "code",
       "norm_label": "calculateremainingdays()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt",
@@ -5728,7 +5549,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "DriverSubscriptionScreen.kt",
+      "community_name": "DriverHomeScreen.kt",
       "file_type": "code",
       "norm_label": ".nowmillis()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt",
@@ -5740,11 +5561,35 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "DriverSubscriptionScreen.kt",
+      "community_name": "DriverHomeScreen.kt",
       "file_type": "code",
       "norm_label": ".updatefromserverepoch()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt",
       "source_location": "L19"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverhomescreen_driverhomescreen",
+      "label": "DriverHomeScreen()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "DriverHomeScreen.kt",
+      "file_type": "code",
+      "norm_label": "driverhomescreen()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverHomeScreen.kt",
+      "source_location": "L65"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverhomescreen_toggleservice",
+      "label": "toggleService()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "DriverHomeScreen.kt",
+      "file_type": "code",
+      "norm_label": "toggleservice()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverHomeScreen.kt",
+      "source_location": "L2522"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driversubscriptionscreen_driversubscriptionscreen",
@@ -5752,7 +5597,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "DriverSubscriptionScreen.kt",
+      "community_name": "DriverHomeScreen.kt",
       "file_type": "code",
       "norm_label": "driversubscriptionscreen()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverSubscriptionScreen.kt",
@@ -5764,7 +5609,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "DriverSubscriptionScreen.kt",
+      "community_name": "DriverHomeScreen.kt",
       "file_type": "code",
       "norm_label": "renewalrequestitem()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverSubscriptionScreen.kt",
@@ -5865,6 +5710,18 @@
       "norm_label": "passengerloginscreen()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerLoginScreen.kt",
       "source_location": "L37"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_passenger_passengerprofilescreen_passengerprofilescreen",
+      "label": "PassengerProfileScreen()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 62,
+      "community_name": "AppNavigation",
+      "file_type": "code",
+      "norm_label": "passengerprofilescreen()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerProfileScreen.kt",
+      "source_location": "L32"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_passenger_passengerregisterscreen_passengerregisterscreen",
@@ -5975,18 +5832,6 @@
       "source_location": "L1205"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_getsubscriptionperiodrangeiso",
-      "label": "getSubscriptionPeriodRangeIso()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": "getsubscriptionperiodrangeiso()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
-      "source_location": "L54"
-    },
-    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_openwhatsappchat",
       "label": "openWhatsAppChat()",
       "_callable": true,
@@ -6023,66 +5868,6 @@
       "source_location": "L1065"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_csvsecurityutils_csvsecurityutils_escapecsvcell",
-      "label": ".escapeCsvCell()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": ".escapecsvcell()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/CsvSecurityUtils.kt",
-      "source_location": "L11"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter_excelexporter_colletter",
-      "label": ".colLetter()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": ".colletter()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExcelExporter.kt",
-      "source_location": "L30"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter_excelexporter_escapexml",
-      "label": ".escapeXml()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": ".escapexml()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExcelExporter.kt",
-      "source_location": "L22"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter_excelexporter_exportandsharesubscriptionsexcel",
-      "label": ".exportAndShareSubscriptionsExcel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": ".exportandsharesubscriptionsexcel()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExcelExporter.kt",
-      "source_location": "L40"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter_excelexporter_writexlsx",
-      "label": ".writeXlsx()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": ".writexlsx()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExcelExporter.kt",
-      "source_location": "L124"
-    },
-    {
       "id": "tuctucmapdashboard_src_app_shared_dialogs_change_name_dialog_component_changenamedialogcomponent_onsubmit",
       "label": ".onSubmit()",
       "_callable": true,
@@ -6117,30 +5902,6 @@
       "norm_label": ".passwordmatchvalidator()",
       "source_file": "tuctucMapDashboard/src/app/shared/dialogs/change-password-dialog.component.ts",
       "source_location": "L103"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_driverfarepreferences_driverfarepreferences_getrecentfares",
-      "label": ".getRecentFares()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 70,
-      "community_name": "AppDrawer.kt",
-      "file_type": "code",
-      "norm_label": ".getrecentfares()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/DriverFarePreferences.kt",
-      "source_location": "L21"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_driverfarepreferences_driverfarepreferences_savefare",
-      "label": ".saveFare()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 70,
-      "community_name": "AppDrawer.kt",
-      "file_type": "code",
-      "norm_label": ".savefare()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/DriverFarePreferences.kt",
-      "source_location": "L48"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_appdrawer_admindrawersheet",
@@ -6239,30 +6000,6 @@
       "source_location": "L274"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverhomescreen_driverhomescreen",
-      "label": "DriverHomeScreen()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 70,
-      "community_name": "AppDrawer.kt",
-      "file_type": "code",
-      "norm_label": "driverhomescreen()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverHomeScreen.kt",
-      "source_location": "L65"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverhomescreen_toggleservice",
-      "label": "toggleService()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 70,
-      "community_name": "AppDrawer.kt",
-      "file_type": "code",
-      "norm_label": "toggleservice()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverHomeScreen.kt",
-      "source_location": "L2522"
-    },
-    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_passenger_passengerhomescreen_passengerhomescreen",
       "label": "PassengerHomeScreen()",
       "_callable": true,
@@ -6275,28 +6012,76 @@
       "source_location": "L32"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_externalnavigationutils_externalnavigationutils_opengooglemaps",
-      "label": ".openGoogleMaps()",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_appshareutils_appshareutils_openplaystoreforrating",
+      "label": ".openPlayStoreForRating()",
       "_callable": true,
       "_origin": "ast",
       "community": 70,
       "community_name": "AppDrawer.kt",
       "file_type": "code",
-      "norm_label": ".opengooglemaps()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExternalNavigationUtils.kt",
-      "source_location": "L18"
+      "norm_label": ".openplaystoreforrating()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/AppShareUtils.kt",
+      "source_location": "L49"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_externalnavigationutils_externalnavigationutils_openwaze",
-      "label": ".openWaze()",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_appshareutils_appshareutils_openplaystorewebfallback",
+      "label": ".openPlayStoreWebFallback()",
       "_callable": true,
       "_origin": "ast",
       "community": 70,
       "community_name": "AppDrawer.kt",
       "file_type": "code",
-      "norm_label": ".openwaze()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExternalNavigationUtils.kt",
-      "source_location": "L58"
+      "norm_label": ".openplaystorewebfallback()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/AppShareUtils.kt",
+      "source_location": "L72"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_appshareutils_appshareutils_shareapp",
+      "label": ".shareApp()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 70,
+      "community_name": "AppDrawer.kt",
+      "file_type": "code",
+      "norm_label": ".shareapp()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/AppShareUtils.kt",
+      "source_location": "L23"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_driver_parseisotimestamp",
+      "label": "parseIsoTimestamp()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "DriverReportsScreen.kt",
+      "file_type": "code",
+      "norm_label": "parseisotimestamp()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt",
+      "source_location": "L222"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverprofilescreen_driverprofilescreen",
+      "label": "DriverProfileScreen()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "DriverReportsScreen.kt",
+      "file_type": "code",
+      "norm_label": "driverprofilescreen()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverProfileScreen.kt",
+      "source_location": "L37"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverprofilescreen_formatexpirydate",
+      "label": "formatExpiryDate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "DriverReportsScreen.kt",
+      "file_type": "code",
+      "norm_label": "formatexpirydate()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverProfileScreen.kt",
+      "source_location": "L712"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverreportsscreen_driverreportsscreen",
@@ -6352,7 +6137,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 74,
-      "community_name": "PassengerRegisterScreen.kt",
+      "community_name": "PassengerLoginScreen.kt",
       "file_type": "code",
       "norm_label": ".getgooglecredentials()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/service/GoogleAuthHelper.kt",
@@ -6364,11 +6149,131 @@
       "_callable": true,
       "_origin": "ast",
       "community": 74,
-      "community_name": "PassengerRegisterScreen.kt",
+      "community_name": "PassengerLoginScreen.kt",
       "file_type": "code",
       "norm_label": ".sha256()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/service/GoogleAuthHelper.kt",
       "source_location": "L28"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_admincrashlogsscreen",
+      "label": "AdminCrashLogsScreen()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "AdminCrashLogsScreen.kt",
+      "file_type": "code",
+      "norm_label": "admincrashlogsscreen()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
+      "source_location": "L47"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_analyticsbarchartcard",
+      "label": "AnalyticsBarChartCard()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "AdminCrashLogsScreen.kt",
+      "file_type": "code",
+      "norm_label": "analyticsbarchartcard()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
+      "source_location": "L1201"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_analyticsdashboardview",
+      "label": "AnalyticsDashboardView()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "AdminCrashLogsScreen.kt",
+      "file_type": "code",
+      "norm_label": "analyticsdashboardview()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
+      "source_location": "L1004"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_cleancrashlogcard",
+      "label": "CleanCrashLogCard()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "AdminCrashLogsScreen.kt",
+      "file_type": "code",
+      "norm_label": "cleancrashlogcard()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
+      "source_location": "L707"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_crashdetailcontent",
+      "label": "CrashDetailContent()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "AdminCrashLogsScreen.kt",
+      "file_type": "code",
+      "norm_label": "crashdetailcontent()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
+      "source_location": "L1338"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_formatcrashdate",
+      "label": "formatCrashDate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "AdminCrashLogsScreen.kt",
+      "file_type": "code",
+      "norm_label": "formatcrashdate()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
+      "source_location": "L1571"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_kpiminicard",
+      "label": "KpiMiniCard()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "AdminCrashLogsScreen.kt",
+      "file_type": "code",
+      "norm_label": "kpiminicard()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
+      "source_location": "L672"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_driver_getoperationalcalendar",
+      "label": "getOperationalCalendar()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "DriverTripHistoryScreen.kt",
+      "file_type": "code",
+      "norm_label": "getoperationalcalendar()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt",
+      "source_location": "L34"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_service_locationtrackingservice_locationtrackingservice_createboundedset",
+      "label": ".createBoundedSet()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "DriverTripHistoryScreen.kt",
+      "file_type": "code",
+      "norm_label": ".createboundedset()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt",
+      "source_location": "L106"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_service_locationtrackingservice_locationtrackingservice_createboundedset_object_java_l109_removeeldestentry",
+      "label": ".removeEldestEntry()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "DriverTripHistoryScreen.kt",
+      "file_type": "code",
+      "norm_label": ".removeeldestentry()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/service/LocationTrackingService.kt",
+      "source_location": "L110"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_drivertriphistoryscreen_drivertripcard",
@@ -6429,6 +6334,30 @@
       "norm_label": "openwhatsapp()",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverTripHistoryScreen.kt",
       "source_location": "L1170"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_externalnavigationutils_externalnavigationutils_opengooglemaps",
+      "label": ".openGoogleMaps()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "DriverTripHistoryScreen.kt",
+      "file_type": "code",
+      "norm_label": ".opengooglemaps()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExternalNavigationUtils.kt",
+      "source_location": "L18"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_externalnavigationutils_externalnavigationutils_openwaze",
+      "label": ".openWaze()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "DriverTripHistoryScreen.kt",
+      "file_type": "code",
+      "norm_label": ".openwaze()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExternalNavigationUtils.kt",
+      "source_location": "L58"
     },
     {
       "id": "tuctucmapdashboard_src_app_features_drivers_drivers_component_driverscomponent_approvedriver",
@@ -6755,6 +6684,90 @@
       "source_location": "L396"
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_haversinemeters",
+      "label": ".haversineMeters()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 80,
+      "community_name": ".saveTripRecord",
+      "file_type": "code",
+      "norm_label": ".haversinemeters()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
+      "source_location": "L139"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_observependingtripsfordriver_object_valueeventlistener_l1364_ondatachange",
+      "label": ".onDataChange()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 80,
+      "community_name": ".saveTripRecord",
+      "file_type": "code",
+      "norm_label": ".ondatachange()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
+      "source_location": "L1365"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_requestbroadcasttrip",
+      "label": ".requestBroadcastTrip()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 80,
+      "community_name": ".saveTripRecord",
+      "file_type": "code",
+      "norm_label": ".requestbroadcasttrip()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
+      "source_location": "L1247"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_requesttrip",
+      "label": ".requestTrip()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 80,
+      "community_name": ".saveTripRecord",
+      "file_type": "code",
+      "norm_label": ".requesttrip()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
+      "source_location": "L1285"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_sanitizetripmessage",
+      "label": ".sanitizeTripMessage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 80,
+      "community_name": ".saveTripRecord",
+      "file_type": "code",
+      "norm_label": ".sanitizetripmessage()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
+      "source_location": "L67"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_savecompletedtriptosupabase",
+      "label": ".saveCompletedTripToSupabase()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 80,
+      "community_name": ".saveTripRecord",
+      "file_type": "code",
+      "norm_label": ".savecompletedtriptosupabase()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
+      "source_location": "L1046"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_savetriprecord",
+      "label": ".saveTripRecord()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 80,
+      "community_name": ".saveTripRecord",
+      "file_type": "code",
+      "norm_label": ".savetriprecord()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
+      "source_location": "L977"
+    },
+    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_accepttripatomically",
       "label": ".acceptTripAtomically()",
       "_callable": true,
@@ -6779,16 +6792,112 @@
       "source_location": "L1323"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_supabaserepository_supabaserepository_accepttripatomically_object_transaction_l1322_oncomplete",
-      "label": ".onComplete()",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminpassengersscreen_adminpassengersscreen",
+      "label": "AdminPassengersScreen()",
       "_callable": true,
       "_origin": "ast",
-      "community": 84,
-      "community_name": "SupabaseRepository.kt",
+      "community": 85,
+      "community_name": "AdminRepository",
       "file_type": "code",
-      "norm_label": ".oncomplete()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
-      "source_location": "L1342"
+      "norm_label": "adminpassengersscreen()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminPassengersScreen.kt",
+      "source_location": "L33"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminpassengersscreen_formatdateshort",
+      "label": "formatDateShort()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 85,
+      "community_name": "AdminRepository",
+      "file_type": "code",
+      "norm_label": "formatdateshort()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminPassengersScreen.kt",
+      "source_location": "L264"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminpassengersscreen_openwhatsapp",
+      "label": "openWhatsApp()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 85,
+      "community_name": "AdminRepository",
+      "file_type": "code",
+      "norm_label": "openwhatsapp()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminPassengersScreen.kt",
+      "source_location": "L272"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminpassengersscreen_passengercard",
+      "label": "PassengerCard()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 85,
+      "community_name": "AdminRepository",
+      "file_type": "code",
+      "norm_label": "passengercard()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminPassengersScreen.kt",
+      "source_location": "L173"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_approvedriver",
+      "label": "approveDriver()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "AdminRepository.kt",
+      "file_type": "code",
+      "norm_label": "approvedriver()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
+      "source_location": "L72"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_fetchdrivers",
+      "label": "fetchDrivers()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "AdminRepository.kt",
+      "file_type": "code",
+      "norm_label": "fetchdrivers()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
+      "source_location": "L59"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_getuserrole",
+      "label": "getUserRole()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "AdminRepository.kt",
+      "file_type": "code",
+      "norm_label": "getuserrole()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
+      "source_location": "L42"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_iscurrentuseradmin",
+      "label": "isCurrentUserAdmin()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "AdminRepository.kt",
+      "file_type": "code",
+      "norm_label": "iscurrentuseradmin()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
+      "source_location": "L53"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_rejectdriver",
+      "label": "rejectDriver()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "AdminRepository.kt",
+      "file_type": "code",
+      "norm_label": "rejectdriver()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
+      "source_location": "L126"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_settings_settingsscreen_openwhatsappsupport",
@@ -6875,6 +6984,18 @@
       "source_location": "L444"
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_getsubscriptionperiodrangeiso",
+      "label": "getSubscriptionPeriodRangeIso()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 95,
+      "community_name": "SubscriptionHistoryPeriodFilter",
+      "file_type": "code",
+      "norm_label": "getsubscriptionperiodrangeiso()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
+      "source_location": "L54"
+    },
+    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminbusinessconfigtab_adminbusinessconfigtab",
       "label": "AdminBusinessConfigTab()",
       "_callable": true,
@@ -6923,28 +7044,16 @@
       "source_location": "L354"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverpendingscreen_driverpendingscreen",
-      "label": "DriverPendingScreen()",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_getperiodrangeiso",
+      "label": "getPeriodRangeIso()",
       "_callable": true,
       "_origin": "ast",
-      "community": 98,
-      "community_name": "AdminBusinessConfigTab.kt",
+      "community": 99,
+      "community_name": "AdminTripPeriodFilter",
       "file_type": "code",
-      "norm_label": "driverpendingscreen()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverPendingScreen.kt",
-      "source_location": "L34"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverpendingscreen_openadminwhatsapp",
-      "label": "openAdminWhatsApp()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 98,
-      "community_name": "AdminBusinessConfigTab.kt",
-      "file_type": "code",
-      "norm_label": "openadminwhatsapp()",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverPendingScreen.kt",
-      "source_location": "L231"
+      "norm_label": "getperiodrangeiso()",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
+      "source_location": "L63"
     },
     {
       "id": "injectable",
@@ -7189,6 +7298,61 @@
       "source_location": ""
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter",
+      "label": "ExcelExporter.kt",
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "ExcelExporter",
+      "file_type": "code",
+      "norm_label": "excelexporter.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExcelExporter.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter_kt_context",
+      "label": "Context",
+      "_origin": "ast",
+      "community": 101,
+      "community_name": "ExcelExporter",
+      "file_type": "code",
+      "norm_label": "context",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_kt_selectabledates",
+      "label": "SelectableDates",
+      "_origin": "ast",
+      "community": 102,
+      "community_name": "SelectableDates",
+      "file_type": "code",
+      "norm_label": "selectabledates",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverpendingscreen",
+      "label": "DriverPendingScreen.kt",
+      "_origin": "ast",
+      "community": 103,
+      "community_name": "DriverPendingScreen.kt",
+      "file_type": "code",
+      "norm_label": "driverpendingscreen.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverPendingScreen.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverpendingscreen_kt_context",
+      "label": "Context",
+      "_origin": "ast",
+      "community": 103,
+      "community_name": "DriverPendingScreen.kt",
+      "file_type": "code",
+      "norm_label": "context",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_driverlocation",
       "label": "DriverLocation.kt",
       "_origin": "ast",
@@ -7220,6 +7384,72 @@
       "norm_label": "context",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverreportsscreen_driverreportsperiodfilter_custom_range",
+      "label": "CUSTOM_RANGE",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "DriverReportsPeriodFilter",
+      "file_type": "code",
+      "norm_label": "custom_range",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverReportsScreen.kt",
+      "source_location": "L45"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverreportsscreen_driverreportsperiodfilter_today",
+      "label": "TODAY",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "DriverReportsPeriodFilter",
+      "file_type": "code",
+      "norm_label": "today",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverReportsScreen.kt",
+      "source_location": "L43"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverreportsscreen_driverreportsperiodfilter_yesterday",
+      "label": "YESTERDAY",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "DriverReportsPeriodFilter",
+      "file_type": "code",
+      "norm_label": "yesterday",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverReportsScreen.kt",
+      "source_location": "L44"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud",
+      "label": "OrbitGyroscopeHud.kt",
+      "_origin": "ast",
+      "community": 107,
+      "community_name": "OrbitGyroscopeHud.kt",
+      "file_type": "code",
+      "norm_label": "orbitgyroscopehud.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/OrbitGyroscopeHud.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud_kt_modifier",
+      "label": "Modifier",
+      "_origin": "ast",
+      "community": 107,
+      "community_name": "OrbitGyroscopeHud.kt",
+      "file_type": "code",
+      "norm_label": "modifier",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_csvsecurityutils",
+      "label": "CsvSecurityUtils.kt",
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "CsvSecurityUtils",
+      "file_type": "code",
+      "norm_label": "csvsecurityutils.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/CsvSecurityUtils.kt",
+      "source_location": "L1"
     },
     {
       "id": "tuctucmapdashboard_package_devdependencies",
@@ -8191,7 +8421,7 @@
       "file_type": "code",
       "norm_label": "driver_portrait",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L43"
+      "source_location": "L50"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_nativecamerascreen_cameracapturemode_vehicle_360_scan",
@@ -8202,7 +8432,7 @@
       "file_type": "code",
       "norm_label": "vehicle_360_scan",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L44"
+      "source_location": "L51"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_completedrivergoogleregistrationdialog",
@@ -8491,105 +8721,6 @@
       "source_location": ""
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels",
-      "label": "AdminModels.kt",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "adminmodels.kt",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository",
-      "label": "AdminRepository.kt",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "adminrepository.kt",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_kt_result",
-      "label": "Result",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "result",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen",
-      "label": "AdminCrashLogsScreen.kt",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "admincrashlogsscreen.kt",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_kt_color",
-      "label": "Color",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "color",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_kt_imagevector",
-      "label": "ImageVector",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "imagevector",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_kt_modifier",
-      "label": "Modifier",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "modifier",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminpassengersscreen",
-      "label": "AdminPassengersScreen.kt",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "adminpassengersscreen.kt",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminPassengersScreen.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminpassengersscreen_kt_context",
-      "label": "Context",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "context",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen",
       "label": "AdminTripsScreen.kt",
       "_origin": "ast",
@@ -8599,61 +8730,6 @@
       "norm_label": "admintripsscreen.kt",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
       "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripperiodfilter_custom",
-      "label": "CUSTOM",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "custom",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L60"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripperiodfilter_last_3_days",
-      "label": "LAST_3_DAYS",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "last_3_days",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L57"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripperiodfilter_last_5_days",
-      "label": "LAST_5_DAYS",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "last_5_days",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L58"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripperiodfilter_last_7_days",
-      "label": "LAST_7_DAYS",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "last_7_days",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L59"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripperiodfilter_today",
-      "label": "TODAY",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "today",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
-      "source_location": "L56"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_kt_color",
@@ -8685,17 +8761,6 @@
       "community_name": "AdminTripsScreen.kt",
       "file_type": "code",
       "norm_label": "drawable",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_kt_selectabledates",
-      "label": "SelectableDates",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "AdminTripsScreen.kt",
-      "file_type": "code",
-      "norm_label": "selectabledates",
       "source_file": "",
       "source_location": ""
     },
@@ -10345,37 +10410,48 @@
       "source_location": ""
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverprofilescreen",
-      "label": "DriverProfileScreen.kt",
+      "id": "sensor",
+      "label": "Sensor",
       "_origin": "ast",
       "community": 32,
-      "community_name": "parseIsoTimestamp",
+      "community_name": "GyroscopeGuideManager",
       "file_type": "code",
-      "norm_label": "driverprofilescreen.kt",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverProfileScreen.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_appshareutils",
-      "label": "AppShareUtils.kt",
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "parseIsoTimestamp",
-      "file_type": "code",
-      "norm_label": "appshareutils.kt",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/AppShareUtils.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_appshareutils_kt_context",
-      "label": "Context",
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "parseIsoTimestamp",
-      "file_type": "code",
-      "norm_label": "context",
+      "norm_label": "sensor",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "sensorevent",
+      "label": "SensorEvent",
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "GyroscopeGuideManager",
+      "file_type": "code",
+      "norm_label": "sensorevent",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "sensoreventlistener",
+      "label": "SensorEventListener",
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "GyroscopeGuideManager",
+      "file_type": "code",
+      "norm_label": "sensoreventlistener",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager",
+      "label": "GyroscopeGuideManager.kt",
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "GyroscopeGuideManager",
+      "file_type": "code",
+      "norm_label": "gyroscopeguidemanager.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L1"
     },
     {
       "id": "tuctucmapdashboard_implementationsplans_first_task",
@@ -11097,6 +11173,17 @@
       "source_location": ""
     },
     {
+      "id": "sessionstatus",
+      "label": "SessionStatus",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Screen",
+      "file_type": "code",
+      "norm_label": "sessionstatus",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_mainactivity",
       "label": "MainActivity.kt",
       "_origin": "ast",
@@ -11642,6 +11729,28 @@
       "community_name": "PassengerMapScreen",
       "file_type": "code",
       "norm_label": "org",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_driverfarepreferences",
+      "label": "DriverFarePreferences.kt",
+      "_origin": "ast",
+      "community": 49,
+      "community_name": "PassengerMapScreen",
+      "file_type": "code",
+      "norm_label": "driverfarepreferences.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/DriverFarePreferences.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_driverfarepreferences_kt_context",
+      "label": "Context",
+      "_origin": "ast",
+      "community": 49,
+      "community_name": "PassengerMapScreen",
+      "file_type": "code",
+      "norm_label": "context",
       "source_file": "",
       "source_location": ""
     },
@@ -12231,18 +12340,51 @@
       "label": "Driver.kt",
       "_origin": "ast",
       "community": 6,
-      "community_name": "DriverSubscriptionScreen.kt",
+      "community_name": "DriverHomeScreen.kt",
       "file_type": "code",
       "norm_label": "driver.kt",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/Driver.kt",
       "source_location": "L1"
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverhomescreen",
+      "label": "DriverHomeScreen.kt",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "DriverHomeScreen.kt",
+      "file_type": "code",
+      "norm_label": "driverhomescreen.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverHomeScreen.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverhomescreen_kt_context",
+      "label": "Context",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "DriverHomeScreen.kt",
+      "file_type": "code",
+      "norm_label": "context",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverhomescreen_kt_driver",
+      "label": "Driver",
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "DriverHomeScreen.kt",
+      "file_type": "code",
+      "norm_label": "driver",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driversubscriptionscreen",
       "label": "DriverSubscriptionScreen.kt",
       "_origin": "ast",
       "community": 6,
-      "community_name": "DriverSubscriptionScreen.kt",
+      "community_name": "DriverHomeScreen.kt",
       "file_type": "code",
       "norm_label": "driversubscriptionscreen.kt",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverSubscriptionScreen.kt",
@@ -12340,17 +12482,6 @@
       "file_type": "code",
       "norm_label": "driverloginscreen.kt",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverLoginScreen.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_passenger_passengerloginscreen",
-      "label": "PassengerLoginScreen.kt",
-      "_origin": "ast",
-      "community": 62,
-      "community_name": "AppNavigation",
-      "file_type": "code",
-      "norm_label": "passengerloginscreen.kt",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerLoginScreen.kt",
       "source_location": "L1"
     },
     {
@@ -13070,105 +13201,6 @@
       "source_location": ""
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter_all",
-      "label": "ALL",
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": "all",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
-      "source_location": "L50"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter_custom",
-      "label": "CUSTOM",
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": "custom",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
-      "source_location": "L51"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter_last_3_days",
-      "label": "LAST_3_DAYS",
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": "last_3_days",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
-      "source_location": "L47"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter_last_7_days",
-      "label": "LAST_7_DAYS",
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": "last_7_days",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
-      "source_location": "L48"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter_this_month",
-      "label": "THIS_MONTH",
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": "this_month",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
-      "source_location": "L49"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter_today",
-      "label": "TODAY",
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": "today",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
-      "source_location": "L46"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_csvsecurityutils",
-      "label": "CsvSecurityUtils.kt",
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": "csvsecurityutils.kt",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/CsvSecurityUtils.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter",
-      "label": "ExcelExporter.kt",
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": "excelexporter.kt",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExcelExporter.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_excelexporter_kt_context",
-      "label": "Context",
-      "_origin": "ast",
-      "community": 68,
-      "community_name": "AdminSubscriptionsTab.kt",
-      "file_type": "code",
-      "norm_label": "context",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "tuctucmapdashboard_src_app_shared_dialogs_change_name_dialog_component",
       "label": "change-name-dialog.component.ts",
       "_origin": "ast",
@@ -13438,28 +13470,6 @@
       "norm_label": "politica de privacidad y deslinde de responsabilidad de tuctuc map",
       "source_file": "Reportes/POLITICA_PRIVACIDAD.md",
       "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_driverfarepreferences",
-      "label": "DriverFarePreferences.kt",
-      "_origin": "ast",
-      "community": 70,
-      "community_name": "AppDrawer.kt",
-      "file_type": "code",
-      "norm_label": "driverfarepreferences.kt",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/DriverFarePreferences.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_driverfarepreferences_kt_context",
-      "label": "Context",
-      "_origin": "ast",
-      "community": 70,
-      "community_name": "AppDrawer.kt",
-      "file_type": "code",
-      "norm_label": "context",
-      "source_file": "",
-      "source_location": ""
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_passenger",
@@ -13759,39 +13769,6 @@
       "source_location": "L1"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverhomescreen",
-      "label": "DriverHomeScreen.kt",
-      "_origin": "ast",
-      "community": 70,
-      "community_name": "AppDrawer.kt",
-      "file_type": "code",
-      "norm_label": "driverhomescreen.kt",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverHomeScreen.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverhomescreen_kt_context",
-      "label": "Context",
-      "_origin": "ast",
-      "community": 70,
-      "community_name": "AppDrawer.kt",
-      "file_type": "code",
-      "norm_label": "context",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverhomescreen_kt_driver",
-      "label": "Driver",
-      "_origin": "ast",
-      "community": 70,
-      "community_name": "AppDrawer.kt",
-      "file_type": "code",
-      "norm_label": "driver",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_passenger_passengerhomescreen",
       "label": "PassengerHomeScreen.kt",
       "_origin": "ast",
@@ -13803,18 +13780,18 @@
       "source_location": "L1"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_externalnavigationutils",
-      "label": "ExternalNavigationUtils.kt",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_appshareutils",
+      "label": "AppShareUtils.kt",
       "_origin": "ast",
       "community": 70,
       "community_name": "AppDrawer.kt",
       "file_type": "code",
-      "norm_label": "externalnavigationutils.kt",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExternalNavigationUtils.kt",
+      "norm_label": "appshareutils.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/AppShareUtils.kt",
       "source_location": "L1"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_externalnavigationutils_kt_context",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_appshareutils_kt_context",
       "label": "Context",
       "_origin": "ast",
       "community": 70,
@@ -13869,6 +13846,17 @@
       "source_location": "L27"
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverprofilescreen",
+      "label": "DriverProfileScreen.kt",
+      "_origin": "ast",
+      "community": 73,
+      "community_name": "DriverReportsScreen.kt",
+      "file_type": "code",
+      "norm_label": "driverprofilescreen.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverProfileScreen.kt",
+      "source_location": "L1"
+    },
+    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverreportsscreen",
       "label": "DriverReportsScreen.kt",
       "_origin": "ast",
@@ -13878,39 +13866,6 @@
       "norm_label": "driverreportsscreen.kt",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverReportsScreen.kt",
       "source_location": "L1"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverreportsscreen_driverreportsperiodfilter_custom_range",
-      "label": "CUSTOM_RANGE",
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "DriverReportsScreen.kt",
-      "file_type": "code",
-      "norm_label": "custom_range",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverReportsScreen.kt",
-      "source_location": "L45"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverreportsscreen_driverreportsperiodfilter_today",
-      "label": "TODAY",
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "DriverReportsScreen.kt",
-      "file_type": "code",
-      "norm_label": "today",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverReportsScreen.kt",
-      "source_location": "L43"
-    },
-    {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverreportsscreen_driverreportsperiodfilter_yesterday",
-      "label": "YESTERDAY",
-      "_origin": "ast",
-      "community": 73,
-      "community_name": "DriverReportsScreen.kt",
-      "file_type": "code",
-      "norm_label": "yesterday",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverReportsScreen.kt",
-      "source_location": "L44"
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverreportsscreen_kt_modifier",
@@ -13939,7 +13894,7 @@
       "label": "GoogleAuthHelper.kt",
       "_origin": "ast",
       "community": 74,
-      "community_name": "PassengerRegisterScreen.kt",
+      "community_name": "PassengerLoginScreen.kt",
       "file_type": "code",
       "norm_label": "googleauthhelper.kt",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/service/GoogleAuthHelper.kt",
@@ -13950,7 +13905,7 @@
       "label": "Context",
       "_origin": "ast",
       "community": 74,
-      "community_name": "PassengerRegisterScreen.kt",
+      "community_name": "PassengerLoginScreen.kt",
       "file_type": "code",
       "norm_label": "context",
       "source_file": "",
@@ -13961,7 +13916,7 @@
       "label": "Exception",
       "_origin": "ast",
       "community": 74,
-      "community_name": "PassengerRegisterScreen.kt",
+      "community_name": "PassengerLoginScreen.kt",
       "file_type": "code",
       "norm_label": "exception",
       "source_file": "",
@@ -13972,18 +13927,29 @@
       "label": "Result",
       "_origin": "ast",
       "community": 74,
-      "community_name": "PassengerRegisterScreen.kt",
+      "community_name": "PassengerLoginScreen.kt",
       "file_type": "code",
       "norm_label": "result",
       "source_file": "",
       "source_location": ""
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_passenger_passengerloginscreen",
+      "label": "PassengerLoginScreen.kt",
+      "_origin": "ast",
+      "community": 74,
+      "community_name": "PassengerLoginScreen.kt",
+      "file_type": "code",
+      "norm_label": "passengerloginscreen.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerLoginScreen.kt",
+      "source_location": "L1"
+    },
+    {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_passenger_passengerregisterscreen",
       "label": "PassengerRegisterScreen.kt",
       "_origin": "ast",
       "community": 74,
-      "community_name": "PassengerRegisterScreen.kt",
+      "community_name": "PassengerLoginScreen.kt",
       "file_type": "code",
       "norm_label": "passengerregisterscreen.kt",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/passenger/PassengerRegisterScreen.kt",
@@ -14058,6 +14024,50 @@
       "norm_label": "@angular/core",
       "source_file": "tuctucMapDashboard/package.json",
       "source_location": "L18"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen",
+      "label": "AdminCrashLogsScreen.kt",
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "AdminCrashLogsScreen.kt",
+      "file_type": "code",
+      "norm_label": "admincrashlogsscreen.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminCrashLogsScreen.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_kt_color",
+      "label": "Color",
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "AdminCrashLogsScreen.kt",
+      "file_type": "code",
+      "norm_label": "color",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_kt_imagevector",
+      "label": "ImageVector",
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "AdminCrashLogsScreen.kt",
+      "file_type": "code",
+      "norm_label": "imagevector",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admincrashlogsscreen_kt_modifier",
+      "label": "Modifier",
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "AdminCrashLogsScreen.kt",
+      "file_type": "code",
+      "norm_label": "modifier",
+      "source_file": "",
+      "source_location": ""
     },
     {
       "id": "tuctucmapdashboard_package_dependencies_angular_cdk",
@@ -14148,6 +14158,28 @@
       "source_location": ""
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_externalnavigationutils",
+      "label": "ExternalNavigationUtils.kt",
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "DriverTripHistoryScreen.kt",
+      "file_type": "code",
+      "norm_label": "externalnavigationutils.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/util/ExternalNavigationUtils.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_externalnavigationutils_kt_context",
+      "label": "Context",
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "DriverTripHistoryScreen.kt",
+      "file_type": "code",
+      "norm_label": "context",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "tuctucmapdashboard_src_app_features_drivers_drivers_component_ts_component",
       "label": "Component",
       "_origin": "ast",
@@ -14214,6 +14246,17 @@
       "source_location": ""
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_model_adminmodels",
+      "label": "AdminModels.kt",
+      "_origin": "ast",
+      "community": 83,
+      "community_name": "AdminModels.kt",
+      "file_type": "code",
+      "norm_label": "adminmodels.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/model/AdminModels.kt",
+      "source_location": "L1"
+    },
+    {
       "id": "mutabledata",
       "label": "MutableData",
       "_origin": "ast",
@@ -14221,17 +14264,6 @@
       "community_name": "SupabaseRepository.kt",
       "file_type": "code",
       "norm_label": "mutabledata",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "sessionstatus",
-      "label": "SessionStatus",
-      "_origin": "ast",
-      "community": 84,
-      "community_name": "SupabaseRepository.kt",
-      "file_type": "code",
-      "norm_label": "sessionstatus",
       "source_file": "",
       "source_location": ""
     },
@@ -14245,6 +14277,50 @@
       "norm_label": "supabaserepository.kt",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/SupabaseRepository.kt",
       "source_location": "L1"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminpassengersscreen",
+      "label": "AdminPassengersScreen.kt",
+      "_origin": "ast",
+      "community": 85,
+      "community_name": "AdminRepository",
+      "file_type": "code",
+      "norm_label": "adminpassengersscreen.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminPassengersScreen.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminpassengersscreen_kt_context",
+      "label": "Context",
+      "_origin": "ast",
+      "community": 85,
+      "community_name": "AdminRepository",
+      "file_type": "code",
+      "norm_label": "context",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository",
+      "label": "AdminRepository.kt",
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "AdminRepository.kt",
+      "file_type": "code",
+      "norm_label": "adminrepository.kt",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/data/repository/AdminRepository.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_data_repository_adminrepository_kt_result",
+      "label": "Result",
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "AdminRepository.kt",
+      "file_type": "code",
+      "norm_label": "result",
+      "source_file": "",
+      "source_location": ""
     },
     {
       "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_settings_settingsscreen",
@@ -14739,6 +14815,72 @@
       "source_location": ""
     },
     {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter_all",
+      "label": "ALL",
+      "_origin": "ast",
+      "community": 95,
+      "community_name": "SubscriptionHistoryPeriodFilter",
+      "file_type": "code",
+      "norm_label": "all",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
+      "source_location": "L50"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter_custom",
+      "label": "CUSTOM",
+      "_origin": "ast",
+      "community": 95,
+      "community_name": "SubscriptionHistoryPeriodFilter",
+      "file_type": "code",
+      "norm_label": "custom",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
+      "source_location": "L51"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter_last_3_days",
+      "label": "LAST_3_DAYS",
+      "_origin": "ast",
+      "community": 95,
+      "community_name": "SubscriptionHistoryPeriodFilter",
+      "file_type": "code",
+      "norm_label": "last_3_days",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
+      "source_location": "L47"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter_last_7_days",
+      "label": "LAST_7_DAYS",
+      "_origin": "ast",
+      "community": 95,
+      "community_name": "SubscriptionHistoryPeriodFilter",
+      "file_type": "code",
+      "norm_label": "last_7_days",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
+      "source_location": "L48"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter_this_month",
+      "label": "THIS_MONTH",
+      "_origin": "ast",
+      "community": 95,
+      "community_name": "SubscriptionHistoryPeriodFilter",
+      "file_type": "code",
+      "norm_label": "this_month",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
+      "source_location": "L49"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_adminsubscriptionstab_subscriptionhistoryperiodfilter_today",
+      "label": "TODAY",
+      "_origin": "ast",
+      "community": 95,
+      "community_name": "SubscriptionHistoryPeriodFilter",
+      "file_type": "code",
+      "norm_label": "today",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminSubscriptionsTab.kt",
+      "source_location": "L46"
+    },
+    {
       "id": "databasetuctucapp_migration_crash_solution",
       "label": "migration_crash_solution.sql",
       "_origin": "ast",
@@ -14794,26 +14936,59 @@
       "source_location": ""
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverpendingscreen",
-      "label": "DriverPendingScreen.kt",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripperiodfilter_custom",
+      "label": "CUSTOM",
       "_origin": "ast",
-      "community": 98,
-      "community_name": "AdminBusinessConfigTab.kt",
+      "community": 99,
+      "community_name": "AdminTripPeriodFilter",
       "file_type": "code",
-      "norm_label": "driverpendingscreen.kt",
-      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverPendingScreen.kt",
-      "source_location": "L1"
+      "norm_label": "custom",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
+      "source_location": "L60"
     },
     {
-      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_driver_driverpendingscreen_kt_context",
-      "label": "Context",
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripperiodfilter_last_3_days",
+      "label": "LAST_3_DAYS",
       "_origin": "ast",
-      "community": 98,
-      "community_name": "AdminBusinessConfigTab.kt",
+      "community": 99,
+      "community_name": "AdminTripPeriodFilter",
       "file_type": "code",
-      "norm_label": "context",
-      "source_file": "",
-      "source_location": ""
+      "norm_label": "last_3_days",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
+      "source_location": "L57"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripperiodfilter_last_5_days",
+      "label": "LAST_5_DAYS",
+      "_origin": "ast",
+      "community": 99,
+      "community_name": "AdminTripPeriodFilter",
+      "file_type": "code",
+      "norm_label": "last_5_days",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
+      "source_location": "L58"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripperiodfilter_last_7_days",
+      "label": "LAST_7_DAYS",
+      "_origin": "ast",
+      "community": 99,
+      "community_name": "AdminTripPeriodFilter",
+      "file_type": "code",
+      "norm_label": "last_7_days",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
+      "source_location": "L59"
+    },
+    {
+      "id": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripperiodfilter_today",
+      "label": "TODAY",
+      "_origin": "ast",
+      "community": 99,
+      "community_name": "AdminTripPeriodFilter",
+      "file_type": "code",
+      "norm_label": "today",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminTripsScreen.kt",
+      "source_location": "L56"
     }
   ],
   "links": [
@@ -16702,6 +16877,18 @@
       "weight": 1.0
     },
     {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_iswithintolerance",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_getshortestangledelta",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L91",
+      "weight": 1.0
+    },
+    {
       "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_nativecamerascreen_nativecamerascreen",
       "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_vehicle360viewer_vehicle360viewer",
       "relation": "calls",
@@ -16710,7 +16897,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L254",
+      "source_location": "L355",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud_orbitgyroscopehud",
+      "target": "canvas",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/OrbitGyroscopeHud.kt",
+      "source_location": "L69",
       "weight": 1.0
     },
     {
@@ -19630,6 +19829,18 @@
       "weight": 1.0
     },
     {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager",
+      "target": "sensor",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
       "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_markericonutils_markericonutils",
       "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_util_markericonutils_kt_bitmap",
       "relation": "references",
@@ -20815,6 +21026,51 @@
       "weight": 1.0
     },
     {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager",
+      "target": "sensor",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "android.hardware.Sensor"
+      },
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager",
+      "target": "sensorevent",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "android.hardware.SensorEvent"
+      },
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager",
+      "target": "sensoreventlistener",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "android.hardware.SensorEventListener"
+      },
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
       "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_service_locationtrackingservice",
       "target": "location",
       "relation": "imports",
@@ -20905,6 +21161,21 @@
       "weight": 1.0
     },
     {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud",
+      "target": "canvas",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "androidx.compose.foundation.Canvas"
+      },
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/OrbitGyroscopeHud.kt",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
       "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_animatedsplashscreen",
       "target": "canvas",
       "relation": "imports",
@@ -20917,6 +21188,21 @@
       },
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/AnimatedSplashScreen.kt",
       "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_navigation",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "androidx.compose.material.icons.filled.Navigation"
+      },
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/OrbitGyroscopeHud.kt",
+      "source_location": "L14",
       "weight": 1.0
     },
     {
@@ -20947,6 +21233,21 @@
       },
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/AppDrawer.kt",
       "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud_kt_modifier",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "androidx.compose.ui.Modifier"
+      },
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/OrbitGyroscopeHud.kt",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -21126,7 +21427,7 @@
         "target_fqn": "androidx.compose.ui.graphics.Brush"
       },
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L25",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -21456,7 +21757,22 @@
         "target_fqn": "androidx.compose.ui.graphics.Color"
       },
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L26",
+      "source_location": "L32",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_theme_color",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "androidx.compose.ui.graphics.Color"
+      },
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/OrbitGyroscopeHud.kt",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -22026,7 +22342,22 @@
         "target_fqn": "androidx.compose.ui.unit.dp"
       },
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L32",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud",
+      "target": "dp",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "androidx.compose.ui.unit.dp"
+      },
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/OrbitGyroscopeHud.kt",
+      "source_location": "L29",
       "weight": 1.0
     },
     {
@@ -24441,7 +24772,7 @@
         "target_fqn": "com.example.tuctucmap.ui.components.Vehicle360Viewer"
       },
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L36",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -27811,6 +28142,30 @@
       "weight": 1.0
     },
     {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_onaccuracychanged",
+      "target": "sensor",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L75",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_onsensorchanged",
+      "target": "sensorevent",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
       "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_nativecamerascreen_nativecamerascreen",
       "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_nativecamerascreen_cameracapturemode",
       "relation": "references",
@@ -27819,7 +28174,19 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L47",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud_orbitgyroscopehud",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud_kt_modifier",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/OrbitGyroscopeHud.kt",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -30233,7 +30600,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L43",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -30244,7 +30611,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L44",
+      "source_location": "L51",
       "weight": 1.0
     },
     {
@@ -33900,6 +34267,17 @@
       "weight": 1.0
     },
     {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
       "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_nativecamerascreen",
       "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_nativecamerascreen_cameracapturemode",
       "relation": "contains",
@@ -33907,7 +34285,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L42",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -33918,7 +34296,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
-      "source_location": "L47",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud_orbitgyroscopehud",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/OrbitGyroscopeHud.kt",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -37327,6 +37716,17 @@
       "weight": 1.0
     },
     {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager",
+      "target": "sensoreventlistener",
+      "relation": "implements",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
       "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_admintripsscreen_object_selectabledates_l188",
       "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_screens_admin_admintripsscreen_kt_selectabledates",
       "relation": "implements",
@@ -39095,6 +39495,83 @@
       "confidence_score": 1.0,
       "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/CameraUtils.kt",
       "source_location": "L74",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_startlistening",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_stoplistening",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L43",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_calibrateinitialheading",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L47",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_onsensorchanged",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_onaccuracychanged",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L75",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_getshortestangledelta",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L81",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager_iswithintolerance",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -41235,6 +41712,30 @@
       "weight": 1.0
     },
     {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_nativecamerascreen_nativecamerascreen",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_orbitgyroscopehud_orbitgyroscopehud",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "call",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
+      "source_location": "L578",
+      "weight": 1.0
+    },
+    {
+      "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_nativecamerascreen_nativecamerascreen",
+      "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_camera_gyroscopeguidemanager_gyroscopeguidemanager",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "call",
+      "source_file": "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt",
+      "source_location": "L93",
+      "weight": 1.0
+    },
+    {
       "source": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_completedrivergoogleregistrationdialog_completedrivergoogleregistrationdialog",
       "target": "tuctucmap_app_src_main_java_com_example_tuctucmap_ui_components_vehicle360viewer_vehicle360viewer",
       "relation": "calls",
@@ -41440,5 +41941,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "a012022bffcdf478fcc05eb42737eff21c66da6a"
+  "built_at_commit": "4a3f8b68a29c5e6ab3eb5b2ac0c84b5856b11bb9"
 }
