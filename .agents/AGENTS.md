@@ -12,7 +12,7 @@ Este monorepo se compone de tres proyectos interconectados. **Nunca modifiques a
 | :--- | :--- | :--- | :--- |
 | [`/databaseTuctucApp`](../databaseTuctucApp) | Backend, esquema relacional, scripts administrativos y RLS | PostgreSQL en Supabase, Node.js (`pg`) | [`tuctuc-database`](./skills/tuctuc-database/SKILL.md) |
 | [`/tuctucMap`](../tuctucMap) | Aplicación móvil nativa para pasajeros y conductores de tuctucs | Kotlin, Jetpack Compose (M3), OSMDroid, Firebase RTDB, Supabase | [`tuctuc-android`](./skills/tuctuc-android/SKILL.md) |
-| [`/tuctucMapDashboard`](../tuctucMapDashboard) | Panel administrativo web para gestión de flota, aprobaciones y finanzas | Angular (v22), Angular Material, Leaflet, Supabase JS, Firebase RTDB | [`tuctuc-dashboard`](./skills/tuctuc-dashboard/SKILL.md) |
+| [`/tuctucMapDashboard`](../tuctucMapDashboard) | Panel administrativo web para gestión de flota, aprobaciones y finanzas | Angular (v22), Angular Material, Leaflet, Supabase JS, Firebase RTDB | N/A |
 
 ---
 
@@ -28,39 +28,32 @@ Para optimizar el uso de tokens y mantener procedimientos estandarizados, este p
    - Ciclo de vida y bloqueo de suscripciones del conductor.
    - Compilación y verificación con Gradle (`.\gradlew.bat assembleDebug`).
 
-2. **[`tuctuc-dashboard`](./skills/tuctuc-dashboard/SKILL.md):**
-   - Panel Angular 22 con Standalone Components y Angular Material.
-   - Seguridad: requerimiento estricto de `role = 'admin'` en `profiles` para acceso y RLS.
-   - Mapa de flota interactivo con Leaflet y sincronización en vivo con Firebase (`driver_locations`).
-   - Módulo financiero de cobranza, KPIs y botón de contacto por WhatsApp.
-   - Compilación y verificación con NPM (`npm run build`).
-
-3. **[`tuctuc-database`](./skills/tuctuc-database/SKILL.md):**
+2. **[`tuctuc-database`](./skills/tuctuc-database/SKILL.md):**
    - Tablas maestras: `profiles`, `trips`, `driver_subscriptions`, `driver_locations`.
    - Principios mandatorios de Row Level Security (RLS) en PostgreSQL.
    - Ejecución segura de sentencias SQL mediante `node run_sql.js "<SQL>"`.
    - Sincronización obligatoria de cambios en `databaseTuctucApp/db.sql`.
 
-4. **[`tuctuc-git-sync`](./skills/tuctuc-git-sync/SKILL.md):**
+3. **[`tuctuc-git-sync`](./skills/tuctuc-git-sync/SKILL.md):**
    - Protocolo de versionamiento y push automático a GitHub tras agregar o modificar funciones.
    - Mensajes semánticos, prevención de fuga de credenciales y sincronización remota con `origin/main`.
 
-5. **[`tuctuc-playstore-release`](./skills/tuctuc-playstore-release/SKILL.md):**
+4. **[`tuctuc-playstore-release`](./skills/tuctuc-playstore-release/SKILL.md):**
    - Generación del paquete oficial firmado `.aab` (`.\gradlew.bat bundleRelease`).
    - Incremento secuencial de `versionCode` y `versionName` en `build.gradle.kts`.
    - Extracción y síntesis de commits desde la fecha de modificación del último `.aab` para redactar el Nombre y las Notas de la versión en formato Google Play Console (`<es-419>`).
 
-6. **[`graphify`](C:/Users/exbinario/.gemini/config/skills/graphify/SKILL.md):**
+5. **[`graphify`](C:/Users/exbinario/.gemini/config/skills/graphify/SKILL.md):**
    - Grafo de conocimiento y navegación arquitectónica (GraphRAG) en `graphify-out/`.
    - Consultas con token-budget reducido (`python -m graphify query "<pregunta>"`), trazabilidad de rutas entre conceptos (`python -m graphify path "A" "B"`) y análisis de impacto (`python -m graphify affected "X"`).
    - Sincronización incremental sin costo de API (`python -m graphify update .`).
 
-7. **[`prompt-engineer`](./skills/prompt-engineer/SKILL.md):**
+6. **[`prompt-engineer`](./skills/prompt-engineer/SKILL.md):**
    - Protocolo consultivo y de ingeniería de prompts para estructurar requerimientos del usuario en especificaciones técnicas de alta precisión.
    - Detección activa de lagunas y formulación de dudas críticas (edge cases, arquitectura, UI/UX, persistencia).
    - Asesoramiento y recomendación experta: presentación de opciones ponderadas destacando la solución técnica óptima con `(Recomendado)` justificado.
 
-8. **[`tuctuc-crash-resolver`](./skills/tuctuc-crash-resolver/SKILL.md):**
+7. **[`tuctuc-crash-resolver`](./skills/tuctuc-crash-resolver/SKILL.md):**
    - Auditoría, diagnóstico y solución de errores y crashes almacenados en `public.app_crash_logs`.
    - Consulta de fallos pendientes en Supabase, formulación de propuestas de solución técnicas con validación del usuario, aplicación de parches, verificación de compilación y marcado de incidencias resueltas (`UPDATE ... SET resolved = true`).
 
