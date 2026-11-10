@@ -275,7 +275,7 @@ fun CompleteDriverGoogleRegistrationDialog(
                             .clickable { openCamera(CameraCaptureMode.VEHICLE_360_SCAN) },
                         shape = RoundedCornerShape(10.dp),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
-                        border = BorderStroke(1.dp, if (vehicle360Bitmaps.size == 8) Color(0xFF10B981) else Color(0xFF475569))
+                        border = BorderStroke(1.dp, if (vehicle360Bitmaps.size == 4) Color(0xFF10B981) else Color(0xFF475569))
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
                             Row(
@@ -286,19 +286,19 @@ fun CompleteDriverGoogleRegistrationDialog(
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text("Foto 360° del Vehículo *", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                                     Text(
-                                        if (vehicle360Bitmaps.size == 8) "✓ 8 de 8 ángulos capturados" else "Rodea el TucTuc tomando 8 fotos",
-                                        color = if (vehicle360Bitmaps.size == 8) Color(0xFF10B981) else Color(0xFF94A3B8),
+                                        if (vehicle360Bitmaps.size == 4) "✓ 4 de 4 ángulos capturados" else "Rodea el TucTuc tomando 4 fotos",
+                                        color = if (vehicle360Bitmaps.size == 4) Color(0xFF10B981) else Color(0xFF94A3B8),
                                         fontSize = 11.sp
                                     )
                                 }
                                 Icon(
-                                    imageVector = if (vehicle360Bitmaps.size == 8) Icons.Default.CheckCircle else Icons.Default.ChevronRight,
+                                    imageVector = if (vehicle360Bitmaps.size == 4) Icons.Default.CheckCircle else Icons.Default.ChevronRight,
                                     contentDescription = null,
-                                    tint = if (vehicle360Bitmaps.size == 8) Color(0xFF10B981) else Color.Gray
+                                    tint = if (vehicle360Bitmaps.size == 4) Color(0xFF10B981) else Color.Gray
                                 )
                             }
 
-                            if (vehicle360Bitmaps.size == 8) {
+                            if (vehicle360Bitmaps.size == 4) {
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Vehicle360Viewer(
                                     localBitmaps = vehicle360Bitmaps,
@@ -348,8 +348,8 @@ fun CompleteDriverGoogleRegistrationDialog(
                                     localError = "Debes tomar tu foto de conductor obligatoriamente"
                                     return@Button
                                 }
-                                if (vehicle360Bitmaps.size < 8) {
-                                    localError = "Debes completar las 8 fotos 360° del vehículo"
+                                if (vehicle360Bitmaps.size < 4) {
+                                    localError = "Debes completar las 4 fotos 360° del vehículo"
                                     return@Button
                                 }
                                 onConfirm(nombre.trim(), telefono.trim(), placas.trim(), numeroUnidad.trim(), driverPhotoBitmap, vehicle360Bitmaps)

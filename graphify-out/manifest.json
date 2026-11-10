@@ -360,9 +360,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverRegisterScreen.kt": {
-    "mtime": 1794277756.4369962,
-    "seen": 1794277888.7889695,
-    "ast_hash": "c4cae7c9c373ab3b0bfc5e636909da34",
+    "mtime": 1794279893.688118,
+    "seen": 1794279977.6580613,
+    "ast_hash": "b7d33890c01b7b128d61901b63e99b65",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/driver/DriverReportsScreen.kt": {
@@ -660,9 +660,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminDriversTab.kt": {
-    "mtime": 1794277755.8939638,
-    "seen": 1794277888.7889493,
-    "ast_hash": "b683d85995c6c2d2c99b5f4e76a0edee",
+    "mtime": 1794279919.4198432,
+    "seen": 1794279977.6580458,
+    "ast_hash": "7939a1cf492d6189787a1a846f42c3eb",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/screens/admin/AdminFleetMapTab.kt": {
@@ -816,9 +816,9 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/CompleteDriverGoogleRegistrationDialog.kt": {
-    "mtime": 1794277754.5041013,
-    "seen": 1794277888.788929,
-    "ast_hash": "0184a7fa8ba9d527f7c4f7268752b4cc",
+    "mtime": 1794279910.5789804,
+    "seen": 1794279977.658016,
+    "ast_hash": "2c0c057eb128fd7d5f0e0261c655a52d",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/GoogleSignInButton.kt": {
@@ -876,15 +876,15 @@
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/CameraUtils.kt": {
-    "mtime": 1794277822.153715,
-    "seen": 1794277888.7889369,
-    "ast_hash": "304c1be92dd450fa654a9807722bccee",
+    "mtime": 1794279571.9916952,
+    "seen": 1794279977.6580334,
+    "ast_hash": "0dd74b07773aa639781bc65cb0ba400a",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/NativeCameraScreen.kt": {
-    "mtime": 1794278764.1827896,
-    "seen": 1794278765.3950515,
-    "ast_hash": "63d662d762fe7e61eaac2aa7d5964c4f",
+    "mtime": 1794279945.5382576,
+    "seen": 1794279977.658036,
+    "ast_hash": "567dc65f32f40a3bb2cfb8b441ba3082",
     "semantic_hash": ""
   },
   "tuctucMap/app/src/main/java/com/example/tuctucmap/ui/components/camera/GyroscopeGuideManager.kt": {

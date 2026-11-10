@@ -1710,12 +1710,12 @@ private fun DriverDossierBottomSheetContent(
                     )
                     val photoCount = driver.vehiclePhotos360?.size ?: 0
                     Surface(
-                        color = if (photoCount == 8) Color(0x3310B981) else Color(0x33F97316),
+                        color = if (photoCount >= 4) Color(0x3310B981) else Color(0x33F97316),
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
-                            text = if (photoCount == 8) "8/8 Ángulos Verificados" else "$photoCount/8 Ángulos",
-                            color = if (photoCount == 8) Color(0xFF10B981) else Color(0xFFF97316),
+                            text = if (photoCount >= 4) "4/4 Ángulos Verificados" else "$photoCount/4 Ángulos",
+                            color = if (photoCount >= 4) Color(0xFF10B981) else Color(0xFFF97316),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)

@@ -8,7 +8,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
 /**
- * Definición de los 8 ángulos cardinales y ordinales para la captura y visualización 360° del TucTuc.
+ * Definición de los 4 ángulos cardinales principales para la captura y visualización 360° del TucTuc.
  */
 data class VehicleAngleStep(
     val stepIndex: Int,
@@ -19,17 +19,27 @@ data class VehicleAngleStep(
 )
 
 val VEHICLE_360_STEPS = listOf(
-    VehicleAngleStep(0, 0, "Frente", "Colócate frente al TucTuc encuadrando el parabrisas y luces", "0°"),
-    VehicleAngleStep(1, 45, "Frontal Derecha", "Muévete hacia la esquina frontal derecha (45°)", "45°"),
-    VehicleAngleStep(2, 90, "Costado Derecho", "Ubícate frente al lateral derecho completo", "90°"),
-    VehicleAngleStep(3, 135, "Trasera Derecha", "Pasa a la esquina posterior derecha (135°)", "135°"),
-    VehicleAngleStep(4, 180, "Parte Trasera", "Encuadra la parte posterior del vehículo", "180°"),
-    VehicleAngleStep(5, 225, "Trasera Izquierda", "Pasa a la esquina posterior izquierda (225°)", "225°"),
-    VehicleAngleStep(6, 270, "Costado Izquierdo", "Ubícate frente al lateral izquierdo completo", "270°"),
-    VehicleAngleStep(7, 315, "Frontal Izquierda", "Completa la vuelta en la esquina frontal izquierda (315°)", "315°")
+    VehicleAngleStep(0, 0, "Frente", "Colócate frente al TucTuc encuadrando el frente completo", "0°"),
+    VehicleAngleStep(1, 90, "Costado Derecho", "Ubícate frente al lateral derecho completo", "90°"),
+    VehicleAngleStep(2, 180, "Parte Trasera", "Encuadra la parte posterior del vehículo", "180°"),
+    VehicleAngleStep(3, 270, "Costado Izquierdo", "Ubícate frente al lateral izquierdo completo", "270°")
 )
 
 object CameraUtils {
+
+    /**
+     * Recorta el bitmap al centro en una relación de aspecto exacta 1:1 (cuadrada).
+     */
+    fun cropToSquare(bitmap: Bitmap): Bitmap {
+        val size = minOf(bitmap.width, bitmap.height)
+        val x = (bitmap.width - size) / 2
+        val y = (bitmap.height - size) / 2
+        val square = Bitmap.createBitmap(bitmap, x, y, size, size)
+        if (square != bitmap) {
+            bitmap.recycle()
+        }
+        return square
+    }
 
     /**
      * Corrige la orientación del bitmap basada en los metadatos EXIF del sensor de la cámara.

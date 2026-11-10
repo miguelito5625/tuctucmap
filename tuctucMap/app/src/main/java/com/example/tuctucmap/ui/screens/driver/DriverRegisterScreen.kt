@@ -176,8 +176,8 @@ fun DriverRegisterScreen(
                     errorMessage = "Todos los campos principales son obligatorios"
                 } else if (driverPhotoBitmap == null) {
                     errorMessage = "Debes tomar tu foto de conductor obligatoriamente"
-                } else if (vehicle360Bitmaps.size < 8) {
-                    errorMessage = "Debes completar el escaneo 360° de los 8 ángulos de tu vehículo"
+                } else if (vehicle360Bitmaps.size < 4) {
+                    errorMessage = "Debes completar el escaneo 360° de los 4 ángulos de tu vehículo"
                 } else {
                     val cleanDigits = telefono.replace(Regex("[^0-9]"), "")
                     if (cleanDigits.length < 8) {
@@ -490,14 +490,14 @@ fun DriverRegisterScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Tarjeta 2: Foto 360° del Vehículo (8 ángulos)
+            // Tarjeta 2: Foto 360° del Vehículo (4 ángulos)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { openCamera(CameraCaptureMode.VEHICLE_360_SCAN) },
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-                border = BorderStroke(1.dp, if (vehicle360Bitmaps.size == 8) Color(0xFF10B981) else Color(0xFF475569))
+                border = BorderStroke(1.dp, if (vehicle360Bitmaps.size == 4) Color(0xFF10B981) else Color(0xFF475569))
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Row(
@@ -515,23 +515,23 @@ fun DriverRegisterScreen(
                         }
 
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("2. Foto 360° de tu TucTuc (8 ángulos) *", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text("2. Foto 360° de tu TucTuc (4 ángulos) *", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = if (vehicle360Bitmaps.size == 8) "✓ 8 de 8 ángulos listos (Toca para re-escanear)" else "Toma el teléfono y rodea el vehículo",
-                                color = if (vehicle360Bitmaps.size == 8) Color(0xFF10B981) else Color(0xFF94A3B8),
+                                text = if (vehicle360Bitmaps.size == 4) "✓ 4 de 4 ángulos listos (Toca para re-escanear)" else "Toma el teléfono y rodea el vehículo",
+                                color = if (vehicle360Bitmaps.size == 4) Color(0xFF10B981) else Color(0xFF94A3B8),
                                 fontSize = 12.sp
                             )
                         }
 
                         Icon(
-                            imageVector = if (vehicle360Bitmaps.size == 8) Icons.Default.CheckCircle else Icons.Default.FlipCameraAndroid,
+                            imageVector = if (vehicle360Bitmaps.size == 4) Icons.Default.CheckCircle else Icons.Default.FlipCameraAndroid,
                             contentDescription = null,
-                            tint = if (vehicle360Bitmaps.size == 8) Color(0xFF10B981) else Color(0xFF00E5FF)
+                            tint = if (vehicle360Bitmaps.size == 4) Color(0xFF10B981) else Color(0xFF00E5FF)
                         )
                     }
 
-                    if (vehicle360Bitmaps.size == 8) {
+                    if (vehicle360Bitmaps.size == 4) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = "Vista previa interactiva (arrastra con el dedo):",
