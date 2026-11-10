@@ -33,7 +33,10 @@ import com.example.tuctucmap.data.service.GoogleAuthCancellationException
 import com.example.tuctucmap.data.service.GoogleAuthHelper
 import com.example.tuctucmap.ui.components.CompleteDriverGoogleRegistrationDialog
 import com.example.tuctucmap.ui.components.GoogleSignInButton
+import com.example.tuctucmap.ui.components.camera.CameraUtils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun DriverLoginScreen(
@@ -338,16 +341,25 @@ fun DriverLoginScreen(
                             dialogError = null
                         }
                     },
-                    onConfirm = { nombre, telefono, placas, numeroUnidad ->
+                    onConfirm = { nombre, telefono, placas, numeroUnidad, driverPhoto, vehicle360 ->
                         dialogLoading = true
                         dialogError = null
                         scope.launch {
                             try {
+                                val driverBytes = driverPhoto?.let { bmp ->
+                                    withContext(Dispatchers.Default) { CameraUtils.compressBitmap(bmp) }
+                                }
+                                val v360BytesList = if (vehicle360.isNotEmpty()) {
+                                    withContext(Dispatchers.Default) { vehicle360.map { CameraUtils.compressBitmap(it) } }
+                                } else null
+
                                 val regResult = repository.completeDriverGoogleRegistration(
                                     nombre = nombre,
                                     telefono = telefono,
                                     placas = placas,
-                                    numeroUnidad = numeroUnidad
+                                    numeroUnidad = numeroUnidad,
+                                    driverPhotoBytes = driverBytes,
+                                    vehicle360BytesList = v360BytesList
                                 )
                                 if (regResult.isSuccess) {
                                     pendingGoogleProfile = null

@@ -18,6 +18,8 @@ import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.realtime
+import io.github.jan.supabase.storage.storage
+import kotlinx.coroutines.withContext
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
@@ -274,13 +276,57 @@ class SupabaseRepository {
         }
     }
 
+    suspend fun uploadDriverPhoto(driverId: String, imageBytes: ByteArray): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val fileName = "drivers/$driverId/portrait_${System.currentTimeMillis()}.jpg"
+            val bucket = supabase.storage.from("driver-documents")
+            bucket.upload(path = fileName, data = imageBytes) {
+                upsert = true
+            }
+            val publicUrl = bucket.publicUrl(fileName)
+            Result.success(publicUrl)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun uploadVehicle360Photos(driverId: String, photos: List<ByteArray>): Result<List<String>> = withContext(Dispatchers.IO) {
+        try {
+            val bucket = supabase.storage.from("driver-documents")
+            val timestamp = System.currentTimeMillis()
+            val urls = mutableListOf<String>()
+            photos.forEachIndexed { index, bytes ->
+                val fileName = "drivers/$driverId/vehicle360_${timestamp}_$index.jpg"
+                bucket.upload(path = fileName, data = bytes) {
+                    upsert = true
+                }
+                urls.add(bucket.publicUrl(fileName))
+            }
+            Result.success(urls)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun fetchDriverDetails(driverId: String): Driver? = withContext(Dispatchers.IO) {
+        try {
+            supabase.postgrest["profiles"]
+                .select { filter { eq("id", driverId) } }
+                .decodeSingleOrNull<Driver>()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     suspend fun registerDriver(
         nombre: String,
         telefono: String,
         placas: String,
         email: String,
         contrasena: String,
-        numeroUnidad: String = ""
+        numeroUnidad: String = "",
+        driverPhotoBytes: ByteArray? = null,
+        vehicle360BytesList: List<ByteArray>? = null
     ): Result<Unit> {
         return try {
             supabase.auth.signUpWith(Email) {
@@ -302,9 +348,27 @@ class SupabaseRepository {
 
             if (uid == null) return Result.failure(Exception("Por favor desactiva 'Confirm email' en Supabase (Authentication -> Providers -> Email)"))
 
+            // Subir foto personal y fotos 360 si fueron proporcionadas
+            var driverPhotoUrl: String? = null
+            var vehicle360Urls: List<String>? = null
+
+            if (driverPhotoBytes != null) {
+                val uploadRes = uploadDriverPhoto(uid, driverPhotoBytes)
+                if (uploadRes.isSuccess) {
+                    driverPhotoUrl = uploadRes.getOrNull()
+                }
+            }
+
+            if (!vehicle360BytesList.isNullOrEmpty()) {
+                val upload360Res = uploadVehicle360Photos(uid, vehicle360BytesList)
+                if (upload360Res.isSuccess) {
+                    vehicle360Urls = upload360Res.getOrNull()
+                }
+            }
+
             // El trigger trg_profile_insert_security asigna los 7 días de prueba con la hora real del servidor
             // y el trigger trg_create_initial_driver_trial crea automáticamente el registro en driver_subscriptions.
-            val profile = mutableMapOf(
+            val profile = mutableMapOf<String, Any>(
                 "id" to uid,
                 "email" to email,
                 "name" to nombre.trim(),
@@ -314,6 +378,12 @@ class SupabaseRepository {
             )
             if (numeroUnidad.isNotBlank()) {
                 profile["unit_number"] = numeroUnidad.trim()
+            }
+            if (!driverPhotoUrl.isNullOrBlank()) {
+                profile["driver_photo_url"] = driverPhotoUrl
+            }
+            if (!vehicle360Urls.isNullOrEmpty()) {
+                profile["vehicle_photos_360"] = vehicle360Urls
             }
             supabase.postgrest["profiles"].insert(profile)
             Result.success(Unit)
@@ -523,14 +593,33 @@ class SupabaseRepository {
         nombre: String,
         telefono: String,
         placas: String,
-        numeroUnidad: String = ""
+        numeroUnidad: String = "",
+        driverPhotoBytes: ByteArray? = null,
+        vehicle360BytesList: List<ByteArray>? = null
     ): Result<Unit> {
         return try {
             val uid = currentUserUid ?: supabase.auth.currentUserOrNull()?.id
                 ?: return Result.failure(Exception("No se encontró sesión activa de Google."))
             val email = currentUserEmail ?: ""
 
-            val profile = mutableMapOf(
+            var driverPhotoUrl: String? = null
+            var vehicle360Urls: List<String>? = null
+
+            if (driverPhotoBytes != null) {
+                val uploadRes = uploadDriverPhoto(uid, driverPhotoBytes)
+                if (uploadRes.isSuccess) {
+                    driverPhotoUrl = uploadRes.getOrNull()
+                }
+            }
+
+            if (!vehicle360BytesList.isNullOrEmpty()) {
+                val upload360Res = uploadVehicle360Photos(uid, vehicle360BytesList)
+                if (upload360Res.isSuccess) {
+                    vehicle360Urls = upload360Res.getOrNull()
+                }
+            }
+
+            val profile = mutableMapOf<String, Any>(
                 "id" to uid,
                 "email" to email.trim(),
                 "name" to nombre.trim(),
@@ -541,6 +630,12 @@ class SupabaseRepository {
             )
             if (numeroUnidad.isNotBlank()) {
                 profile["unit_number"] = numeroUnidad.trim()
+            }
+            if (!driverPhotoUrl.isNullOrBlank()) {
+                profile["driver_photo_url"] = driverPhotoUrl
+            }
+            if (!vehicle360Urls.isNullOrEmpty()) {
+                profile["vehicle_photos_360"] = vehicle360Urls
             }
             supabase.postgrest["profiles"].insert(profile)
             syncServerTimeAndExpire()

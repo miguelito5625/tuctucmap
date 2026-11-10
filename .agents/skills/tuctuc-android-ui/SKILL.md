@@ -214,3 +214,4 @@ Antes de dar por finalizada la creación o modificación de cualquier interfaz e
 - [ ] **Estados:** ¿Se gestionaron adecuadamente los estados de carga, vacío, error y contenido?
 - [ ] **Listas:** ¿Todos los `LazyColumn` y `LazyRow` tienen `key = { it.id }` en sus `items`?
 - [ ] **Modales:** ¿Los `ModalBottomSheet` tienen `skipPartiallyExpanded = true` y no bloquean el teclado?
+

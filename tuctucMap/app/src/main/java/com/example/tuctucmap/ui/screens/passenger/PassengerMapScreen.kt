@@ -64,9 +64,12 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.example.tuctucmap.data.PassengerDestinationPreferences
 import com.example.tuctucmap.data.PassengerLocationPreferences
 import com.example.tuctucmap.data.model.DriverLocation
+import com.example.tuctucmap.data.model.Driver
 import com.example.tuctucmap.data.model.ServerClock
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.data.service.OsrmRoutingService
+import com.example.tuctucmap.ui.components.DriverAvatar
+import com.example.tuctucmap.ui.components.Vehicle360Viewer
 import com.example.tuctucmap.ui.util.AppTileSource
 import com.example.tuctucmap.ui.util.PassengerLocationOverlay
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -86,6 +89,8 @@ import android.animation.AnimatorListenerAdapter
 import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
 import android.view.animation.AccelerateInterpolator
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -280,6 +285,20 @@ fun PassengerMapScreen(
         if (activeTrip != null && activeTrip?.status == "accepted" && activeTrip?.driverId?.isNotBlank() == true) {
             rawDriverLocations.find { it.uid == activeTrip?.driverId }
         } else null
+    }
+
+    // Perfil completo del conductor asignado (foto de rostro y fotos 360 del vehículo)
+    var assignedDriverProfile by remember { mutableStateOf<Driver?>(null) }
+    var showVehicle360Dialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(activeTrip?.driverId, activeTrip?.status) {
+        val dId = activeTrip?.driverId
+        if (activeTrip?.status == "accepted" && !dId.isNullOrBlank()) {
+            assignedDriverProfile = repository.fetchDriverDetails(dId)
+        } else {
+            assignedDriverProfile = null
+            showVehicle360Dialog = false
+        }
     }
 
     var lastPassengerOsrmCalcTime by remember { mutableLongStateOf(0L) }
@@ -1452,15 +1471,11 @@ fun PassengerMapScreen(
                                         modifier = Modifier.weight(1f),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(40.dp)
-                                                .clip(CircleShape)
-                                                .background(Color(0x3300E5FF)),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text("🛺", fontSize = 22.sp)
-                                        }
+                                        DriverAvatar(
+                                            photoUrl = assignedDriverProfile?.driverPhotoUrl,
+                                            name = activeTrip!!.driverName.ifBlank { "Conductor" },
+                                            size = 44.dp
+                                        )
                                         Spacer(modifier = Modifier.width(10.dp))
                                         Column {
                                             Text(
@@ -1562,6 +1577,21 @@ fun PassengerMapScreen(
                                     ) {
                                         Icon(Icons.Default.Route, contentDescription = "Ver ruta completa", modifier = Modifier.size(20.dp))
                                     }
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Botón para ver fotos 360° interactivas del vehículo
+                                OutlinedButton(
+                                    onClick = { showVehicle360Dialog = true },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(42.dp),
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = BorderStroke(1.dp, Color(0xFF00E5FF)),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF00E5FF))
+                                ) {
+                                    Text("🛺 Ver Vehículo 360°", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                 }
 
                                 // Panel de detalles colapsable
@@ -1748,6 +1778,92 @@ fun PassengerMapScreen(
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Diálogo para Visualización 360° Interactiva del TucTuc para el Pasajero
+        if (showVehicle360Dialog && activeTrip != null) {
+            val photos360 = assignedDriverProfile?.vehiclePhotos360 ?: emptyList()
+            Dialog(
+                onDismissRequest = { showVehicle360Dialog = false },
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth(0.92f)
+                        .wrapContentHeight(),
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color(0xFF1E293B),
+                    tonalElevation = 6.dp
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                DriverAvatar(
+                                    photoUrl = assignedDriverProfile?.driverPhotoUrl,
+                                    name = activeTrip!!.driverName,
+                                    size = 46.dp
+                                )
+                                Column {
+                                    Text(
+                                        text = activeTrip!!.driverName.ifBlank { "Conductor" },
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        fontSize = 15.sp
+                                    )
+                                    Text(
+                                        text = "Placas: ${activeTrip!!.driverPlate.ifBlank { "Sin placa" }}",
+                                        color = Color(0xFF94A3B8),
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                            IconButton(onClick = { showVehicle360Dialog = false }) {
+                                Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.LightGray)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Text(
+                            text = "Arrastra con el dedo para ver el vehículo en 360°:",
+                            color = Color(0xFF00E5FF),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Vehicle360Viewer(
+                            imageUrls = photos360,
+                            autoSpinOnStart = true,
+                            modifier = Modifier.height(240.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { showVehicle360Dialog = false },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
+                        ) {
+                            Text("Entendido", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold)
                         }
                     }
                 }

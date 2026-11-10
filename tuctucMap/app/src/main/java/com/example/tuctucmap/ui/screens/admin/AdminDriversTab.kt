@@ -37,6 +37,8 @@ import com.example.tuctucmap.data.model.AppConfig
 import com.example.tuctucmap.data.model.DriverDossierDto
 import com.example.tuctucmap.data.repository.AdminRepository
 import com.example.tuctucmap.data.repository.SupabaseRepository
+import com.example.tuctucmap.ui.components.DriverAvatar
+import com.example.tuctucmap.ui.components.Vehicle360Viewer
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
@@ -672,26 +674,12 @@ private fun AdminDriverCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Avatar con inicial
-                val initial = (driver.nombre.trim().firstOrNull() ?: 'T').uppercaseChar().toString()
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color(0xFFF59E0B), Color(0xFFD97706))
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = initial,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0F172A)
-                    )
-                }
+                // Avatar con foto real del conductor o inicial con fallback
+                DriverAvatar(
+                    photoUrl = driver.driverPhotoUrl,
+                    name = driver.nombre,
+                    size = 48.dp
+                )
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -1666,25 +1654,11 @@ private fun DriverDossierBottomSheetContent(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            val initial = (driver.nombre.trim().firstOrNull() ?: 'T').uppercaseChar().toString()
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(Color(0xFFF59E0B), Color(0xFFD97706))
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = initial,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0F172A)
-                )
-            }
+            DriverAvatar(
+                photoUrl = driver.driverPhotoUrl,
+                name = driver.nombre,
+                size = 58.dp
+            )
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -1714,6 +1688,58 @@ private fun DriverDossierBottomSheetContent(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        // ── Tarjeta de Inspección Visual 360° del Vehículo y Conductor ───────
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+            shape = RoundedCornerShape(16.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155))
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "🛺 Inspección Visual 360°",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFF9D423)
+                    )
+                    val photoCount = driver.vehiclePhotos360?.size ?: 0
+                    Surface(
+                        color = if (photoCount == 8) Color(0x3310B981) else Color(0x33F97316),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = if (photoCount == 8) "8/8 Ángulos Verificados" else "$photoCount/8 Ángulos",
+                            color = if (photoCount == 8) Color(0xFF10B981) else Color(0xFFF97316),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Arrastra el dedo horizontalmente para girar y verificar el estado del mototaxi:",
+                    fontSize = 12.sp,
+                    color = Color(0xFF94A3B8)
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+                Vehicle360Viewer(
+                    imageUrls = driver.vehiclePhotos360 ?: emptyList(),
+                    autoSpinOnStart = false,
+                    modifier = Modifier.height(230.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         if (isLoading) {
             Box(

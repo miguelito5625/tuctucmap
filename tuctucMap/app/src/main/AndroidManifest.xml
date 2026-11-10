@@ -17,6 +17,11 @@
     <!-- Permiso para notificaciones persistentes (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Permisos para cámara nativa (Foto del conductor y escaneo 360 del vehículo) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
     <!-- Consultas de intents para apps de navegación externa (Google Maps y Waze) -->
     <queries>
         <package android:name="com.google.android.apps.maps" />

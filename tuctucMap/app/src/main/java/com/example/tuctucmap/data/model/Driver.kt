@@ -117,7 +117,11 @@ data class Driver(
     @SerialName("approval_status")
     private val rawEstadoAprobacion: String? = null,
     @SerialName("subscription_end_date")
-    private val rawFechaVencimientoSuscripcion: String? = null
+    private val rawFechaVencimientoSuscripcion: String? = null,
+    @SerialName("driver_photo_url")
+    val driverPhotoUrl: String? = null,
+    @SerialName("vehicle_photos_360")
+    val vehiclePhotos360: List<String>? = null
 ) {
     val nombre: String get() = rawNombre?.trim() ?: ""
     val telefono: String get() = rawTelefono?.trim() ?: ""

@@ -59,6 +59,10 @@ data class AdminDriver(
     val estadoAprobacion: String = "pendiente",
     @SerialName("subscription_end_date")
     val fechaVencimientoSuscripcion: String? = null,
+    @SerialName("driver_photo_url")
+    val driverPhotoUrl: String? = null,
+    @SerialName("vehicle_photos_360")
+    val vehiclePhotos360: List<String>? = null,
     val role: String = "driver"
 ) {
     val nombre: String get() = rawNombre?.trim() ?: ""

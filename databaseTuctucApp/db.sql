@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS unit_number TEXT DEFAULT NULL;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS driver_photo_url TEXT DEFAULT NULL;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS vehicle_photos_360 TEXT[] DEFAULT NULL;
 ALTER TABLE public.profiles ALTER COLUMN approval_status SET DEFAULT 'pendiente';
 
 -- 1.5 Crear tabla de historial de suscripciones para conductores
@@ -784,4 +786,26 @@ CREATE POLICY "Admins can delete app_crash_logs" ON public.app_crash_logs
 -- Índices de consulta rápida
 CREATE INDEX IF NOT EXISTS idx_crash_logs_created_at ON public.app_crash_logs (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_crash_logs_resolved ON public.app_crash_logs (resolved);
+
+-- 15. Bucket de almacenamiento y políticas para fotos de conductores y vehículos (360°)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('driver-documents', 'driver-documents', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+DROP POLICY IF EXISTS "driver_documents_select" ON storage.objects;
+CREATE POLICY "driver_documents_select" ON storage.objects
+  FOR SELECT USING (bucket_id = 'driver-documents');
+
+DROP POLICY IF EXISTS "driver_documents_insert_auth" ON storage.objects;
+CREATE POLICY "driver_documents_insert_auth" ON storage.objects
+  FOR INSERT TO authenticated WITH CHECK (bucket_id = 'driver-documents');
+
+DROP POLICY IF EXISTS "driver_documents_insert_anon" ON storage.objects;
+CREATE POLICY "driver_documents_insert_anon" ON storage.objects
+  FOR INSERT TO anon WITH CHECK (bucket_id = 'driver-documents');
+
+DROP POLICY IF EXISTS "driver_documents_update_auth" ON storage.objects;
+CREATE POLICY "driver_documents_update_auth" ON storage.objects
+  FOR UPDATE TO authenticated USING (bucket_id = 'driver-documents');
+
 

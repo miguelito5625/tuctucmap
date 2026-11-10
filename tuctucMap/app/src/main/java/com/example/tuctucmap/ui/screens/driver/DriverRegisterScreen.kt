@@ -1,17 +1,29 @@
 package com.example.tuctucmap.ui.screens.driver
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.FlipCameraAndroid
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -19,8 +31,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
@@ -30,13 +45,20 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.example.tuctucmap.data.repository.DriverGoogleLoginResult
 import com.example.tuctucmap.data.repository.SupabaseRepository
 import com.example.tuctucmap.data.service.GoogleAuthCancellationException
 import com.example.tuctucmap.data.service.GoogleAuthHelper
 import com.example.tuctucmap.ui.components.CompleteDriverGoogleRegistrationDialog
 import com.example.tuctucmap.ui.components.GoogleSignInButton
+import com.example.tuctucmap.ui.components.Vehicle360Viewer
+import com.example.tuctucmap.ui.components.camera.CameraCaptureMode
+import com.example.tuctucmap.ui.components.camera.CameraUtils
+import com.example.tuctucmap.ui.components.camera.NativeCameraScreen
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun DriverRegisterScreen(
@@ -59,6 +81,28 @@ fun DriverRegisterScreen(
     var pendingGoogleProfile by remember { mutableStateOf<DriverGoogleLoginResult.NeedsProfile?>(null) }
     var dialogLoading by remember { mutableStateOf(false) }
     var dialogError by remember { mutableStateOf<String?>(null) }
+
+    // Estados para captura obligatoria de fotos (Conductor y 360° del Vehículo)
+    var driverPhotoBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var vehicle360Bitmaps by remember { mutableStateOf<List<Bitmap>>(emptyList()) }
+    var activeCameraMode by remember { mutableStateOf<CameraCaptureMode?>(null) }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            errorMessage = "El permiso de cámara es obligatorio para capturar la fotografía y el escaneo 360°."
+        }
+    }
+
+    val openCamera: (CameraCaptureMode) -> Unit = { mode ->
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            activeCameraMode = mode
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
@@ -130,6 +174,10 @@ fun DriverRegisterScreen(
             val handleRegister: () -> Unit = {
                 if (nombre.isBlank() || telefono.isBlank() || placas.isBlank() || email.isBlank() || password.isBlank()) {
                     errorMessage = "Todos los campos principales son obligatorios"
+                } else if (driverPhotoBitmap == null) {
+                    errorMessage = "Debes tomar tu foto de conductor obligatoriamente"
+                } else if (vehicle360Bitmaps.size < 8) {
+                    errorMessage = "Debes completar el escaneo 360° de los 8 ángulos de tu vehículo"
                 } else {
                     val cleanDigits = telefono.replace(Regex("[^0-9]"), "")
                     if (cleanDigits.length < 8) {
@@ -140,13 +188,21 @@ fun DriverRegisterScreen(
                         isLoading = true
                         scope.launch {
                             try {
+                                val driverBytes = withContext(Dispatchers.Default) {
+                                    CameraUtils.compressBitmap(driverPhotoBitmap!!)
+                                }
+                                val v360BytesList = withContext(Dispatchers.Default) {
+                                    vehicle360Bitmaps.map { CameraUtils.compressBitmap(it) }
+                                }
                                 val result = repository.registerDriver(
                                     nombre = nombre.trim(),
                                     telefono = telefono.trim(),
                                     placas = placas.trim(),
                                     email = email.trim(),
                                     contrasena = password,
-                                    numeroUnidad = numeroUnidad.trim()
+                                    numeroUnidad = numeroUnidad.trim(),
+                                    driverPhotoBytes = driverBytes,
+                                    vehicle360BytesList = v360BytesList
                                 )
                                 if (result.isSuccess) {
                                     onRegisterSuccess()
@@ -357,7 +413,142 @@ fun DriverRegisterScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // ── Fotografías Obligatorias de Verificación ─────────────────────────
+            Text(
+                text = "Fotografías Obligatorias de Verificación",
+                color = Color(0xFFF9D423),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            )
+            Text(
+                text = "El administrador revisará estas fotos para autorizar tu cuenta.",
+                color = Color(0xFF94A3B8),
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+            )
+
+            // Tarjeta 1: Foto del Conductor (Rostro)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { openCamera(CameraCaptureMode.DRIVER_PORTRAIT) },
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                border = BorderStroke(1.dp, if (driverPhotoBitmap != null) Color(0xFF10B981) else Color(0xFF475569))
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (driverPhotoBitmap != null) {
+                        Image(
+                            bitmap = driverPhotoBitmap!!.asImageBitmap(),
+                            contentDescription = "Foto capturada",
+                            modifier = Modifier
+                                .size(52.dp)
+                                .clip(CircleShape)
+                                .border(2.dp, Color(0xFF10B981), CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(52.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF334155)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Person, contentDescription = null, tint = Color(0xFFF9D423), modifier = Modifier.size(28.dp))
+                        }
+                    }
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("1. Tu Foto de Conductor (Rostro) *", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = if (driverPhotoBitmap != null) "✓ Fotografía capturada correctamente" else "Toca para abrir la cámara y tomar tu selfie",
+                            color = if (driverPhotoBitmap != null) Color(0xFF10B981) else Color(0xFF94A3B8),
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    Icon(
+                        imageVector = if (driverPhotoBitmap != null) Icons.Default.CheckCircle else Icons.Default.CameraAlt,
+                        contentDescription = null,
+                        tint = if (driverPhotoBitmap != null) Color(0xFF10B981) else Color(0xFFF9D423)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Tarjeta 2: Foto 360° del Vehículo (8 ángulos)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { openCamera(CameraCaptureMode.VEHICLE_360_SCAN) },
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                border = BorderStroke(1.dp, if (vehicle360Bitmaps.size == 8) Color(0xFF10B981) else Color(0xFF475569))
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(52.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF334155)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("🛺 360°", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF00E5FF))
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("2. Foto 360° de tu TucTuc (8 ángulos) *", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = if (vehicle360Bitmaps.size == 8) "✓ 8 de 8 ángulos listos (Toca para re-escanear)" else "Toma el teléfono y rodea el vehículo",
+                                color = if (vehicle360Bitmaps.size == 8) Color(0xFF10B981) else Color(0xFF94A3B8),
+                                fontSize = 12.sp
+                            )
+                        }
+
+                        Icon(
+                            imageVector = if (vehicle360Bitmaps.size == 8) Icons.Default.CheckCircle else Icons.Default.FlipCameraAndroid,
+                            contentDescription = null,
+                            tint = if (vehicle360Bitmaps.size == 8) Color(0xFF10B981) else Color(0xFF00E5FF)
+                        )
+                    }
+
+                    if (vehicle360Bitmaps.size == 8) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Vista previa interactiva (arrastra con el dedo):",
+                            fontSize = 11.sp,
+                            color = Color(0xFF94A3B8)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Vehicle360Viewer(
+                            localBitmaps = vehicle360Bitmaps,
+                            autoSpinOnStart = false,
+                            modifier = Modifier.height(170.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Mensaje de Error
             errorMessage?.let { error ->
@@ -504,16 +695,25 @@ fun DriverRegisterScreen(
                         dialogError = null
                     }
                 },
-                onConfirm = { nombre, telefono, placas, numeroUnidad ->
+                onConfirm = { nombre, telefono, placas, numeroUnidad, driverPhoto, vehicle360 ->
                     dialogLoading = true
                     dialogError = null
                     scope.launch {
                         try {
+                            val driverBytes = driverPhoto?.let { bmp ->
+                                withContext(Dispatchers.Default) { CameraUtils.compressBitmap(bmp) }
+                            }
+                            val v360BytesList = if (vehicle360.isNotEmpty()) {
+                                withContext(Dispatchers.Default) { vehicle360.map { CameraUtils.compressBitmap(it) } }
+                            } else null
+
                             val regResult = repository.completeDriverGoogleRegistration(
                                 nombre = nombre,
                                 telefono = telefono,
                                 placas = placas,
-                                numeroUnidad = numeroUnidad
+                                numeroUnidad = numeroUnidad,
+                                driverPhotoBytes = driverBytes,
+                                vehicle360BytesList = v360BytesList
                             )
                             if (regResult.isSuccess) {
                                 pendingGoogleProfile = null
@@ -527,6 +727,24 @@ fun DriverRegisterScreen(
                             dialogLoading = false
                         }
                     }
+                }
+            )
+        }
+
+        // Pantalla de Cámara Nativa Integrada para Captura de Selfie o 360°
+        if (activeCameraMode != null) {
+            NativeCameraScreen(
+                mode = activeCameraMode!!,
+                onDismiss = { activeCameraMode = null },
+                onDriverPhotoCaptured = { bmp ->
+                    driverPhotoBitmap = bmp
+                    activeCameraMode = null
+                    errorMessage = null
+                },
+                onVehicle360Captured = { list ->
+                    vehicle360Bitmaps = list
+                    activeCameraMode = null
+                    errorMessage = null
                 }
             )
         }
